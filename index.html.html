@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Importaciones Yesica - Centro de Control</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700;800&display=swap');
+        
+        :root {
+            --bg-base: #030712;
+            --accent: #e11d48;
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--bg-base); 
+            color: #f8fafc; 
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 32px 32px;
+            background-position: center center;
+        }
+        
+        .font-tech { font-family: 'JetBrains Mono', monospace; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #030712; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 12px; }
+        ::-webkit-scrollbar-thumb:hover { background: #334155; }
+
+        .glass-panel { 
+            background: rgba(15, 23, 42, 0.75); 
+            backdrop-filter: blur(24px); 
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.05); 
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .tab-btn {
+            color: #64748b;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .tab-btn.active {
+            background: #e11d48;
+            color: #ffffff;
+            box-shadow: 0 0 20px rgba(225, 29, 72, 0.4);
+        }
+
+        .task-node { transition: all 0.2s ease-in-out; cursor: pointer; }
+        .task-node:hover { transform: scale(1.02); border-color: #64748b; }
+
+        .led { width: 8px; height: 8px; border-radius: 50%; transition: all 0.3s ease; }
+        .led-off { background: #ef4444; box-shadow: 0 0 10px rgba(239,68,68,0.6); animation: pulse 2s infinite; }
+        .led-on { background: #10b981; box-shadow: 0 0 10px rgba(16,185,129,0.6); }
+
+        @keyframes pulse {
+            0% { opacity: 1; box-shadow: 0 0 10px rgba(239,68,68,0.8); }
+            50% { opacity: 0.5; box-shadow: 0 0 2px rgba(239,68,68,0.2); }
+            100% { opacity: 1; box-shadow: 0 0 10px rgba(239,68,68,0.8); }
+        }
+    </style>
+</head>
+<body class="min-h-screen selection:bg-rose-600 selection:text-white pb-20">
+
+    <!-- OVERLAY DE AUTENTICACIÓN (LOGIN) -->
+    <div id="loginOverlay" class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="glass-panel w-full max-w-md p-8 rounded-[2rem] space-y-6 border border-slate-700/80 shadow-2xl">
+            <div class="text-center space-y-2">
+                <div class="w-16 h-16 bg-gradient-to-br from-rose-600 to-pink-700 rounded-2xl mx-auto flex items-center justify-center shadow-[0_0_25px_rgba(225,29,72,0.5)]">
+                    <i class="fa-solid fa-lock text-white text-2xl"></i>
+                </div>
+                <h2 class="text-xl font-black text-white uppercase tracking-wider">Acceso Restringido</h2>
+                <p class="text-xs text-slate-400 font-tech">Importaciones Yesica - Secure Access</p>
+            </div>
+            
+            <form id="formLogin" class="space-y-4">
+                <div>
+                    <label class="block text-[10px] text-slate-400 mb-1.5 uppercase font-bold tracking-widest">Correo Electrónico</label>
+                    <input type="email" id="loginEmail" required placeholder="usuario@yesica.com" class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs font-bold outline-none focus:border-rose-500">
+                </div>
+                <div>
+                    <label class="block text-[10px] text-slate-400 mb-1.5 uppercase font-bold tracking-widest">Contraseña</label>
+                    <input type="password" id="loginPassword" required placeholder="••••••••" class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs font-bold outline-none focus:border-rose-500">
+                </div>
+                <button type="submit" class="w-full bg-rose-600 hover:bg-rose-500 text-white font-black py-4 rounded-xl transition-all text-xs uppercase tracking-widest shadow-[0_0_20px_rgba(225,29,72,0.4)]">
+                    INICIAR SESIÓN
+                </button>
+                <p id="loginError" class="text-rose-500 text-xs text-center font-tech hidden"></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- NAVBAR PREMIUM -->
+    <nav class="glass-panel sticky top-0 z-40 px-6 lg:px-10 py-4 border-b border-slate-800/80">
+        <div class="max-w-[1800px] mx-auto flex flex-col xl:flex-row justify-between items-center gap-6">
+            
+            <div class="flex items-center gap-5">
+                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-rose-600 to-pink-700 flex items-center justify-center shadow-[0_0_20px_rgba(225,29,72,0.4)]">
+                    <i class="fa-solid fa-microchip text-white text-xl"></i>
+                </div>
+                <div class="flex flex-col">
+                    <h1 class="text-2xl font-black text-white italic tracking-tighter uppercase">
+                        Importaciones <span class="text-rose-500">Yesica</span>
+                    </h1>
+                    <span class="text-[10px] text-slate-400 font-tech uppercase tracking-[0.3em]">Sistema Central V3.0</span>
+                </div>
+            </div>
+            
+            <div class="flex flex-wrap items-center gap-4">
+                <div class="bg-slate-950/80 p-1.5 rounded-xl border border-slate-800 flex gap-1">
+                    <button onclick="cambiarSeccion('flota')" id="tabFlota" class="tab-btn active px-5 py-2.5 rounded-lg text-xs font-black flex items-center gap-2 tracking-wide uppercase">
+                        <i class="fa-solid fa-layer-group"></i> Nodos Activos
+                    </button>
+                    <button onclick="cambiarSeccion('registro')" id="tabRegistro" class="tab-btn px-5 py-2.5 rounded-lg text-xs font-bold flex items-center gap-2 tracking-wide uppercase">
+                        <i class="fa-solid fa-database"></i> Servidor Datos
+                    </button>
+                    <button onclick="cambiarSeccion('equipos')" id="tabEquipos" class="tab-btn px-5 py-2.5 rounded-lg text-xs font-bold flex items-center gap-2 tracking-wide uppercase">
+                        <i class="fa-solid fa-users-gear"></i> Config Nodos
+                    </button>
+                </div>
+
+                <div class="flex items-center gap-3 bg-slate-950/80 px-4 py-2.5 rounded-xl border border-slate-800">
+                    <i class="fa-solid fa-user-shield text-rose-500 text-xs"></i>
+                    <span id="userSessionLabel" class="text-rose-400 font-tech text-xs font-bold uppercase">Autenticando...</span>
+                    <button onclick="cerrarSesion()" class="text-slate-400 hover:text-white ml-2 text-xs" title="Cerrar Sesión">
+                        <i class="fa-solid fa-power-off"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-[1800px] mx-auto px-4 lg:px-10 mt-10 space-y-8">
+        
+        <!-- APARTADO 1: FLOTA ACTIVA -->
+        <div id="contenedorFlota" class="grid grid-cols-1 xl:grid-cols-4 gap-8">
+            <div id="seccionFormulario" class="xl:col-span-1">
+                <div class="glass-panel rounded-[2rem] p-8 shadow-2xl space-y-6">
+                    <div class="flex items-center gap-3 border-b border-slate-700/80 pb-4">
+                        <i class="fa-solid fa-satellite-dish text-rose-500 text-xl"></i>
+                        <h2 class="text-sm font-black text-white uppercase tracking-widest">Inyectar Unidad</h2>
+                    </div>
+                    
+                    <form id="formIngreso" class="space-y-4">
+                        <div>
+                            <label class="block text-[10px] text-slate-400 mb-1.5 uppercase tracking-widest font-bold">Esquema / Ruta</label>
+                            <select id="tipoProceso" onchange="alternarCamposProceso()" class="w-full px-4 py-3 rounded-xl border border-slate-700 bg-slate-900 text-white text-xs font-bold outline-none focus:border-rose-500">
+                                <option value="Encargo">Vehículo por Encargo</option>
+                                <option value="Stock">Stock / Inversión</option>
+                            </select>
+                        </div>
+
+                        <div id="camposEncargo" class="space-y-3 bg-slate-900/60 p-4 rounded-xl border border-slate-700/50">
+                            <p class="text-[10px] text-rose-500 uppercase tracking-widest font-black flex justify-between items-center">
+                                <span>ID Cliente</span> <i class="fa-solid fa-fingerprint"></i>
+                            </p>
+                            <input type="text" id="nombreCliente" placeholder="Nombre completo" class="w-full px-3 py-2.5 rounded-lg bg-slate-950 border border-slate-800 text-white text-xs outline-none focus:border-rose-500">
+                            <div class="flex items-center bg-slate-950 border border-slate-800 rounded-lg overflow-hidden focus-within:border-rose-500">
+                                <span class="pl-3 text-slate-500 text-xs font-black">$</span>
+                                <input type="number" id="abonoInicio" value="100" class="w-full px-3 py-2.5 bg-transparent text-white font-tech text-sm font-bold outline-none">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-[10px] text-slate-400 mb-1.5 uppercase font-bold">Base</label>
+                                <select id="plataforma" class="w-full px-3 py-3 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs font-bold outline-none">
+                                    <option value="Copart">Copart</option>
+                                    <option value="IAAI">IAAI</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-slate-400 mb-1.5 uppercase font-bold">Clase</label>
+                                <select id="categoria" class="w-full px-3 py-3 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs font-bold outline-none">
+                                    <option value="Sedán">Sedán</option>
+                                    <option value="Camioneta">Camioneta</option>
+                                    <option value="Pickup">Pickup</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] text-slate-400 mb-1.5 uppercase font-bold">VIN Code</label>
+                            <input type="text" id="vin" required placeholder="Escribir VIN..." class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-rose-400 font-tech uppercase text-xs font-bold outline-none focus:border-rose-500">
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] text-slate-400 mb-1.5 uppercase font-bold">Unidad Fila</label>
+                            <input type="text" id="vehiculo" required placeholder="Ej: 2023 Toyota Hilux" class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs font-bold outline-none focus:border-rose-500">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-[10px] text-slate-400 mb-1.5 uppercase font-bold">Inv. Base ($)</label>
+                                <input type="number" id="costo" required placeholder="0" class="w-full px-3 py-3 rounded-xl bg-slate-900 border border-slate-700 text-white font-tech text-right text-xs font-bold outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-slate-400 mb-1.5 uppercase font-bold">Target ($)</label>
+                                <input type="number" id="precioVenta" required placeholder="0" class="w-full px-3 py-3 rounded-xl bg-slate-900 border border-slate-700 text-white font-tech text-right text-xs font-bold outline-none">
+                            </div>
+                        </div>
+
+                        <button type="submit" class="w-full mt-2 bg-rose-600 hover:bg-rose-500 text-white font-black py-4 rounded-xl transition-all text-xs uppercase tracking-widest flex justify-center items-center gap-2 shadow-[0_0_20px_rgba(225,29,72,0.3)]">
+                            INICIALIZAR NODO
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div id="seccionDashboard" class="xl:col-span-3">
+                <div class="glass-panel rounded-[2rem] shadow-2xl overflow-hidden h-full">
+                    <div class="bg-slate-900/60 px-8 py-5 border-b border-slate-700/80 flex justify-between items-center">
+                        <h2 class="text-sm font-black text-white uppercase tracking-widest flex items-center gap-3">
+                            <i class="fa-solid fa-server text-rose-500"></i> SERVIDOR CENTRAL DE TAREAS
+                        </h2>
+                    </div>
+                    <div id="listaVehiculos" class="p-6 space-y-6 max-h-[85vh] overflow-y-auto">
+                        <div class="text-center text-slate-500 font-tech py-10">Cargando Nodos...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- APARTADO 2: REGISTRO -->
+        <div id="contenedorRegistro" class="glass-panel rounded-[2rem] shadow-2xl overflow-hidden" style="display: none;">
+            <div class="bg-slate-900/60 px-8 py-6 border-b border-slate-700/80">
+                <h2 class="text-sm font-black text-white uppercase tracking-widest flex items-center gap-3"><i class="fa-solid fa-database text-rose-500"></i> DATACENTER / HISTÓRICO</h2>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-950/80 text-slate-400 text-xs uppercase font-black tracking-widest border-b border-slate-700">
+                            <th class="p-5">Fecha Alta</th>
+                            <th class="p-5">Unidad</th>
+                            <th class="p-5">Ruta</th>
+                            <th class="p-5">Código Hash / VIN</th>
+                            <th class="p-5 text-center">Ejecución</th>
+                            <th class="p-5 text-right">Métricas</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaRegistroHistorico" class="text-sm divide-y divide-slate-700/50">
+                        <tr><td colspan="6" class="p-10 text-center text-slate-500 font-tech">Sin registros en servidor...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- APARTADO 3: EQUIPOS -->
+        <div id="contenedorEquipos" class="glass-panel p-10 rounded-[2rem] shadow-2xl" style="display: none;">
+            <div class="border-b border-slate-700/80 pb-6 mb-8">
+                <h2 class="text-lg font-black text-white uppercase tracking-widest flex items-center gap-3">
+                    <i class="fa-solid fa-network-wired text-rose-500"></i> Topología de Equipos
+                </h2>
+                <p class="text-xs text-slate-400 mt-2">Enrutamiento de alertas automatizadas de WhatsApp por rama operativa.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="bg-slate-900/50 p-5 rounded-xl border border-slate-700">
+                    <label class="block text-[10px] text-slate-400 mb-2 uppercase font-black tracking-widest"><i class="fa-solid fa-bullhorn text-rose-500 mr-2"></i> Comercial</label>
+                    <input type="text" id="equipoMarketing" value="Equipo Ventas / Redes" onchange="guardarEquipos()" class="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white text-sm font-bold outline-none focus:border-rose-500">
+                </div>
+                <div class="bg-slate-900/50 p-5 rounded-xl border border-slate-700">
+                    <label class="block text-[10px] text-slate-400 mb-2 uppercase font-black tracking-widest"><i class="fa-solid fa-money-bill-transfer text-rose-500 mr-2"></i> Finanzas / USA</label>
+                    <input type="text" id="equipoFinanzas" value="Lic. Carlos & Yesica" onchange="guardarEquipos()" class="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white text-sm font-bold outline-none focus:border-rose-500">
+                </div>
+                <div class="bg-slate-900/50 p-5 rounded-xl border border-slate-700">
+                    <label class="block text-[10px] text-slate-400 mb-2 uppercase font-black tracking-widest"><i class="fa-solid fa-ship text-rose-500 mr-2"></i> Logística</label>
+                    <input type="text" id="equipoNaviera" value="Mario Logística" onchange="guardarEquipos()" class="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white text-sm font-bold outline-none focus:border-rose-500">
+                </div>
+                <div class="bg-slate-900/50 p-5 rounded-xl border border-slate-700">
+                    <label class="block text-[10px] text-slate-400 mb-2 uppercase font-black tracking-widest"><i class="fa-solid fa-building-columns text-rose-500 mr-2"></i> Aduanas</label>
+                    <input type="text" id="equipoAduana" value="Gestor Aduanal SV" onchange="guardarEquipos()" class="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white text-sm font-bold outline-none focus:border-rose-500">
+                </div>
+                <div class="bg-slate-900/50 p-5 rounded-xl border border-slate-700">
+                    <label class="block text-[10px] text-slate-400 mb-2 uppercase font-black tracking-widest"><i class="fa-solid fa-scale-balanced text-rose-500 mr-2"></i> Legal</label>
+                    <input type="text" id="equipoLegal" value="Área Legal / Notaría" onchange="guardarEquipos()" class="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white text-sm font-bold outline-none focus:border-rose-500">
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- SCRIPT FIREBASE Y CONTROL DE SESIÓN -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, doc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js";
+        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+
+        const firebaseConfig = { apiKey: "AIzaSyAg4xJoxrfGahtrZeOpnfhCPe6zqNjkGxk", authDomain: "sistema-yesica.firebaseapp.com", projectId: "sistema-yesica", storageBucket: "sistema-yesica.firebasestorage.app", messagingSenderId: "108033064871", appId: "1:108033064871:web:ce001ff12edb9f44e51782" };
+        const app = initializeApp(firebaseConfig); 
+        const db = getFirestore(app); 
+        const storage = getStorage(app);
+        const auth = getAuth(app);
+
+        let rolActual = 'admin';
+
+        onAuthStateChanged(auth, (user) => {
+            const loginOverlay = document.getElementById('loginOverlay');
+            if (user) {
+                loginOverlay.style.display = 'none';
+                const email = user.email.toLowerCase();
+                if (email.includes('carlos') || email.includes('yesica')) {
+                    rolActual = 'finanzas';
+                } else if (email.includes('leslie') || email.includes('evelyn') || email.includes('cesar')) {
+                    rolActual = 'marketing';
+                } else {
+                    rolActual = 'admin';
+                }
+                document.getElementById('userSessionLabel').innerText = `${user.email} (${rolActual.toUpperCase()})`;
+                cargarDatosTabla();
+            } else {
+                loginOverlay.style.display = 'flex';
+            }
+        });
+
+        document.getElementById('formLogin').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value.trim();
+            const pass = document.getElementById('loginPassword').value.trim();
+            const errBox = document.getElementById('loginError');
+            errBox.classList.add('hidden');
+
+            try {
+                await signInWithEmailAndPassword(auth, email, pass);
+            } catch (error) {
+                errBox.innerText = "Error: " + error.code;
+                errBox.classList.remove('hidden');
+            }
+        });
+
+        window.cerrarSesion = function() { signOut(auth); };
+
+        window.cambiarSeccion = function(seccion) {
+            ['Flota', 'Registro', 'Equipos'].forEach(s => {
+                document.getElementById('contenedor' + s).style.display = 'none';
+                document.getElementById('tab' + s).classList.remove('active');
+            });
+            const map = { 'flota': 'Flota', 'registro': 'Registro', 'equipos': 'Equipos' };
+            const idKey = map[seccion];
+            document.getElementById('contenedor' + idKey).style.display = (seccion==='flota') ? 'grid' : 'block';
+            document.getElementById('tab' + idKey).classList.add('active');
+        };
+
+        window.guardarEquipos = function() {
+            const equipos = { marketing: document.getElementById('equipoMarketing').value, finanzas: document.getElementById('equipoFinanzas').value, naviera: document.getElementById('equipoNaviera').value, aduana: document.getElementById('equipoAduana').value, legal: document.getElementById('equipoLegal').value };
+            localStorage.setItem('yesica_equipos_v4', JSON.stringify(equipos));
+        };
+
+        function cargarEquipos() {
+            const e = JSON.parse(localStorage.getItem('yesica_equipos_v4') || '{}');
+            document.getElementById('equipoMarketing').value = e.marketing || "Equipo Ventas / Redes"; 
+            document.getElementById('equipoFinanzas').value = e.finanzas || "Lic. Carlos & Yesica"; 
+            document.getElementById('equipoNaviera').value = e.naviera || "Mario Logística"; 
+            document.getElementById('equipoAduana').value = e.aduana || "Gestor Aduanal SV"; 
+            document.getElementById('equipoLegal').value = e.legal || "Área Legal / Notaría";
+        }
+        cargarEquipos();
+
+        window.alternarCamposProceso = function() { document.getElementById('camposEncargo').style.display = document.getElementById('tipoProceso').value === 'Encargo' ? 'block' : 'none'; };
+
+        window.enviarAlertaWhatsApp = function(areaKey, tareaNombre, vehiculo, vin) {
+            const eq = JSON.parse(localStorage.getItem('yesica_equipos_v4') || '{}');
+            const mensaje = `*⚡ YESICA CENTRAL SYSTEM ⚡*\n⚠️ ALERTA DE EJECUCIÓN\n\nNODO: *${vehiculo}*\nCODE: *${vin}*\nRAMA: *${eq[areaKey]||'Asignado'}*\nACCIÓN PENDIENTE: *${tareaNombre}*\n\nFavor de ejecutar en sistema.`;
+            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(mensaje)}`, '_blank');
+        };
+
+        window.actualizarPrecioVenta = async function(id, nuevoPrecio) {
+            const valor = Number(nuevoPrecio);
+            if (!isNaN(valor)) await updateDoc(doc(db, "vehiculos", id), { precio_venta: valor });
+        };
+
+        function calcularProgreso(auto) {
+            const tareas = ['t_grupoWp', 't_opcionesCliente', 't_pagoUsa', 't_naviera', 't_publicidad', 't_estatusConstante', 't_llegadaPais', 't_promesaVenta', 't_aduana', 't_compraventa', 't_prorroga'];
+            let completadas = auto.comprobanteClienteUrl ? 1 : 0;
+            tareas.forEach(t => { if (auto[t]) completadas++; });
+            return Math.round((completadas / (tareas.length + 1)) * 100);
+        }
+
+        document.getElementById('formIngreso').addEventListener('submit', async (e) => {
+            e.preventDefault(); const btn = e.target.querySelector('button[type="submit"]');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> PROCESANDO...'; btn.disabled = true;
+            const esEncargo = document.getElementById('tipoProceso').value === 'Encargo';
+            const nuevoVehiculo = {
+                tipoProceso: document.getElementById('tipoProceso').value,
+                nombreCliente: esEncargo ? document.getElementById('nombreCliente').value : "Libre (Stock)",
+                abonoInicio: esEncargo ? Number(document.getElementById('abonoInicio').value) : 100,
+                plataforma: document.getElementById('plataforma').value, vin: document.getElementById('vin').value, vehiculo: document.getElementById('vehiculo').value, categoria: document.getElementById('categoria').value,
+                costo_subasta: Number(document.getElementById('costo').value), precio_venta: Number(document.getElementById('precioVenta').value), condicion_venta: "A reparar",
+                t_grupoWp: false, t_opcionesCliente: false, t_pagoUsa: false, t_naviera: false, t_publicidad: false, t_estatusConstante: false, t_llegadaPais: false, t_promesaVenta: false, t_aduana: false, comprobanteClienteUrl: "", t_compraventa: false, t_prorroga: false,
+                fecha_registro: new Date().toISOString()
+            };
+            try { await addDoc(collection(db, "vehiculos"), nuevoVehiculo); e.target.reset(); alternarCamposProceso(); } catch (err) { alert("Error de red."); } finally { btn.innerHTML = 'INICIALIZAR NODO'; btn.disabled = false; }
+        });
+
+        window.toggleTarea = async function(id, tarea, actual) {
+            let obj = {}; obj[tarea] = !actual;
+            await updateDoc(doc(db, "vehiculos", id), obj);
+        };
+
+        window.subirComprobanteCliente = async function(id) {
+            const input = document.getElementById(`file-${id}`);
+            if (!input || !input.files[0]) return;
+            try {
+                const snap = await uploadBytes(ref(storage, `clientes/${id}_${input.files[0].name}`), input.files[0]);
+                const url = await getDownloadURL(snap.ref);
+                await updateDoc(doc(db, "vehiculos", id), { comprobanteClienteUrl: url });
+            } catch (err) { alert("Error subiendo archivo."); }
+        };
+
+        let ultimoSnapshot = null;
+        function cargarDatosTabla() {
+            if (!ultimoSnapshot) return;
+            const lista = document.getElementById('listaVehiculos');
+            const tablaReg = document.getElementById('tablaRegistroHistorico');
+            lista.innerHTML = ""; tablaReg.innerHTML = "";
+
+            if (ultimoSnapshot.empty) {
+                lista.innerHTML = `<div class="text-center text-slate-500 font-tech py-10">0 Nodos detectados en el sector.</div>`;
+                return;
+            }
+
+            ultimoSnapshot.forEach((docSnap) => {
+                const auto = docSnap.data(); const id = docSnap.id; const porc = calcularProgreso(auto);
+
+                const fReg = document.createElement('tr'); fReg.className = "hover:bg-slate-800/40 transition-colors";
+                fReg.innerHTML = `<td class="p-4 text-xs text-slate-400 font-tech">${auto.fecha_registro ? auto.fecha_registro.split('T')[0] : 'N/A'}</td><td class="p-4 font-black text-white">${auto.vehiculo} <span class="text-[9px] text-slate-500 border border-slate-700 px-1 rounded ml-1">${auto.categoria}</span></td><td class="p-4 text-xs text-slate-300">${auto.tipoProceso === 'Encargo' ? '<i class="fa-solid fa-user text-rose-500 mr-1"></i> '+auto.nombreCliente : '<i class="fa-solid fa-box text-blue-400 mr-1"></i> Stock'}</td><td class="p-4 text-xs text-slate-400">${auto.plataforma} · <span class="text-rose-400 font-tech">${auto.vin}</span></td><td class="p-4"><div class="w-full bg-slate-800 rounded-full h-1.5"><div class="bg-rose-500 h-full rounded-full" style="width:${porc}%"></div></div></td><td class="p-4 text-right font-tech text-white text-xs">$${Number(auto.costo_subasta||0).toLocaleString()} <span class="text-slate-600">|</span> <span class="text-rose-500">$${Number(auto.precio_venta||0).toLocaleString()}</span></td>`;
+                tablaReg.appendChild(fReg);
+                
+                let badgeTipo = auto.tipoProceso === 'Encargo' 
+                    ? `<span class="bg-slate-900 text-slate-300 px-2 py-1 rounded border border-slate-700 text-[10px] font-black uppercase tracking-widest"><i class="fa-solid fa-fingerprint text-rose-500 mr-1"></i> ${auto.nombreCliente}</span>`
+                    : `<span class="bg-slate-900 text-slate-300 px-2 py-1 rounded border border-slate-700 text-[10px] font-black uppercase tracking-widest"><i class="fa-solid fa-box-open text-blue-500 mr-1"></i> Libre / Stock</span>`;
+
+                let mkBtn = (tarea, texto, icon, areaKey) => {
+                    let estado = auto[tarea];
+                    let btnClass = estado ? 'bg-slate-800/80 border-slate-600 text-white' : 'bg-slate-950/80 border-slate-800 text-slate-400 task-node';
+                    let ledClass = estado ? 'led-on' : 'led-off';
+                    let alertaHTML = (!estado && areaKey) ? `<button onclick="enviarAlertaWhatsApp('${areaKey}', '${texto}', '${auto.vehiculo}', '${auto.vin}')" class="absolute -right-2 -top-2 bg-slate-900 border border-slate-700 rounded-full w-6 h-6 flex items-center justify-center text-rose-500 hover:bg-rose-500 hover:text-white transition-colors shadow-lg z-10" title="Alertar"><i class="fa-solid fa-bolt text-[10px]"></i></button>` : '';
+                    
+                    return `<div class="relative">
+                        ${alertaHTML}
+                        <button onclick="toggleTarea('${id}', '${tarea}', ${estado})" class="w-full text-left px-4 py-3 border rounded-xl flex justify-between items-center ${btnClass} shadow-inner">
+                            <span class="text-[10px] font-black uppercase tracking-widest flex items-center gap-2"><i class="${icon} text-sm w-4 text-center"></i> ${texto}</span>
+                            <span class="led ${ledClass} flex-shrink-0"></span>
+                        </button>
+                    </div>`;
+                };
+
+                let inputVenta = `<div class="flex items-center justify-end font-tech text-sm font-bold"><span class="text-slate-500 mr-1">$</span><input type="number" value="${auto.precio_venta||0}" onchange="actualizarPrecioVenta('${id}', this.value)" class="w-24 bg-slate-900/50 py-1 px-2 rounded text-rose-400 text-right outline-none border border-slate-700 focus:border-rose-500 transition-colors"></div>`;
+                
+                let formRecibo = `<div class="bg-slate-900/80 border border-slate-700 p-3 rounded-xl shadow-inner mt-2">
+                    ${auto.comprobanteClienteUrl ? `<a href="${auto.comprobanteClienteUrl}" target="_blank" class="block text-center text-[10px] text-emerald-400 uppercase font-black tracking-widest mb-2"><i class="fa-solid fa-file-pdf text-lg block mb-1"></i> DOC OK</a>` : `<span class="block text-center text-[10px] text-slate-500 uppercase font-black tracking-widest mb-2"><i class="fa-solid fa-file-circle-xmark text-lg block mb-1"></i> Faltante</span>`}
+                    <div class="flex gap-1">
+                        <label for="file-${id}" class="cursor-pointer flex-1 bg-slate-800 hover:bg-slate-700 text-white text-[9px] font-bold uppercase text-center py-2 rounded-lg transition-colors border border-slate-700"><i class="fa-solid fa-paperclip"></i></label>
+                        <input type="file" id="file-${id}" accept="image/*,.pdf" class="hidden">
+                        <button onclick="subirComprobanteCliente('${id}')" class="flex-1 bg-rose-600 hover:bg-rose-500 text-white text-[9px] font-black uppercase text-center py-2 rounded-lg transition-colors border border-rose-700">Subir</button>
+                    </div>
+                </div>`;
+
+                const card = document.createElement('div');
+                card.className = "bg-slate-900/60 border border-slate-700/80 rounded-[2rem] p-6 relative overflow-hidden transition-all hover:border-rose-500/40 shadow-xl";
+                card.innerHTML += `<div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-rose-600 to-pink-500 opacity-80"></div>`;
+
+                let cardContent = `<div class="flex flex-col xl:flex-row gap-6">`;
+                cardContent += `
+                    <div class="xl:w-1/4 flex flex-col justify-between border-b xl:border-b-0 xl:border-r border-slate-700/50 pb-4 xl:pb-0 xl:pr-6">
+                        <div>
+                            <h3 class="text-xl font-black text-white uppercase leading-tight">${auto.vehiculo}</h3>
+                            <p class="font-tech text-rose-400 text-xs mt-1.5 font-bold tracking-widest">${auto.plataforma} · ${auto.vin}</p>
+                            <div class="mt-3">${badgeTipo}</div>
+                        </div>
+                        
+                        <div class="mt-6 bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner">
+                            <div class="flex justify-between items-end mb-2">
+                                <span class="text-[10px] text-slate-500 font-black uppercase tracking-widest">Ejecución</span>
+                                <span class="text-sm font-tech text-rose-500 font-bold">${porc}%</span>
+                            </div>
+                            <div class="w-full bg-slate-800 rounded-full h-1.5 mb-4">
+                                <div class="bg-rose-500 h-full rounded-full shadow-[0_0_8px_rgba(225,29,72,0.6)] transition-all duration-700" style="width: ${porc}%"></div>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-4 border-t border-slate-800 pt-3">
+                                <div>
+                                    <span class="text-[9px] text-slate-500 uppercase font-black tracking-widest block mb-1">Costo ($)</span>
+                                    <span class="font-tech text-white text-sm font-bold">${Number(auto.costo_subasta||0).toLocaleString()}</span>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-[9px] text-slate-500 uppercase font-black tracking-widest block mb-1">Venta ($)</span>
+                                    ${inputVenta}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                let gridCols = rolActual === 'admin' ? 'md:grid-cols-2 lg:grid-cols-4' : 'md:grid-cols-2';
+                cardContent += `<div class="xl:w-3/4 grid grid-cols-1 ${gridCols} gap-4">`;
+
+                if (rolActual === 'finanzas') {
+                    cardContent += `
+                        <div class="space-y-2"><h4 class="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-3"><i class="fa-solid fa-money-bill-transfer text-rose-500 mr-1"></i> F1: USA / Naviera</h4>${mkBtn('t_pagoUsa', 'Pago USA', 'fa-dollar-sign', 'finanzas')}</div>
+                        <div class="space-y-2"><h4 class="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-3"><i class="fa-solid fa-building-columns text-rose-500 mr-1"></i> F2: Aduanas</h4>${mkBtn('t_aduana', 'Liquidación', 'fa-file-invoice', 'aduana')}${formRecibo}</div>
+                    `;
+                } else if (rolActual === 'marketing') {
+                    cardContent += `
+                        <div class="space-y-2"><h4 class="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-3"><i class="fa-solid fa-comments text-rose-500 mr-1"></i> Comercial</h4>${mkBtn('t_grupoWp', 'Crear Wp', 'fa-whatsapp', 'marketing')}${mkBtn('t_opcionesCliente', 'Opciones', 'fa-magnifying-glass', 'marketing')}</div>
+                        <div class="space-y-2"><h4 class="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-3"><i class="fa-solid fa-bullhorn text-rose-500 mr-1"></i> Marketing</h4>${mkBtn('t_publicidad', 'Campaña Ads', 'fa-rectangle-ad', 'marketing')}${mkBtn('t_estatusConstante', 'Status Cliente', 'fa-bell', 'marketing')}</div>
+                    `;
+                } else {
+                    cardContent += `
+                        <div class="space-y-3"><h4 class="text-[10px] text-slate-500 font-black uppercase tracking-widest border-b border-slate-700/50 pb-2"><i class="fa-solid fa-comment-dots text-rose-500 mr-1"></i> Comercial</h4>${mkBtn('t_grupoWp', 'Grupo Wp', 'fa-whatsapp', 'marketing')}${mkBtn('t_opcionesCliente', 'Opciones', 'fa-search', 'marketing')}${mkBtn('t_estatusConstante', 'Status Upd', 'fa-bell', 'marketing')}</div>
+                        <div class="space-y-3"><h4 class="text-[10px] text-slate-500 font-black uppercase tracking-widest border-b border-slate-700/50 pb-2"><i class="fa-solid fa-ship text-rose-500 mr-1"></i> Logística</h4>${mkBtn('t_pagoUsa', 'Pago USA', 'fa-dollar-sign', 'finanzas')}${mkBtn('t_naviera', 'Naviera', 'fa-ship', 'naviera')}${mkBtn('t_publicidad', 'Ads', 'fa-bullhorn', 'marketing')}</div>
+                        <div class="space-y-3"><h4 class="text-[10px] text-slate-500 font-black uppercase tracking-widest border-b border-slate-700/50 pb-2"><i class="fa-solid fa-building-columns text-rose-500 mr-1"></i> Frontera</h4>${mkBtn('t_llegadaPais', 'Llegada SV', 'fa-map-pin', 'aduana')}${mkBtn('t_aduana', 'Impuestos', 'fa-file-invoice', 'aduana')}${mkBtn('t_promesaVenta', 'Promesa Vta', 'fa-file-signature', 'legal')}</div>
+                        <div class="space-y-3"><h4 class="text-[10px] text-slate-500 font-black uppercase tracking-widest border-b border-slate-700/50 pb-2"><i class="fa-solid fa-scale-balanced text-rose-500 mr-1"></i> Cierre Legal</h4>${mkBtn('t_compraventa', 'C-Venta', 'fa-file-contract', 'legal')}${mkBtn('t_prorroga', 'Prórroga', 'fa-clock-rotate-left', 'legal')}${formRecibo}</div>
+                    `;
+                }
+
+                cardContent += `</div></div>`;
+                card.innerHTML += cardContent;
+                lista.appendChild(card);
+            });
+        }
+        onSnapshot(collection(db, "vehiculos"), snap => { ultimoSnapshot = snap; cargarDatosTabla(); });
+    </script>
+</body>
+</html>
