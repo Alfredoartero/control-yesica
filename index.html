@@ -3,149 +3,627 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Importaciones Yesica - Centro de Control</title>
+    <title>Centro de Control Maestro - Importaciones Yesica</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Montserrat:wght@700;900&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700;800&display=swap');
-        :root { --bg-base: #030712; --accent: #e11d48; }
-        body { font-family: 'Inter', sans-serif; background-color: var(--bg-base); color: #f8fafc; background-image: linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px); background-size: 32px 32px; }
-        .font-tech { font-family: 'JetBrains Mono', monospace; }
-        .glass-panel { background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(24px); border: 1px solid rgba(255, 255, 255, 0.05); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
-        .led { width: 8px; height: 8px; border-radius: 50%; }
-        .led-off { background: #ef4444; box-shadow: 0 0 10px rgba(239,68,68,0.6); }
-        .led-on { background: #10b981; box-shadow: 0 0 10px rgba(16,185,129,0.6); }
+        :root {
+            --brand: #ff2e88;
+            --brand-dark: #c8106a;
+            --brand-soft: rgba(255,46,136,0.12);
+            --cyan: #22e2e2;
+            --bg: #070b14;
+            --panel: #0e1524;
+            --panel-hi: #131b2e;
+            --line: rgba(148,163,184,0.14);
+            --line-strong: rgba(148,163,184,0.28);
+            --txt: #e7ecf5;
+            --txt-soft: #8a95ab;
+        }
+        body {
+            font-family: 'Inter', sans-serif; color: var(--txt); margin: 0;
+            background-color: var(--bg);
+            background-image:
+                linear-gradient(rgba(34,226,226,0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(34,226,226,0.05) 1px, transparent 1px);
+            background-size: 34px 34px;
+        }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 9999px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--cyan); }
+        .glass-panel { background: linear-gradient(180deg, var(--panel-hi), var(--panel)); border: 1px solid var(--line); box-shadow: 0 20px 40px -20px rgba(0,0,0,0.6); }
+        .brand-logo { font-family: 'Montserrat', sans-serif; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        .font-display { font-family: 'Space Grotesk', sans-serif; }
+        .glow-dot { box-shadow: 0 0 10px 2px var(--cyan); animation: pulse 2.2s ease-in-out infinite; }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .35; } }
+        .input-style {
+            background: #0a0f1c; border: 1px solid var(--line-strong); color: var(--txt);
+            font-family: 'JetBrains Mono', monospace; transition: all 0.15s;
+        }
+        .input-style::placeholder { color: #4b5670; font-family: 'Inter', sans-serif; }
+        .input-style:focus { border-color: var(--cyan) !important; box-shadow: 0 0 0 3px rgba(34,226,226,0.18); }
+        .tab-btn {
+            font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.05em;
+            text-transform: uppercase; padding: 10px 16px; border-radius: 0.6rem; color: var(--txt-soft);
+            background: transparent; border: none; cursor: pointer; transition: all 0.15s; white-space: nowrap; min-width: 0;
+        }
+        @media (max-width: 480px) { .tab-btn { padding: 8px 6px; font-size: 9px; white-space: normal; } }
+        .tab-btn:hover { color: var(--txt); }
+        .tab-btn.active { background: linear-gradient(90deg, var(--brand), #ff5fa3); color: #05070c !important; box-shadow: 0 4px 16px -4px rgba(255,46,136,0.5); }
+        .btn-primary { background: linear-gradient(90deg, var(--brand), #ff5fa3); box-shadow: 0 0 0 1px rgba(255,46,136,0.4), 0 10px 30px -8px rgba(255,46,136,0.55); }
+        .btn-primary:hover { filter: brightness(1.08); }
+        .badge-pill { font-family: 'JetBrains Mono', monospace; }
+        .status-tag { display: inline-flex; align-items: center; gap: 6px; font-family: 'JetBrains Mono', monospace; }
+        .status-tag .ping { width: 6px; height: 6px; border-radius: 999px; background: var(--cyan); box-shadow: 0 0 8px 2px var(--cyan); }
+
+        /* Tarjetas y acentos creativos */
+        .hud-corner { position: absolute; width: 14px; height: 14px; border-color: var(--cyan); pointer-events: none; }
+        .hud-corner.tl { top: -1px; left: -1px; border-top: 2px solid; border-left: 2px solid; border-radius: 4px 0 0 0; }
+        .hud-corner.tr { top: -1px; right: -1px; border-top: 2px solid; border-right: 2px solid; border-radius: 0 4px 0 0; }
+        .hud-corner.bl { bottom: -1px; left: -1px; border-bottom: 2px solid; border-left: 2px solid; border-radius: 0 0 0 4px; }
+        .hud-corner.br { bottom: -1px; right: -1px; border-bottom: 2px solid; border-right: 2px solid; border-radius: 0 0 4px 0; }
+        .lift-card { transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease; }
+        .lift-card:hover { transform: translateY(-3px); border-color: rgba(34,226,226,0.35) !important; box-shadow: 0 16px 32px -12px rgba(34,226,226,0.15); }
+        .stat-card {
+            background: linear-gradient(180deg, var(--panel-hi), var(--panel)); border: 1px solid var(--line);
+            border-radius: 1rem; padding: 16px 18px; position: relative; overflow: hidden;
+        }
+        .stat-card::before {
+            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 2px;
+            background: linear-gradient(90deg, var(--brand), var(--cyan));
+        }
+        .stat-card .stat-icon { font-size: 22px; opacity: 0.9; }
+        .stat-card .stat-value { font-family: 'JetBrains Mono', monospace; font-weight: 700; }
+        .section-icon-badge {
+            width: 34px; height: 34px; border-radius: 0.65rem; display: flex; align-items: center; justify-content: center;
+            font-size: 16px; flex-shrink: 0; background: linear-gradient(135deg, rgba(255,46,136,0.18), rgba(34,226,226,0.12));
+            border: 1px solid var(--line-strong);
+        }
+        .team-card { position: relative; overflow: hidden; }
+        .team-card::after {
+            content: ""; position: absolute; top: -30%; right: -20%; width: 120px; height: 120px; border-radius: 999px;
+            background: radial-gradient(circle, rgba(34,226,226,0.10), transparent 70%); pointer-events: none;
+        }
     </style>
 </head>
-<body class="min-h-screen pb-20">
+<body class="min-h-screen selection:bg-pink-600 selection:text-white pb-16">
 
-    <!-- LOGIN -->
-    <div id="loginOverlay" class="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-4">
-        <div class="glass-panel w-full max-w-md p-8 rounded-[2rem] space-y-6 border border-slate-700/80 shadow-2xl">
-            <div class="text-center space-y-2">
-                <div class="w-16 h-16 bg-gradient-to-br from-rose-600 to-pink-700 rounded-2xl mx-auto flex items-center justify-center mb-4"><i class="fa-solid fa-fingerprint text-white text-2xl"></i></div>
-                <h2 class="text-xl font-black text-white uppercase tracking-wider">Acceso de Equipo</h2>
+    <!-- Barra Superior Ejecutiva -->
+    <nav class="glass-panel border-b border-slate-800 sticky top-0 z-50 px-4 lg:px-8 py-4 shadow-2xl">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-xl flex items-center justify-center font-mono font-bold text-[#05070c] text-lg relative flex-shrink-0" style="background:linear-gradient(135deg, var(--brand), var(--cyan));">
+                    Y
+                    <span class="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-[var(--cyan)] glow-dot"></span>
+                </div>
+                <div>
+                    <h1 class="brand-logo text-xl font-black text-white italic tracking-tight uppercase">
+                        Importaciones <span style="color:var(--brand);">Yesica</span>
+                    </h1>
+                    <p class="font-mono text-[10px] text-[var(--txt-soft)] font-bold uppercase tracking-wider">// Centro de Operaciones Global</p>
+                </div>
             </div>
-            <form id="formLogin" class="space-y-4">
-                <input type="email" id="loginEmail" required placeholder="correo@yesica.com" class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs font-bold outline-none">
-                <input type="password" id="loginPassword" required placeholder="Contraseña" class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs font-bold outline-none">
-                <button type="submit" class="w-full bg-rose-600 text-white font-black py-4 rounded-xl text-xs uppercase">INICIAR SESIÓN</button>
-                <p id="loginError" class="text-rose-500 text-xs text-center font-tech hidden"></p>
-            </form>
-        </div>
-    </div>
+            
+            <div class="flex flex-wrap items-center gap-3">
+                <!-- Pestañas de Navegación Más Grandes -->
+                <div class="p-1.5 rounded-2xl border flex gap-1.5" style="background:#0a0f1c; border-color:var(--line);">
+                    <button onclick="cambiarSeccion('flota')" id="tabFlota" class="tab-btn active">🚀 Flota Activa</button>
+                    <button onclick="cambiarSeccion('registro')" id="tabRegistro" class="tab-btn">📂 Registro Histórico</button>
+                    <button onclick="cambiarSeccion('equipos')" id="tabEquipos" class="tab-btn">👥 Asignar Equipos</button>
+                </div>
 
-    <!-- NAVBAR -->
-    <nav class="glass-panel sticky top-0 z-40 px-6 py-4 border-b border-slate-800/80">
-        <div class="max-w-[1800px] mx-auto flex justify-between items-center">
-            <h1 class="text-xl font-black text-white uppercase italic">Importaciones <span class="text-rose-500">Yesica</span></h1>
-            <div class="flex items-center gap-4 bg-slate-950/80 px-4 py-2 rounded-xl border border-slate-800">
-                <div class="flex flex-col"><span id="userNameLabel" class="text-white font-black text-xs uppercase">---</span></div>
-                <button onclick="cerrarSesion()" class="text-slate-400 hover:text-white text-xs ml-3 pl-3 border-l border-slate-700"><i class="fa-solid fa-right-from-bracket"></i></button>
+                <div class="flex items-center gap-2 px-3.5 py-2 rounded-2xl border" style="background:#0a0f1c; border-color:var(--line);">
+                    <span class="font-mono text-[10px] text-[var(--txt-soft)] uppercase font-extrabold">Vista:</span>
+                    <select id="selectorRol" onchange="cambiarRol()" class="input-style font-extrabold text-xs px-3 py-1.5 rounded-xl outline-none cursor-pointer" style="color:var(--cyan);">
+                        <option value="admin">Administrador (Total)</option>
+                        <option value="finanzas">Finanzas (Pagos/Aduana)</option>
+                        <option value="marketing">Marketing (Opciones/Redes)</option>
+                    </select>
+                </div>
             </div>
         </div>
     </nav>
 
-    <main class="max-w-[1800px] mx-auto px-4 mt-10 space-y-8">
-        <div id="contenedorFlota" class="grid grid-cols-1 xl:grid-cols-4 gap-8">
-            <div class="xl:col-span-1">
-                <div class="glass-panel rounded-[2rem] p-8 shadow-2xl space-y-6">
-                    <h2 class="text-sm font-black text-white uppercase border-b border-slate-700 pb-4">Inyectar Unidad</h2>
+    <main class="max-w-7xl mx-auto px-4 lg:px-8 mt-8 space-y-8">
+        
+        <!-- APARTADO 1: FLOTA ACTIVA -->
+        <!-- RESUMEN RÁPIDO -->
+        <div id="resumenRapido" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="stat-card">
+                <div class="flex items-center justify-between">
+                    <span class="stat-icon">🚗</span>
+                    <span id="statTotal" class="stat-value text-2xl text-white">0</span>
+                </div>
+                <p class="font-mono text-[9px] font-bold uppercase tracking-wider mt-2" style="color:var(--txt-soft);">Unidades Activas</p>
+            </div>
+            <div class="stat-card">
+                <div class="flex items-center justify-between">
+                    <span class="stat-icon">🤝</span>
+                    <span id="statEncargo" class="stat-value text-2xl" style="color:var(--cyan);">0</span>
+                </div>
+                <p class="font-mono text-[9px] font-bold uppercase tracking-wider mt-2" style="color:var(--txt-soft);">Por Encargo</p>
+            </div>
+            <div class="stat-card">
+                <div class="flex items-center justify-between">
+                    <span class="stat-icon">📦</span>
+                    <span id="statStock" class="stat-value text-2xl text-emerald-400">0</span>
+                </div>
+                <p class="font-mono text-[9px] font-bold uppercase tracking-wider mt-2" style="color:var(--txt-soft);">En Stock</p>
+            </div>
+            <div class="stat-card">
+                <div class="flex items-center justify-between">
+                    <span class="stat-icon">⚡</span>
+                    <span id="statProgreso" class="stat-value text-2xl" style="color:var(--brand);">0%</span>
+                </div>
+                <p class="font-mono text-[9px] font-bold uppercase tracking-wider mt-2" style="color:var(--txt-soft);">Progreso Promedio</p>
+            </div>
+        </div>
+
+        <div id="contenedorFlota" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Formulario de Ingreso -->
+            <div id="seccionFormulario" class="lg:col-span-1">
+                <div class="glass-panel lift-card rounded-3xl p-6 md:p-8 shadow-2xl space-y-5 relative" style="border-top:2px solid var(--cyan);">
+                    <div class="hud-corner tl"></div>
+                    <div class="hud-corner tr"></div>
+                    <div class="flex items-center gap-3 border-b pb-4" style="border-color:var(--line);">
+                        <div class="section-icon-badge">🆕</div>
+                        <div>
+                            <h2 class="font-mono text-xs font-black text-white uppercase tracking-wider">
+                                Ingresar Nueva Unidad
+                            </h2>
+                            <p class="font-mono text-[9px] font-bold uppercase tracking-wide mt-0.5" style="color:var(--txt-soft);">// Suma un vehículo a la flota</p>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block font-mono text-[10px] font-bold text-[var(--txt-soft)] mb-1.5 uppercase tracking-wider">Tipo de Proceso</label>
+                        <select id="tipoProceso" onchange="alternarCamposProceso()" class="input-style w-full px-4 py-3 rounded-2xl cursor-pointer text-xs font-bold">
+                            <option value="Encargo">Vehículo por Encargo</option>
+                            <option value="Stock">Vehículo para Stock (Sin Encargo)</option>
+                        </select>
+                    </div>
+
                     <form id="formIngreso" class="space-y-4">
-                        <input type="text" id="vehiculo" required placeholder="Ej: Toyota Hilux" class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs outline-none">
-                        <button type="submit" class="w-full bg-rose-600 text-white font-black py-4 rounded-xl text-xs uppercase">AGREGAR NODO</button>
+                        <div id="camposEncargo" class="space-y-3 p-4 rounded-2xl" style="background:rgba(34,226,226,0.05); border:1px solid var(--line);">
+                            <p class="font-mono text-[10px] font-black uppercase tracking-wider" style="color:var(--cyan);">Detalles del Encargo</p>
+                            <div>
+                                <label class="block font-mono text-[9px] font-bold text-[var(--txt-soft)] mb-1 uppercase tracking-wide">Nombre del Cliente</label>
+                                <input type="text" id="nombreCliente" placeholder="Ej. Juan Pérez" class="input-style w-full px-3.5 py-2.5 rounded-xl text-xs font-semibold">
+                            </div>
+                            <div>
+                                <label class="block font-mono text-[9px] font-bold text-[var(--txt-soft)] mb-1 uppercase tracking-wide">Cancelación Inicio ($)</label>
+                                <input type="number" id="abonoInicio" value="100" class="input-style w-full px-3.5 py-2.5 rounded-xl font-bold text-xs">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block font-mono text-[10px] font-bold text-[var(--txt-soft)] mb-1.5 uppercase tracking-wider">Plataforma</label>
+                            <select id="plataforma" class="input-style w-full px-4 py-3 rounded-2xl text-xs font-bold">
+                                <option value="Copart">Copart</option>
+                                <option value="IAAI">IAAI</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block font-mono text-[10px] font-bold text-[var(--txt-soft)] mb-1.5 uppercase tracking-wider">Lote / VIN</label>
+                            <input type="text" id="vin" required placeholder="Ej. 1C4PJLCB..." class="input-style w-full px-4 py-3 rounded-2xl uppercase text-xs font-bold">
+                        </div>
+
+                        <div>
+                            <label class="block font-mono text-[10px] font-bold text-[var(--txt-soft)] mb-1.5 uppercase tracking-wider">Vehículo (Año Marca Modelo)</label>
+                            <input type="text" id="vehiculo" required placeholder="2023 Toyota Hilux" class="input-style w-full px-4 py-3 rounded-2xl text-xs font-bold">
+                        </div>
+
+                        <div>
+                            <label class="block font-mono text-[10px] font-bold text-[var(--txt-soft)] mb-1.5 uppercase tracking-wider">Categoría</label>
+                            <select id="categoria" class="input-style w-full px-4 py-3 rounded-2xl text-xs font-bold">
+                                <option value="Sedán">Sedán</option>
+                                <option value="Camioneta">Camioneta</option>
+                                <option value="Pickup">Pickup</option>
+                                <option value="Moto">Moto</option>
+                            </select>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block font-mono text-[9px] font-bold text-[var(--txt-soft)] mb-1 uppercase tracking-wide">Costo Subasta ($)</label>
+                                <input type="number" id="costo" required placeholder="0.00" class="input-style w-full px-3.5 py-2.5 rounded-xl font-bold text-right text-xs">
+                            </div>
+                            <div>
+                                <label class="block font-mono text-[9px] font-bold text-[var(--txt-soft)] mb-1 uppercase tracking-wide">Venta Proyectada ($)</label>
+                                <input type="number" id="precioVenta" required placeholder="0.00" class="input-style w-full px-3.5 py-2.5 rounded-xl font-bold text-right text-xs">
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block font-mono text-[10px] font-bold text-[var(--txt-soft)] mb-1.5 uppercase tracking-wider">Condición</label>
+                            <input type="text" id="condicion" value="A reparar" readonly class="w-full px-4 py-3 rounded-2xl font-black uppercase text-center text-xs cursor-not-allowed" style="background:#0a0f1c; border:1px solid var(--line); color:var(--txt-soft);">
+                        </div>
+
+                        <button type="submit" 
+                                class="btn-primary w-full text-[#05070c] font-black py-3.5 px-4 rounded-2xl transition-all uppercase tracking-wider text-xs flex justify-center items-center gap-2 mt-3 font-mono">
+                            <span>Registrar Unidad</span>
+                        </button>
                     </form>
                 </div>
             </div>
-            <div class="xl:col-span-3">
-                <div class="glass-panel rounded-[2rem] p-6 shadow-2xl min-h-[500px]">
-                    <div id="listaVehiculos" class="space-y-4"></div>
+
+            <!-- Tabla de Tareas y Progreso -->
+            <div id="seccionDashboard" class="lg:col-span-2 space-y-6">
+                <div class="glass-panel lift-card rounded-3xl shadow-2xl overflow-hidden relative" style="border-top:2px solid var(--brand);">
+                    <div style="background:#0a0f1c; border-color:var(--line);" class="px-6 py-4.5 border-b flex justify-between items-center gap-3">
+                        <div class="flex items-center gap-3">
+                            <div class="section-icon-badge">📊</div>
+                            <div>
+                                <h2 id="tituloTabla" class="font-mono text-xs font-black text-white uppercase tracking-wide">
+                                    Flota Activa y Progreso Operativo
+                                </h2>
+                                <p class="font-mono text-[9px] font-bold uppercase tracking-wide mt-0.5" style="color:var(--txt-soft);">// En tiempo real</p>
+                            </div>
+                        </div>
+                        <span class="status-tag px-2.5 py-1 rounded-lg text-[9px] font-black uppercase" style="background:rgba(34,226,226,0.1); color:var(--cyan); border:1px solid rgba(34,226,226,0.35);"><span class="ping"></span> Live</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr id="cabeceraTabla" style="background:#070b14; border-color:var(--line);" class="font-mono text-[var(--txt-soft)] text-[10px] uppercase font-black border-b">
+                                    <!-- Dinámico -->
+                                </tr>
+                            </thead>
+                            <tbody id="tablaVehiculos" class="text-xs divide-y divide-slate-800/60">
+                                <tr><td colspan="7" class="p-14 text-center font-mono text-[var(--txt-soft)] font-bold"><span class="text-2xl block mb-2">🚗💨</span>Cargando flota activa...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
+
+        <!-- APARTADO 2: REGISTRO HISTÓRICO GENERAL -->
+        <div id="contenedorRegistro" class="glass-panel lift-card rounded-3xl shadow-2xl overflow-hidden" style="display: none; border-top:2px solid var(--cyan);">
+            <div style="background:#0a0f1c; border-color:var(--line);" class="px-6 py-4.5 border-b flex items-center gap-3">
+                <div class="section-icon-badge">📂</div>
+                <div>
+                    <h2 class="font-mono text-xs font-black text-white uppercase tracking-wide">
+                        Registro Histórico General de Vehículos
+                    </h2>
+                    <p class="font-mono text-[9px] font-bold uppercase tracking-wide mt-0.5" style="color:var(--txt-soft);">// Toda la trazabilidad, en un solo lugar</p>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr style="background:#070b14; border-color:var(--line);" class="font-mono text-[var(--txt-soft)] text-[10px] uppercase font-black border-b">
+                            <th class="p-4">Fecha Registro</th>
+                            <th class="p-4">Vehículo / Tipo</th>
+                            <th class="p-4">Cliente / Stock</th>
+                            <th class="p-4">Plataforma & VIN</th>
+                            <th class="p-4 text-center">Progreso</th>
+                            <th class="p-4 text-right">Costo / Venta</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaRegistroHistorico" class="text-xs divide-y divide-slate-800/60">
+                        <tr><td colspan="6" class="p-14 text-center font-mono text-[var(--txt-soft)] font-bold"><span class="text-2xl block mb-2">📂</span>Cargando registro histórico...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- APARTADO 3: ASIGNACIÓN DE EQUIPOS -->
+        <div id="contenedorEquipos" class="glass-panel p-8 rounded-3xl shadow-2xl space-y-6" style="display: none; border-top:2px solid var(--brand);">
+            <div class="flex items-center gap-3 border-b pb-4" style="border-color:var(--line);">
+                <div class="section-icon-badge">👥</div>
+                <div>
+                    <h2 class="font-mono text-xs font-black text-white uppercase tracking-wide">
+                        Asignación de Equipos y Múltiples Responsables
+                    </h2>
+                    <p class="text-xs mt-1" style="color:var(--txt-soft);">Designa a los encargados de cada área. Aplica de forma general para toda la flota.</p>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                <div class="team-card lift-card panel-box p-5 rounded-2xl space-y-2.5" style="background:#0a0f1c; border:1px solid var(--line);">
+                    <label class="flex items-center gap-2 font-mono text-[10px] font-black uppercase" style="color:var(--cyan);"><span class="text-base">📢</span> 1. Opciones Diarias & Grupo Wp</label>
+                    <input type="text" id="equipoMarketing" value="Equipo Ventas / Redes" onchange="guardarEquipos()" class="input-style w-full px-3.5 py-2.5 rounded-xl text-xs font-bold">
+                </div>
+                <div class="team-card lift-card panel-box p-5 rounded-2xl space-y-2.5" style="background:#0a0f1c; border:1px solid var(--line);">
+                    <label class="flex items-center gap-2 font-mono text-[10px] font-black uppercase" style="color:var(--cyan);"><span class="text-base">💳</span> 2. Pagos USA & Storage</label>
+                    <input type="text" id="equipoFinanzas" value="Lic. Carlos & Yesica" onchange="guardarEquipos()" class="input-style w-full px-3.5 py-2.5 rounded-xl text-xs font-bold">
+                </div>
+                <div class="team-card lift-card panel-box p-5 rounded-2xl space-y-2.5" style="background:#0a0f1c; border:1px solid var(--line);">
+                    <label class="flex items-center gap-2 font-mono text-[10px] font-black uppercase" style="color:var(--cyan);"><span class="text-base">🚢</span> 3. Naviera & Logística</label>
+                    <input type="text" id="equipoNaviera" value="Mario Logística" onchange="guardarEquipos()" class="input-style w-full px-3.5 py-2.5 rounded-xl text-xs font-bold">
+                </div>
+                <div class="team-card lift-card panel-box p-5 rounded-2xl space-y-2.5" style="background:#0a0f1c; border:1px solid var(--line);">
+                    <label class="flex items-center gap-2 font-mono text-[10px] font-black uppercase" style="color:var(--cyan);"><span class="text-base">🛃</span> 4. Llegada al País & Aduana</label>
+                    <input type="text" id="equipoAduana" value="Gestor Aduanal SV" onchange="guardarEquipos()" class="input-style w-full px-3.5 py-2.5 rounded-xl text-xs font-bold">
+                </div>
+                <div class="team-card lift-card panel-box p-5 rounded-2xl space-y-2.5" style="background:#0a0f1c; border:1px solid var(--line);">
+                    <label class="flex items-center gap-2 font-mono text-[10px] font-black uppercase" style="color:var(--cyan);"><span class="text-base">⚖️</span> 5. Compraventa, Promesa y Prórrogas</label>
+                    <input type="text" id="equipoLegal" value="Área Legal / Notaría" onchange="guardarEquipos()" class="input-style w-full px-3.5 py-2.5 rounded-xl text-xs font-bold">
+                </div>
+            </div>
+        </div>
+
     </main>
 
+    <!-- SCRIPT TÉCNICO AVANZADO -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getFirestore, collection, addDoc, doc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js";
 
-        const firebaseConfig = { apiKey: "AIzaSyAg4xJoxrfGahtrZeOpnfhCPe6zqNjkGxk", authDomain: "sistema-yesica.firebaseapp.com", projectId: "sistema-yesica", storageBucket: "sistema-yesica.firebasestorage.app", messagingSenderId: "108033064871", appId: "1:108033064871:web:ce001ff12edb9f44e51782" };
-        const app = initializeApp(firebaseConfig); 
-        const db = getFirestore(app); 
-
-        const equipoYesica = {
-            "alfre@yesica.com": { pass: "yesica2026", nombre: "Alfredo", rol: "admin" },
-            "carlos@yesica.com": { pass: "yesica2026", nombre: "Carlos", rol: "finanzas" },
-            "yesica@yesica.com": { pass: "yesica2026", nombre: "Yesica", rol: "finanzas" }
+        const firebaseConfig = {
+            apiKey: "AIzaSyAg4xJoxrfGahtrZeOpnfhCPe6zqNjkGxk",
+            authDomain: "sistema-yesica.firebaseapp.com",
+            projectId: "sistema-yesica",
+            storageBucket: "sistema-yesica.firebasestorage.app",
+            messagingSenderId: "108033064871",
+            appId: "1:108033064871:web:ce001ff12edb9f44e51782"
         };
 
-        let perfilActual = JSON.parse(localStorage.getItem('yesica_perfil')) || null;
-        if (perfilActual) { document.getElementById('loginOverlay').style.display = 'none'; document.getElementById('userNameLabel').innerText = perfilActual.nombre; }
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const storage = getStorage(app);
 
-        document.getElementById('formLogin').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const email = document.getElementById('loginEmail').value.trim().toLowerCase();
-            const pass = document.getElementById('loginPassword').value.trim();
-            if (equipoYesica[email] && equipoYesica[email].pass === pass) {
-                localStorage.setItem('yesica_perfil', JSON.stringify(equipoYesica[email]));
-                location.reload();
-            } else { document.getElementById('loginError').classList.remove('hidden'); document.getElementById('loginError').innerText = "Datos incorrectos"; }
-        });
-        window.cerrarSesion = function() { localStorage.removeItem('yesica_perfil'); location.reload(); };
+        window.cambiarSeccion = function(seccion) {
+            const cFlota = document.getElementById('contenedorFlota');
+            const cReg = document.getElementById('contenedorRegistro');
+            const cEq = document.getElementById('contenedorEquipos');
+            
+            const bFlota = document.getElementById('tabFlota');
+            const bReg = document.getElementById('tabRegistro');
+            const bEq = document.getElementById('tabEquipos');
 
-        // --- SISTEMA DE NOTIFICACIONES PUSH AL TELÉFONO ---
-        async function enviarPushAlTelefono(rolDestino, titulo, mensaje) {
-            // Canales privados para Importaciones Yesica
-            const canales = {
-                'admin': 'yesica_admin_sv_2026',
-                'finanzas': 'yesica_finanzas_sv_2026',
-                'marketing': 'yesica_marketing_sv_2026'
+            cFlota.style.display = 'none'; cReg.style.display = 'none'; cEq.style.display = 'none';
+            bFlota.classList.remove('active'); bReg.classList.remove('active'); bEq.classList.remove('active');
+
+            if (seccion === 'flota') {
+                cFlota.style.display = 'grid'; bFlota.classList.add('active');
+            } else if (seccion === 'registro') {
+                cReg.style.display = 'block'; bReg.classList.add('active');
+            } else if (seccion === 'equipos') {
+                cEq.style.display = 'block'; bEq.classList.add('active');
+            }
+        };
+
+        window.guardarEquipos = function() {
+            const equipos = {
+                marketing: document.getElementById('equipoMarketing').value,
+                finanzas: document.getElementById('equipoFinanzas').value,
+                naviera: document.getElementById('equipoNaviera').value,
+                aduana: document.getElementById('equipoAduana').value,
+                legal: document.getElementById('equipoLegal').value
             };
-            const canal = canales[rolDestino];
-            if(!canal) return;
-
-            try {
-                await fetch(`https://ntfy.sh/${canal}`, {
-                    method: 'POST',
-                    body: mensaje,
-                    headers: { 'Title': titulo, 'Tags': 'rotating_light,car', 'Priority': 'high' }
-                });
-            } catch(e) { console.log('Error enviando push', e); }
-        }
-
-        window.toggleTarea = async function(id, tareaId, estadoActual, vehiculo, nombreTarea) {
-            let nuevoEstado = !estadoActual;
-            await updateDoc(doc(db, "vehiculos", id), { [tareaId]: nuevoEstado });
-
-            let destinatario = 'admin';
-            if (tareaId.includes('pago')) destinatario = 'finanzas';
-            if (tareaId.includes('grupo')) destinatario = 'marketing';
-
-            // Dispara el Push al celular
-            enviarPushAlTelefono(destinatario, "⚠️ Importaciones Yesica", `El vehículo ${vehiculo} requiere atención. ${nombreTarea} está ${nuevoEstado ? 'COMPLETADO' : 'PENDIENTE'} (Por: ${perfilActual.nombre})`);
+            localStorage.setItem('yesica_equipos', JSON.stringify(equipos));
         };
+
+        function cargarEquipos() {
+            const guardados = localStorage.getItem('yesica_equipos');
+            if (guardados) {
+                const e = JSON.parse(guardados);
+                document.getElementById('equipoMarketing').value = e.marketing || "Equipo Ventas / Redes";
+                document.getElementById('equipoFinanzas').value = e.finanzas || "Lic. Carlos & Yesica";
+                document.getElementById('equipoNaviera').value = e.naviera || "Mario Logística";
+                document.getElementById('equipoAduana').value = e.aduana || "Gestor Aduanal SV";
+                document.getElementById('equipoLegal').value = e.legal || "Área Legal / Notaría";
+            }
+        }
+        cargarEquipos();
+
+        window.alternarCamposProceso = function() {
+            const tipo = document.getElementById('tipoProceso').value;
+            document.getElementById('camposEncargo').style.display = tipo === 'Encargo' ? 'block' : 'none';
+        };
+
+        window.cambiarRol = function() { cargarDatosTabla(); };
+
+        window.enviarAlertaWhatsApp = function(areaKey, tareaNombre, vehiculo, vin) {
+            const eq = JSON.parse(localStorage.getItem('yesica_equipos')) || {};
+            let responsables = eq[areaKey] || "Equipo Asignado";
+            const mensaje = `🚨 *URGENTE - IMPORTACIONES YESICA* 🚨\nEstimados/as (*${responsables}*), tarea pendiente: *${tareaNombre}* para el vehículo *${vehiculo}* (VIN: ${vin}). ¡Por favor actualizar sistema!`;
+            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(mensaje)}`, '_blank');
+        };
+
+        window.actualizarPrecioVenta = async function(id, nuevoPrecio) {
+            const valor = Number(nuevoPrecio);
+            if (isNaN(valor)) return;
+            await updateDoc(doc(db, "vehiculos", id), { precio_venta: valor });
+        };
+
+        function calcularProgreso(auto) {
+            const tareas = ['t_grupoWp', 't_opcionesCliente', 't_pagoUsa', 't_naviera', 't_publicidad', 't_estatusConstante', 't_llegadaPais', 't_promesaVenta', 't_aduana', 't_compraventa', 't_prorroga'];
+            let completadas = 0;
+            tareas.forEach(t => { if (auto[t]) completadas++; });
+            if (auto.comprobanteClienteUrl) completadas++;
+            return Math.round((completadas / (tareas.length + 1)) * 100);
+        }
 
         document.getElementById('formIngreso').addEventListener('submit', async (e) => {
             e.preventDefault();
-            await addDoc(collection(db, "vehiculos"), { vehiculo: document.getElementById('vehiculo').value, t_pagoUsa: false, t_naviera: false, t_grupoWp: false });
-            enviarPushAlTelefono('finanzas', "🚗 Nuevo Ingreso", `Se inyectó un nuevo vehículo. Pago USA pendiente.`);
-            e.target.reset();
+            const btn = e.target.querySelector('button[type="submit"]');
+            btn.innerHTML = 'Guardando...'; btn.disabled = true;
+
+            const tipoProceso = document.getElementById('tipoProceso').value;
+            const nuevoVehiculo = {
+                tipoProceso: tipoProceso,
+                nombreCliente: tipoProceso === 'Encargo' ? document.getElementById('nombreCliente').value : "Stock (Sin Cliente)",
+                abonoInicio: tipoProceso === 'Encargo' ? Number(document.getElementById('abonoInicio').value) : 100,
+                plataforma: document.getElementById('plataforma').value,
+                vin: document.getElementById('vin').value,
+                vehiculo: document.getElementById('vehiculo').value,
+                categoria: document.getElementById('categoria').value,
+                costo_subasta: Number(document.getElementById('costo').value),
+                precio_venta: Number(document.getElementById('precioVenta').value),
+                condicion_venta: "A reparar",
+                t_grupoWp: false, t_opcionesCliente: false, t_pagoUsa: false, t_naviera: false,
+                t_publicidad: false, t_estatusConstante: false, t_llegadaPais: false,
+                t_promesaVenta: false, t_aduana: false, comprobanteClienteUrl: "",
+                t_compraventa: false, t_prorroga: false,
+                fecha_registro: new Date().toISOString()
+            };
+
+            try {
+                await addDoc(collection(db, "vehiculos"), nuevoVehiculo);
+                alert("¡Éxito! Unidad registrada.");
+                e.target.reset();
+                document.getElementById('tipoProceso').value = "Encargo";
+                alternarCamposProceso();
+            } catch (err) { console.error(err); alert("Error al guardar."); }
+            finally { btn.innerHTML = 'Registrar Unidad'; btn.disabled = false; }
         });
 
-        let snapshotGlobal = null;
+        window.toggleTarea = async function(id, tarea, actual) {
+            let obj = {}; obj[tarea] = !actual;
+            await updateDoc(doc(db, "vehiculos", id), obj);
+        };
+
+        window.subirComprobanteCliente = async function(id) {
+            const input = document.getElementById(`file-cliente-${id}`);
+            if (!input.files[0]) { alert("Selecciona el archivo."); return; }
+            alert("Subiendo...");
+            try {
+                const snap = await uploadBytes(ref(storage, `clientes/${id}_${input.files[0].name}`), input.files[0]);
+                const url = await getDownloadURL(snap.ref);
+                await updateDoc(doc(db, "vehiculos", id), { comprobanteClienteUrl: url });
+                alert("¡Recibo subido con éxito!");
+            } catch (err) { console.error(err); alert("Error al subir."); }
+        };
+
+        let ultimoSnapshot = null;
+        const tabla = document.getElementById('tablaVehiculos');
+        const tablaReg = document.getElementById('tablaRegistroHistorico');
+        const cabecera = document.getElementById('cabeceraTabla');
+
         function cargarDatosTabla() {
-            if (!snapshotGlobal) return;
-            const lista = document.getElementById('listaVehiculos');
-            lista.innerHTML = "";
-            snapshotGlobal.forEach((docSnap) => {
-                const auto = docSnap.data(); const id = docSnap.id;
-                let btnTarea = (idKey, txt, icono) => `<button onclick="toggleTarea('${id}', '${idKey}', ${auto[idKey]}, '${auto.vehiculo}', '${txt}')" class="px-3 py-2 border rounded-xl flex justify-between items-center ${auto[idKey] ? 'bg-slate-800' : 'bg-slate-950 text-slate-400'}"><span class="text-[10px] font-black uppercase"><i class="${icono} mr-1"></i> ${txt}</span><div class="led ${auto[idKey] ? 'led-on' : 'led-off'}"></div></button>`;
-                
-                lista.innerHTML += `<div class="bg-slate-900/60 border border-slate-700/80 rounded-2xl p-5 mb-4"><h3 class="font-black text-white uppercase mb-4">${auto.vehiculo}</h3>
-                    <div class="grid grid-cols-3 gap-3">${btnTarea('t_pagoUsa', 'Pago USA', 'fa-dollar-sign')} ${btnTarea('t_naviera', 'Naviera', 'fa-ship')} ${btnTarea('t_grupoWp', 'Wp Grupo', 'fa-whatsapp')}</div></div>`;
+            if (!ultimoSnapshot) return;
+            tabla.innerHTML = ""; tablaReg.innerHTML = "";
+            const rolActual = document.getElementById('selectorRol').value;
+            const eq = JSON.parse(localStorage.getItem('yesica_equipos')) || {};
+
+            // Resumen rápido (solo lectura visual, usa los datos ya cargados)
+            let totalUnidades = 0, totalEncargo = 0, totalStock = 0, sumaProgreso = 0;
+            ultimoSnapshot.forEach((docSnap) => {
+                const a = docSnap.data();
+                totalUnidades++;
+                if (a.tipoProceso === 'Encargo') totalEncargo++; else totalStock++;
+                sumaProgreso += calcularProgreso(a);
+            });
+            document.getElementById('statTotal').innerText = totalUnidades;
+            document.getElementById('statEncargo').innerText = totalEncargo;
+            document.getElementById('statStock').innerText = totalStock;
+            document.getElementById('statProgreso').innerText = (totalUnidades > 0 ? Math.round(sumaProgreso / totalUnidades) : 0) + '%';
+
+            if (rolActual === 'finanzas') {
+                cabecera.innerHTML = `<th class="p-4">Vehículo / Cliente</th><th class="p-4 text-center">Progreso</th><th class="p-4 text-center">Pago USA (${eq.finanzas || 'Finanzas'})</th><th class="p-4 text-center">Aduana (${eq.aduana || 'Aduana'})</th><th class="p-4 text-center">Recibo Cliente</th><th class="p-4 text-right">Costos</th>`;
+            } else if (rolActual === 'marketing') {
+                cabecera.innerHTML = `<th class="p-4">Vehículo</th><th class="p-4 text-center">Progreso</th><th class="p-4 text-center">Opciones Diarias (${eq.marketing || 'Ventas'})</th><th class="p-4 text-center">Publicidad</th><th class="p-4 text-right">Precio Venta ($)</th>`;
+            } else {
+                cabecera.innerHTML = `<th class="p-4">Vehículo / Cliente</th><th class="p-4 text-center">Progreso</th><th class="p-4 text-center">1. Inicio & Opciones</th><th class="p-4 text-center">2. USA & Naviera</th><th class="p-4 text-center">3. Aduana & Promesa</th><th class="p-4 text-center">4. Cierre & Compraventa</th><th class="p-4 text-right">Costo / Venta ($)</th>`;
+            }
+
+            if (ultimoSnapshot.empty) {
+                tabla.innerHTML = `<tr><td colspan="7" class="p-14 text-center font-mono font-bold" style="color:var(--txt-soft);"><span class="text-3xl block mb-2">🏁</span>Aún no hay vehículos registrados.<br><span class="text-[10px]" style="color:var(--cyan);">Ingresa la primera unidad para arrancar la flota.</span></td></tr>`;
+                tablaReg.innerHTML = `<tr><td colspan="6" class="p-14 text-center font-mono font-bold" style="color:var(--txt-soft);"><span class="text-3xl block mb-2">🗂️</span>No hay registros históricos todavía.</td></tr>`;
+                return;
+            }
+
+            ultimoSnapshot.forEach((docSnap) => {
+                const auto = docSnap.data();
+                const id = docSnap.id;
+                const porc = calcularProgreso(auto);
+
+                let barraProgreso = `
+                    <div class="flex flex-col items-center gap-1.5">
+                        <span class="font-mono text-xs font-black" style="color:var(--cyan);">${porc}%</span>
+                        <div class="w-20 rounded-full h-2 overflow-hidden" style="background:#0a0f1c; border:1px solid var(--line-strong);">
+                            <div class="h-full rounded-full" style="width: ${porc}%; background:linear-gradient(90deg, var(--brand), var(--cyan));"></div>
+                        </div>
+                    </div>`;
+
+                // Fila Registro
+                const fReg = document.createElement('tr');
+                fReg.className = "border-b hover:bg-white/5 transition-colors";
+                fReg.style.borderColor = "var(--line)";
+                fReg.innerHTML = `
+                    <td class="p-4 text-xs font-semibold" style="color:var(--txt-soft);">${auto.fecha_registro ? new Date(auto.fecha_registro).toLocaleDateString() : 'N/D'}</td>
+                    <td class="p-4 font-bold text-white">${auto.vehiculo} (${auto.categoria})</td>
+                    <td class="p-4 text-xs font-extrabold" style="color:var(--cyan);">${auto.tipoProceso === 'Encargo' ? auto.nombreCliente : 'Stock General'}</td>
+                    <td class="p-4 text-xs" style="color:var(--txt-soft);">${auto.plataforma} - <span class="uppercase font-mono font-bold">${auto.vin}</span></td>
+                    <td class="p-4 text-center">${barraProgreso}</td>
+                    <td class="p-4 text-right font-black text-white font-mono">$${Number(auto.costo_subasta || 0).toLocaleString()} / <span style="color:var(--brand);">$${Number(auto.precio_venta || 0).toLocaleString()}</span></td>
+                `;
+                tablaReg.appendChild(fReg);
+
+                let badgeTipo = auto.tipoProceso === 'Encargo' 
+                    ? `<span class="status-tag px-2.5 py-1 rounded-lg text-[10px] font-black uppercase inline-block my-1" style="background:rgba(34,226,226,0.1); color:var(--cyan); border:1px solid rgba(34,226,226,0.35);">Encargo: ${auto.nombreCliente}</span>`
+                    : `<span class="status-tag px-2.5 py-1 rounded-lg text-[10px] font-black uppercase inline-block my-1" style="background:rgba(52,211,153,0.1); color:#34d399; border:1px solid rgba(52,211,153,0.35);">Stock</span>`;
+
+                // Botones más grandes, con mejor área de clic
+                let mkBtn = (tarea, texto, areaKey) => {
+                    let estado = auto[tarea];
+                    let html = estado 
+                        ? `<button onclick="toggleTarea('${id}', '${tarea}', true)" class="px-3.5 py-2 font-black text-xs rounded-xl shadow transition-all font-mono" style="background:rgba(52,211,153,0.12); color:#34d399; border:1px solid rgba(52,211,153,0.4);">${texto} ✓</button>`
+                        : `<button onclick="toggleTarea('${id}', '${tarea}', false)" class="px-3.5 py-2 font-black text-xs rounded-xl transition-all font-mono" style="background:#0a0f1c; color:var(--txt-soft); border:1px solid var(--line-strong);">${texto}</button>`;
+                    if (!estado && areaKey) {
+                        html += ` <button onclick="enviarAlertaWhatsApp('${areaKey}', '${texto}', '${auto.vehiculo}', '${auto.vin}')" class="px-2 py-2 rounded-xl font-black text-xs transition-all ml-1" style="background:rgba(255,46,136,0.12); color:var(--brand); border:1px solid rgba(255,46,136,0.4);" title="Notificar por WhatsApp">📲</button>`;
+                    }
+                    return html;
+                };
+
+                let inputPrecioVenta = `<input type="number" value="${auto.precio_venta || 0}" onchange="actualizarPrecioVenta('${id}', this.value)" class="input-style w-28 px-3 py-2 rounded-xl text-right font-black text-xs" style="color:var(--brand);">`;
+
+                const fActiva = document.createElement('tr');
+                fActiva.className = "border-b hover:bg-white/5 transition-colors"; fActiva.style.borderColor = "var(--line)";
+
+                if (rolActual === 'finanzas') {
+                    fActiva.innerHTML = `
+                        <td class="p-4 font-bold text-white">${auto.vehiculo}<br><span class="text-xs font-mono" style="color:var(--txt-soft);">VIN: ${auto.vin}</span><br>${badgeTipo}</td>
+                        <td class="p-4 text-center">${barraProgreso}</td>
+                        <td class="p-4 text-center">${mkBtn('t_pagoUsa', 'Pago USA', 'finanzas')}</td>
+                        <td class="p-4 text-center">${mkBtn('t_aduana', 'Impuestos Aduana', 'aduana')}</td>
+                        <td class="p-4 text-center">
+                            ${auto.comprobanteClienteUrl ? `<a href="${auto.comprobanteClienteUrl}" target="_blank" class="text-xs underline font-bold" style="color:var(--cyan);">Ver Recibo ✓</a>` : `<span class="text-xs font-bold" style="color:#fb923c;">Falta Recibo</span>`}
+                            <input type="file" id="file-cliente-${id}" accept="image/*" class="text-[10px] w-36 font-mono" style="color:var(--txt-soft);">
+                            <button onclick="subirComprobanteCliente('${id}')" class="btn-primary text-[#05070c] font-black text-xs py-1.5 px-3 rounded-xl mt-1.5 font-mono">Subir Recibo</button>
+                        </td>
+                        <td class="p-4 text-right font-black text-white">$${Number(auto.costo_subasta || 0).toLocaleString()}</td>
+                    `;
+                } else if (rolActual === 'marketing') {
+                    fActiva.innerHTML = `
+                        <td class="p-4 font-bold text-white">${auto.vehiculo}<br><span class="text-xs font-mono" style="color:var(--txt-soft);">VIN: ${auto.vin}</span><br>${badgeTipo}</td>
+                        <td class="p-4 text-center">${barraProgreso}</td>
+                        <td class="p-4 text-center">${mkBtn('t_opcionesCliente', 'Enviar Opciones Diarias', 'marketing')}</td>
+                        <td class="p-4 text-center">${mkBtn('t_publicidad', 'Publicidad (A Reparar)', 'marketing')}</td>
+                        <td class="p-4 text-right font-bold">${inputPrecioVenta}</td>
+                    `;
+                } else {
+                    fActiva.innerHTML = `
+                        <td class="p-4 font-bold text-white">${auto.vehiculo}<br><span class="text-xs font-mono" style="color:var(--txt-soft);">${auto.plataforma} - ${auto.vin}</span><br>${badgeTipo}</td>
+                        <td class="p-4 text-center">${barraProgreso}</td>
+                        <td class="p-4 text-center"><div class="flex flex-col gap-2 items-start text-xs">${mkBtn('t_grupoWp', '1. Grupo Wp', 'marketing')}${mkBtn('t_opcionesCliente', '2. Opciones Diarias', 'marketing')}</div></td>
+                        <td class="p-4 text-center"><div class="flex flex-col gap-2 items-start text-xs">${mkBtn('t_pagoUsa', '3. Pago USA', 'finanzas')}${mkBtn('t_naviera', '4. Naviera', 'naviera')}${mkBtn('t_publicidad', '5. Publicidad', 'marketing')}</div></td>
+                        <td class="p-4 text-center"><div class="flex flex-col gap-2 items-start text-xs">${mkBtn('t_llegadaPais', '6. Llegada País', 'aduana')}${mkBtn('t_aduana', '7. Pago Aduana', 'aduana')}${mkBtn('t_promesaVenta', '8. Promesa', 'legal')}</div></td>
+                        <td class="p-4 text-center">
+                            ${auto.comprobanteClienteUrl ? `<a href="${auto.comprobanteClienteUrl}" target="_blank" class="text-xs underline font-bold" style="color:var(--cyan);">Ver Recibo ✓</a>` : `<span class="text-xs font-bold" style="color:#fb923c;">Falta Recibo</span>`}
+                            <input type="file" id="file-cliente-${id}" accept="image/*" class="text-[10px] w-32 font-mono" style="color:var(--txt-soft);">
+                            <button onclick="subirComprobanteCliente('${id}')" class="btn-primary text-[#05070c] font-black text-xs py-1.5 px-3 rounded-xl font-mono">Subir Recibo</button>
+                            <div class="mt-2.5 flex flex-col gap-2">${mkBtn('t_compraventa', '9. Compraventa', 'legal')}${mkBtn('t_prorroga', '10. Prórroga', 'legal')}</div>
+                        </td>
+                        <td class="p-4 text-right font-bold text-white">$${Number(auto.costo_subasta || 0).toLocaleString()}<br><div class="mt-2">${inputPrecioVenta}</div></td>
+                    `;
+                }
+                tabla.appendChild(fActiva);
             });
         }
-        onSnapshot(collection(db, "vehiculos"), snap => { snapshotGlobal = snap; if(perfilActual) cargarDatosTabla(); });
+
+        onSnapshot(collection(db, "vehiculos"), (snap) => {
+            ultimoSnapshot = snap;
+            cargarDatosTabla();
+        });
     </script>
 </body>
 </html>
