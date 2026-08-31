@@ -324,12 +324,12 @@ import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, on
   from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAg4xJoxrfGahtrZeOpnfhCPe6zqNjkGxk",
+  apiKey: "AIzaSyAg4xJoxrfGahtrZeOpnfhCPe0zqNjkGxk",
   authDomain: "sistema-yesica.firebaseapp.com",
   projectId: "sistema-yesica",
   storageBucket: "sistema-yesica.firebasestorage.app",
-  messagingSenderId: "108033064871",
-  appId: "1:108033064871:web:ce001ff12edb9f44e51782"
+  messagingSenderId: "108033864871",
+  appId: "1:108033864871:web:ce001ff12edb9f44e51782"
 };
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app), storage = getStorage(app), auth = getAuth(app);
@@ -444,20 +444,27 @@ window.entrar = async function(){
   if(!p || p.length<6){ m.innerText="La contraseña debe tener mínimo 6 caracteres."; return; }
   b.disabled = true; b.innerText = "Entrando…";
   const mail = u + "@yesica.local";
+  const explica = c => ({
+    "auth/api-key-not-valid.-please-pass-a-valid-api-key.":"⚙️ La clave de conexión no es válida. Revisa la configuración de Firebase.",
+    "auth/api-key-not-valid":"⚙️ La clave de conexión no es válida. Revisa la configuración de Firebase.",
+    "auth/operation-not-allowed":"⚙️ Falta activar “Correo electrónico/contraseña” en Firebase → Authentication → Sign-in method.",
+    "auth/unauthorized-domain":"⚙️ Este dominio no está autorizado. Agrégalo en Firebase → Authentication → Settings → Authorized domains.",
+    "auth/network-request-failed":"📶 Sin conexión a internet. Revisa tu red e intenta de nuevo.",
+    "auth/too-many-requests":"⏳ Demasiados intentos. Espera unos minutos e intenta otra vez.",
+    "auth/wrong-password":"Contraseña incorrecta.",
+    "auth/weak-password":"La contraseña es muy débil. Usa mínimo 6 caracteres.",
+    "auth/email-already-in-use":"Esa no es tu contraseña. Intenta de nuevo.",
+  })[c] || null;
+
+  const fallar = e => { m.innerText = explica(e.code) || ("Error: "+(e.code||e.message)); b.disabled=false; b.innerText="Entrar"; };
+
   try{
     await signInWithEmailAndPassword(auth, mail, p);
   }catch(e){
     if(["auth/user-not-found","auth/invalid-credential","auth/invalid-login-credentials"].includes(e.code)){
       try{ await createUserWithEmailAndPassword(auth, mail, p); }
-      catch(e2){
-        m.innerText = e2.code==="auth/email-already-in-use" ? "Esa contraseña no es la tuya. Intenta de nuevo."
-                    : e2.code==="auth/operation-not-allowed" ? "Falta activar Email/Contraseña en Firebase."
-                    : "No se pudo entrar ("+(e2.code||e2.message)+")";
-        b.disabled=false; b.innerText="Entrar"; return;
-      }
-    } else if(e.code==="auth/wrong-password"){ m.innerText="Contraseña incorrecta."; b.disabled=false; b.innerText="Entrar"; return; }
-    else if(e.code==="auth/operation-not-allowed"){ m.innerText="Falta activar Email/Contraseña en Firebase."; b.disabled=false; b.innerText="Entrar"; return; }
-    else { m.innerText="Error: "+(e.code||e.message); b.disabled=false; b.innerText="Entrar"; return; }
+      catch(e2){ fallar(e2); return; }
+    } else { fallar(e); return; }
   }
   b.disabled=false; b.innerText="Entrar";
 };
