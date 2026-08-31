@@ -166,6 +166,7 @@ select.inp option{background:var(--panel);color:var(--txt)}
       <div class="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-2xl deep">
         <span class="chip chip-cy"><span class="dot"></span></span>
         <span id="dMe" class="font-mono text-[10px] font-bold" style="color:var(--cyan)">—</span>
+        <span id="dRol" class="font-mono text-[8px] px-1.5 py-0.5 rounded" style="color:var(--txt-soft);border:1px solid var(--line)">v3</span>
         <button onclick="salir()" class="btn-g text-[9px] uppercase px-2 py-1 rounded-lg">Salir</button>
       </div>
     </div>
@@ -497,7 +498,12 @@ onAuthStateChanged(auth, async user=>{
 
   const r = doc(db,"usuarios",u);
   const s = await getDoc(r);
-  if(!s.exists()) await setDoc(r,{ nombre:EQUIPO[u].nombre, admin:EQUIPO[u].admin, areas: [] });
+  if(!s.exists()){
+    await setDoc(r,{ nombre:EQUIPO[u].nombre, admin:EQUIPO[u].admin, areas: [] });
+  } else if(EQUIPO[u].admin && s.data().admin !== true){
+    // Cuenta creada con una versión anterior donde aún no era admin: se repara sola.
+    await updateDoc(r,{ admin:true });
+  }
 
   onSnapshot(collection(db,"usuarios"), snap=>{
     usersData = {}; snap.forEach(d=> usersData[d.id]=d.data());
@@ -507,6 +513,8 @@ onAuthStateChanged(auth, async user=>{
     document.getElementById('app').classList.remove('hidden');
     document.getElementById('dMe').innerText = yo.nombre;
     document.getElementById('mMe').innerText = yo.nombre;
+    document.getElementById('dRol').innerText = (yo.admin ? "ADMIN" : "v3") ;
+    document.getElementById('dRol').style.color = yo.admin ? "var(--brand)" : "var(--txt-soft)";
     document.getElementById('tbUsers').classList.toggle('hidden', !yo.admin);
     pintarUsers(); pintarTodo();
     if(!suscrito){
@@ -830,12 +838,14 @@ window.abrirDetalle = function(id, silencioso){
 
       <div>${bloques}</div>
 
-      <div class="flex flex-wrap gap-2 pt-2 border-t" style="border-color:var(--line)">
+      <div class="flex flex-wrap gap-2 pt-3 border-t" style="border-color:var(--line)">
         ${v.archivado ? `<button onclick="archivar('${v.id}',false)" class="btn-g px-4 py-2.5 rounded-xl text-[10px] uppercase">↩ Reactivar unidad</button>`
                       : `<button onclick="archivar('${v.id}',true)" class="btn-g px-4 py-2.5 rounded-xl text-[10px] uppercase">📂 Archivar unidad</button>`}
         ${v.telefonoCliente ? `<a href="https://wa.me/503${String(v.telefonoCliente).replace(/\\D/g,'')}" target="_blank" class="btn-g px-4 py-2.5 rounded-xl text-[10px] uppercase inline-block">💬 Escribir al cliente</a>`:""}
-        ${yo?.admin ? `<button onclick="eliminar('${v.id}')" class="btn-g px-4 py-2.5 rounded-xl text-[10px] uppercase ml-auto"
-             style="color:var(--danger);border-color:rgba(251,113,133,.4)">🗑 Eliminar</button>`:""}
+        ${yo?.admin
+          ? `<button onclick="eliminar('${v.id}')" class="px-4 py-2.5 rounded-xl text-[10px] uppercase font-mono font-bold cursor-pointer"
+               style="background:rgba(251,113,133,.14);color:var(--danger);border:1px solid rgba(251,113,133,.5)">🗑 Eliminar para siempre</button>`
+          : `<span class="font-mono text-[9px] self-center" style="color:var(--txt-soft)">🔒 Solo un admin puede eliminar</span>`}
       </div>
     </div>
   </div>`;
