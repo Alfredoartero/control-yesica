@@ -204,6 +204,17 @@ select.inp option{background:var(--panel);color:var(--txt)}
 
   <!-- ══ MIS TAREAS ══ -->
   <section id="pgMias" class="hidden space-y-4">
+    <div class="glass rounded-3xl p-6 relative" style="border-top:2px solid var(--warn)">
+      <div class="flex items-center gap-3 mb-3">
+        <div class="icon-badge">🔔</div>
+        <div>
+          <h2 class="font-mono text-xs font-black text-white uppercase tracking-wide">Avisos automáticos</h2>
+          <p class="font-mono text-[9px] font-bold uppercase tracking-wide mt-0.5" style="color:var(--txt-soft)">// Te repite el recordatorio hasta que marques</p>
+        </div>
+      </div>
+      <div id="cfgNotis"></div>
+    </div>
+
     <div class="glass rounded-3xl p-6 relative" style="border-top:2px solid var(--cyan)">
       <div class="hud tl"></div><div class="hud tr"></div>
       <div class="flex items-center gap-3 border-b pb-4 mb-4" style="border-color:var(--line)">
@@ -212,7 +223,6 @@ select.inp option{background:var(--panel);color:var(--txt)}
           <h2 class="font-mono text-xs font-black text-white uppercase tracking-wide">Mis tareas pendientes</h2>
           <p id="miasSub" class="text-xs mt-0.5" style="color:var(--txt-soft)">Solo lo que te toca a ti.</p>
         </div>
-        <button onclick="pedirPermisoNotis()" id="btnNoti" class="btn-g text-[9px] uppercase px-3 py-2 rounded-xl">🔔 Activar avisos</button>
       </div>
       <div id="mias" class="space-y-3"></div>
     </div>
@@ -305,6 +315,14 @@ select.inp option{background:var(--panel);color:var(--txt)}
           <p class="text-xs mt-0.5" style="color:var(--txt-soft)">Marca las áreas de cada quien. Se activa al instante en su cuenta.</p>
         </div>
       </div>
+      <div class="deep rounded-xl p-3.5 flex gap-2.5">
+        <span class="text-base">👥</span>
+        <p class="text-[11px] leading-relaxed" style="color:var(--txt-soft)">
+          En las tareas de <b style="color:var(--cyan)">Marketing</b> (enviar opciones y publicidad) <b style="color:var(--txt)">cada persona con esa área marca su propio check</b>
+          —una por Facebook, otra por el grupo de WhatsApp, etc.— y la tarea solo se da por completa cuando todas marcaron.
+          Si eres admin y no haces marketing, deja esa casilla sin marcar para que no te la pida.
+        </p>
+      </div>
       <div id="users" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"></div>
     </div>
   </section>
@@ -316,7 +334,7 @@ select.inp option{background:var(--panel);color:var(--txt)}
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getFirestore, collection, addDoc, doc, updateDoc, onSnapshot, getDoc, setDoc }
+import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, getDoc, setDoc }
   from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL }
   from "https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js";
@@ -364,7 +382,7 @@ const T_ENC = [
   {k:"e02",f:0,a:"finanzas", t:"Confirmar pago de $100", d:"Anexar comprobante. Se abona al total de la venta", pago:true},
   {k:"e03",f:0,a:"finanzas", t:"Facturar los $100 de inicio"},
   {k:"e04",f:0,a:"ventas",   t:"Crear grupo de WhatsApp"},
-  {k:"e05",f:0,a:"marketing",t:"Enviar opciones al cliente", d:"De lunes a viernes hasta que se le gane una"},
+  {k:"e05",f:0,a:"marketing",t:"Enviar opciones al cliente", d:"De lunes a viernes hasta que se le gane una", multi:true},
   {k:"e06",f:1,a:"compras",  t:"Se ganó el vehículo en subasta"},
   {k:"e07",f:1,a:"direccion",t:"Registrar vehículo en sistema", d:"Vehículo, costo y precio de venta"},
   {k:"e08",f:1,a:"compras",  t:"Pagar la subasta (Copart / IAA)", d:"Evitar storage"},
@@ -374,7 +392,7 @@ const T_ENC = [
   {k:"e12",f:1,a:"finanzas", t:"Facturar el abono del 50%"},
   {k:"e13",f:1,a:"legal",    t:"Crear promesa de venta"},
   {k:"e14",f:2,a:"aduana",   t:"Marcar llegada del vehículo al país"},
-  {k:"e15",f:2,a:"marketing",t:"Subir el carro como publicidad"},
+  {k:"e15",f:2,a:"marketing",t:"Subir el carro como publicidad", d:"Cada quien en su canal (Facebook, grupo de WhatsApp, etc.)", multi:true},
   {k:"e16",f:2,a:"finanzas", t:"Pagar a la naviera"},
   {k:"e17",f:2,a:"aduana",   t:"Cancelar impuestos de aduana"},
   {k:"e18",f:2,a:"aduana",   t:"Revisión mecánica"},
@@ -387,7 +405,7 @@ const T_ENC = [
 const FASES_STK = ["1 · Coste e introducción","2 · Preparación y logística USA","3 · Gestión comercial","4 · Arribo y finalización"];
 const T_STK = [
   {k:"s01",f:0,a:"direccion",t:"Registrar coste e introducción del vehículo"},
-  {k:"s02",f:1,a:"marketing",t:"Publicidad del vehículo"},
+  {k:"s02",f:1,a:"marketing",t:"Publicidad del vehículo", d:"Cada quien en su canal (Facebook, grupo de WhatsApp, etc.)", multi:true},
   {k:"s03",f:1,a:"compras",  t:"Pagos USA (Copart / IAA)", d:"Evitar storage"},
   {k:"s04",f:1,a:"naviera",  t:"Asignación de naviera"},
   {k:"s05",f:2,a:"direccion",t:"Definir precio a cliente", d:"Podría darse en menos"},
@@ -479,7 +497,7 @@ onAuthStateChanged(auth, async user=>{
 
   const r = doc(db,"usuarios",u);
   const s = await getDoc(r);
-  if(!s.exists()) await setDoc(r,{ nombre:EQUIPO[u].nombre, admin:EQUIPO[u].admin, areas: EQUIPO[u].admin ? AREAS.map(a=>a.k) : [] });
+  if(!s.exists()) await setDoc(r,{ nombre:EQUIPO[u].nombre, admin:EQUIPO[u].admin, areas: [] });
 
   onSnapshot(collection(db,"usuarios"), snap=>{
     usersData = {}; snap.forEach(d=> usersData[d.id]=d.data());
@@ -527,25 +545,45 @@ window.setTipo = function(t){
 };
 
 /* ════════ CÁLCULOS ════════ */
+function respons(area){ return Object.keys(usersData).filter(u => (usersData[u].areas||[]).includes(area)); }
+
+// ¿La tarea está completa? En las "multi" solo cuando TODOS los responsables del área marcaron su parte.
+function tareaOk(v, t){
+  const st = v.tareas?.[t.k];
+  if(!t.multi) return !!st?.ok;
+  const req = respons(t.a);
+  if(!req.length) return !!st?.ok;          // nadie asignado todavía → funciona como check normal
+  const m = st?.marcas || {};
+  return req.every(u => !!m[u]);
+}
+function miMarca(v, t){ return !!(v.tareas?.[t.k]?.marcas || {})[yo?.usuario]; }
+
 function tareasDe(v){ return defT(v).filter(t=>!t.opc); }
 function progreso(v){
   const ls = tareasDe(v); if(!ls.length) return 0;
-  const h = ls.filter(t=> v.tareas?.[t.k]?.ok).length;
-  return Math.round(h/ls.length*100);
+  return Math.round(ls.filter(t=> tareaOk(v,t)).length / ls.length * 100);
 }
 function pendientesMias(v){
-  return defT(v).filter(t=> !v.tareas?.[t.k]?.ok && puede(t.a));
+  if(!yo) return [];
+  return defT(v).filter(t=>{
+    if(tareaOk(v,t) || !puede(t.a)) return false;
+    if(t.multi){
+      const req = respons(t.a);
+      if(req.length) return req.includes(yo.usuario) && !miMarca(v,t);
+    }
+    return true;
+  });
 }
 function pagado(v){ return (v.abonos||[]).reduce((s,a)=> s+Number(a.monto||0), 0); }
 function saldo(v){ return Math.max(0, Number(v.precio_venta||0) - pagado(v)); }
 function faseActual(v){
   const ls = tareasDe(v);
-  const p = ls.find(t=> !v.tareas?.[t.k]?.ok);
+  const p = ls.find(t=> !tareaOk(v,t));
   return p ? p.f : defF(v).length-1;
 }
 
 /* ════════ RENDER ════════ */
-function pintarTodo(){ pintarStats(); pintarFlota(); pintarMias(); pintarArchivo(); }
+function pintarTodo(){ pintarStats(); pintarFlota(); pintarMias(); pintarArchivo(); pintarCfgNotis(); actualizarTitulo(); }
 
 function pintarStats(){
   const act = autos.filter(a=>!a.archivado);
@@ -576,7 +614,7 @@ function pintarFlota(){
   cont.innerHTML = ls.map(v=>{
     const p = progreso(v), mias = pendientesMias(v).length, fa = faseActual(v);
     const enc = v.tipoProceso==="Encargo";
-    const sig = defT(v).filter(t=>!t.opc).find(t=> !v.tareas?.[t.k]?.ok);
+    const sig = defT(v).filter(t=>!t.opc).find(t=> !tareaOk(v,t));
     return `<div class="glass lift rounded-2xl p-5 space-y-3.5 relative cursor-pointer" onclick="abrirDetalle('${v.id}')" style="border-top:2px solid ${enc?'var(--cyan)':'var(--ok)'}">
       <div class="flex justify-between items-start gap-3">
         <div class="min-w-0">
@@ -637,7 +675,7 @@ function pintarMias(){
       <div class="tarea">
         <div class="tbox" onclick="marcar('${v.id}','${t.k}',false)"></div>
         <div class="flex-1 min-w-0">
-          <p class="text-[13px] font-bold leading-snug">${esc(t.t)}</p>
+          <p class="text-[13px] font-bold leading-snug">${esc(t.t)}${t.multi&&respons(t.a).length?` <span class="chip chip-wn ml-1">tu parte · ${respons(t.a).filter(u=>(v.tareas?.[t.k]?.marcas||{})[u]).length}/${respons(t.a).length}</span>`:""}</p>
           <p class="font-mono text-[10px] mt-0.5" style="color:var(--txt-soft)">
             ${esc(v.vehiculo)} · ${esc(v.vin)||"sin VIN"}${v.tipoProceso==="Encargo"?` · 👤 ${esc(v.nombreCliente)}`:""}
           </p>
@@ -658,7 +696,11 @@ function pintarArchivo(){
     <td class="p-4 font-mono text-[11px]" style="color:var(--txt-soft)">${esc(v.vin)}</td>
     <td class="p-4 text-center font-mono font-black" style="color:var(--cyan)">${progreso(v)}%</td>
     <td class="p-4 text-right font-mono font-bold">${money(v.costo_subasta)} / <span style="color:var(--brand)">${money(v.precio_venta)}</span></td>
-    <td class="p-4 text-right"><button onclick="archivar('${v.id}',false)" class="btn-g text-[9px] uppercase px-2.5 py-1.5 rounded-lg">Reactivar</button></td>
+    <td class="p-4 text-right whitespace-nowrap">
+      <button onclick="archivar('${v.id}',false)" class="btn-g text-[9px] uppercase px-2.5 py-1.5 rounded-lg">Reactivar</button>
+      ${yo?.admin ? `<button onclick="eliminar('${v.id}')" class="btn-g text-[9px] uppercase px-2.5 py-1.5 rounded-lg ml-1.5"
+           style="color:var(--danger);border-color:rgba(251,113,133,.4)">🗑</button>`:""}
+    </td>
   </tr>`).join("");
 }
 
@@ -667,9 +709,8 @@ function pintarUsers(){
   c.innerHTML = Object.keys(EQUIPO).map(u=>{
     const d = usersData[u] || { nombre:EQUIPO[u].nombre, admin:EQUIPO[u].admin, areas:[] };
     const creado = !!usersData[u];
-    const body = d.admin
-      ? `<span class="chip chip-pk"><span class="dot"></span>Administrador · todo habilitado</span>`
-      : AREAS.map(a=>{
+    const body = (d.admin ? `<span class="chip chip-pk mb-1"><span class="dot"></span>Admin · puede todo</span>` : "")
+      + AREAS.map(a=>{
           const on = (d.areas||[]).includes(a.k);
           return `<label class="flex items-center gap-2 text-[11px] font-bold cursor-pointer" style="color:${on?'var(--cyan)':'var(--txt-soft)'}">
             <input type="checkbox" ${on?'checked':''} onchange="togArea('${u}','${a.k}',this.checked)" class="w-4 h-4 accent-cyan-400 rounded">
@@ -696,7 +737,38 @@ window.abrirDetalle = function(id, silencioso){
   let bloques = fases.map((fn,fi)=>{
     const ts = defT(v).filter(t=>t.f===fi);
     return `<div class="fase-h">${esc(fn)}</div>` + ts.map(t=>{
-      const st = v.tareas?.[t.k], ok = !!st?.ok, can = puede(t.a);
+      const st = v.tareas?.[t.k], ok = tareaOk(v,t), can = puede(t.a);
+      const req = t.multi ? respons(t.a) : [];
+
+      // ── Tarea con check individual por persona (marketing) ──
+      if(t.multi && req.length){
+        const marcas = st?.marcas || {};
+        const listos = req.filter(u=>marcas[u]).length;
+        const filas = req.map(u=>{
+          const hecho = !!marcas[u], soyYo = u===yo.usuario;
+          return `<div class="flex items-center gap-2 py-1">
+            <div class="tbox ${hecho?'on':''} ${soyYo?'':'lock'}" style="width:17px;height:17px;font-size:10px"
+              ${soyYo?`onclick="marcarMulti('${v.id}','${t.k}',${hecho})"`:'title="Solo esta persona puede marcar su parte"'}>${hecho?'✓':(soyYo?'':'·')}</div>
+            <span class="font-mono text-[10px] ${hecho?'':'opacity-70'}" style="color:${hecho?'var(--ok)':'var(--txt-soft)'}">
+              ${esc(usersData[u]?.nombre||u)}${soyYo?' (tú)':''}${hecho&&marcas[u]?` · ${new Date(marcas[u]).toLocaleDateString()}`:''}
+            </span></div>`;
+        }).join("");
+        return `<div class="tarea ${ok?'hecha':''}" style="flex-direction:column;align-items:stretch;gap:6px">
+          <div class="flex items-start gap-2">
+            <span class="text-sm mt-0.5">${ok?'✅':'👥'}</span>
+            <div class="flex-1 min-w-0">
+              <p class="text-[13px] font-bold leading-snug ${ok?'line-through opacity-70':''}">${esc(t.t)}</p>
+              ${t.d?`<p class="text-[10px] mt-0.5 leading-snug" style="color:var(--txt-soft)">${esc(t.d)}</p>`:""}
+            </div>
+            <span class="chip ${ok?'chip-ok':'chip-wn'} flex-shrink-0">${listos}/${req.length}</span>
+          </div>
+          <div class="pl-6 pt-1 border-t" style="border-color:var(--line)">${filas}</div>
+          ${!ok?`<div class="pl-6"><button onclick="avisarWhats('${t.a}','${esc(t.t).replace(/'/g,"")}','${esc(v.vehiculo).replace(/'/g,"")}','${esc(v.vin)}')"
+             class="btn-g text-[9px] uppercase px-2 py-1 rounded-lg">📲 Recordar a los que faltan</button></div>`:""}
+        </div>`;
+      }
+
+      // ── Tarea normal ──
       return `<div class="tarea ${ok?'hecha':''} ${!can?'bloq':''}">
         <div class="tbox ${ok?'on':''} ${!can?'lock':''}" ${can?`onclick="marcar('${v.id}','${t.k}',${ok})"`:'title="No tienes esta área habilitada"'}>${ok?'✓':(can?'':'🔒')}</div>
         <div class="flex-1 min-w-0">
@@ -704,7 +776,7 @@ window.abrirDetalle = function(id, silencioso){
           ${t.d?`<p class="text-[10px] mt-0.5 leading-snug" style="color:var(--txt-soft)">${esc(t.d)}</p>`:""}
           <div class="flex flex-wrap items-center gap-2 mt-1.5">
             <span class="chip chip-gr">${areaI(t.a)} ${esc(areaN(t.a))}</span>
-            ${ok && st.por ? `<span class="font-mono text-[9px]" style="color:var(--ok)">✓ ${esc(usersData[st.por]?.nombre||st.por)} · ${st.fecha?new Date(st.fecha).toLocaleDateString():""}</span>`
+            ${ok && st?.por ? `<span class="font-mono text-[9px]" style="color:var(--ok)">✓ ${esc(usersData[st.por]?.nombre||st.por)} · ${st.fecha?new Date(st.fecha).toLocaleDateString():""}</span>`
                           : `<span class="font-mono text-[9px]" style="color:var(--txt-soft)">→ ${esc(quienes(t.a))}</span>`}
           </div>
         </div>
@@ -762,6 +834,8 @@ window.abrirDetalle = function(id, silencioso){
         ${v.archivado ? `<button onclick="archivar('${v.id}',false)" class="btn-g px-4 py-2.5 rounded-xl text-[10px] uppercase">↩ Reactivar unidad</button>`
                       : `<button onclick="archivar('${v.id}',true)" class="btn-g px-4 py-2.5 rounded-xl text-[10px] uppercase">📂 Archivar unidad</button>`}
         ${v.telefonoCliente ? `<a href="https://wa.me/503${String(v.telefonoCliente).replace(/\\D/g,'')}" target="_blank" class="btn-g px-4 py-2.5 rounded-xl text-[10px] uppercase inline-block">💬 Escribir al cliente</a>`:""}
+        ${yo?.admin ? `<button onclick="eliminar('${v.id}')" class="btn-g px-4 py-2.5 rounded-xl text-[10px] uppercase ml-auto"
+             style="color:var(--danger);border-color:rgba(251,113,133,.4)">🗑 Eliminar</button>`:""}
       </div>
     </div>
   </div>`;
@@ -774,11 +848,29 @@ window.marcar = async function(id, k, ok){
   const v = autos.find(a=>a.id===id); if(!v) return;
   const def = defT(v).find(t=>t.k===k); if(!def) return;
   if(!puede(def.a)){ toast("No tienes el área "+areaN(def.a)+" habilitada.","err"); return; }
+  if(def.multi && respons(def.a).length) return marcarMulti(id, k, miMarca(v,def));
   const tareas = { ...(v.tareas||{}) };
   tareas[k] = ok ? { ok:false } : { ok:true, por:yo.usuario, fecha:new Date().toISOString() };
   try{
     await updateDoc(doc(db,"vehiculos",id), { tareas });
     toast(ok ? "Tarea reabierta." : "✓ "+def.t);
+  }catch(e){ toast("No se pudo guardar: "+e.code,"err"); }
+};
+
+// Cada persona marca SOLO su parte (marketing: Facebook, grupo de WhatsApp, etc.)
+window.marcarMulti = async function(id, k, yaHecho){
+  const v = autos.find(a=>a.id===id); if(!v) return;
+  const def = defT(v).find(t=>t.k===k); if(!def) return;
+  if(!puede(def.a)){ toast("No tienes el área "+areaN(def.a)+" habilitada.","err"); return; }
+  const st = v.tareas?.[k] || {};
+  const marcas = { ...(st.marcas||{}) };
+  if(yaHecho) delete marcas[yo.usuario]; else marcas[yo.usuario] = new Date().toISOString();
+  const tareas = { ...(v.tareas||{}) };
+  tareas[k] = { ...st, marcas };
+  try{
+    await updateDoc(doc(db,"vehiculos",id), { tareas });
+    const req = respons(def.a), listos = req.filter(u=>marcas[u]).length;
+    toast(yaHecho ? "Quitaste tu marca." : `✓ Tu parte lista (${listos}/${req.length})`);
   }catch(e){ toast("No se pudo guardar: "+e.code,"err"); }
 };
 
@@ -808,6 +900,24 @@ window.addAbono = async function(id){
 window.archivar = async function(id, val){
   try{ await updateDoc(doc(db,"vehiculos",id), { archivado:val }); cerrar(); toast(val?"Unidad archivada.":"Unidad reactivada."); }
   catch(e){ toast("Error.","err"); }
+};
+
+window.eliminar = async function(id){
+  if(!yo?.admin){ toast("Solo un administrador puede eliminar unidades.","err"); return; }
+  const v = autos.find(a=>a.id===id); if(!v) return;
+  const ok = confirm(
+    "⚠️ ELIMINAR PARA SIEMPRE\n\n"+
+    (v.vehiculo||"Sin nombre")+(v.vin?" ("+v.vin+")":"")+"\n"+
+    (v.tipoProceso==="Encargo" ? "Cliente: "+(v.nombreCliente||"—")+"\n" : "")+
+    "\nSe borra el vehículo con todo su historial de tareas y abonos.\nEsto NO se puede deshacer.\n\n"+
+    "Si solo quieres sacarlo de la lista, cancela y usa \"Archivar\".\n\n¿Eliminar de todas formas?"
+  );
+  if(!ok) return;
+  try{
+    await deleteDoc(doc(db,"vehiculos",id));
+    cerrar();
+    toast("Unidad eliminada definitivamente.");
+  }catch(e){ toast("No se pudo eliminar: "+(e.code||e.message),"err"); }
 };
 
 window.avisarWhats = function(area, tarea, veh, vin){
@@ -849,22 +959,138 @@ window.crearUnidad = async function(){
 };
 
 /* ════════ NOTIFICACIONES ════════ */
-window.pedirPermisoNotis = async function(){
-  if(!("Notification" in window)){ toast("Este navegador no soporta avisos.","warn"); return; }
-  const p = await Notification.requestPermission();
-  if(p==="granted"){ localStorage.setItem("yesica_notis","1"); toast("🔔 Avisos activados."); revisarPendientes(); }
-  else toast("No diste permiso para los avisos.","warn");
-};
-function revisarPendientes(){
-  if(localStorage.getItem("yesica_notis")!=="1" || Notification.permission!=="granted" || !yo) return;
-  let n = 0;
-  autos.filter(a=>!a.archivado).forEach(v=> n += pendientesMias(v).length);
-  if(n>0) new Notification("Importaciones Yesica", {
-    body: `Tienes ${n} tarea${n>1?"s":""} pendiente${n>1?"s":""} en el sistema.`, tag:"yesica-pend"
-  });
+const NK = "yesica_noti_cfg";
+let ncfg = { on:false, minTareas:30, minClientes:15, clientesOn:true, soloHorario:true, hIni:7, hFin:20 };
+let tmrTareas=null, tmrClientes=null;
+
+(function(){ try{ ncfg = { ...ncfg, ...JSON.parse(localStorage.getItem(NK)||"{}") }; }catch(e){} })();
+function guardarCfg(){ localStorage.setItem(NK, JSON.stringify(ncfg)); }
+
+function enHorario(){
+  if(!ncfg.soloHorario) return true;
+  const h = new Date().getHours();
+  return h >= ncfg.hIni && h < ncfg.hFin;
 }
-setInterval(revisarPendientes, 30*60*1000);
-setTimeout(()=>{ if(localStorage.getItem("yesica_notis")==="1") revisarPendientes(); }, 8000);
+function puedeAvisar(){
+  return ncfg.on && yo && ("Notification" in window) && Notification.permission==="granted" && enHorario();
+}
+function lanzar(titulo, cuerpo, tag){
+  try{
+    const n = new Notification(titulo, { body:cuerpo, tag, renotify:true, requireInteraction:false });
+    n.onclick = ()=>{ window.focus(); ir('mias'); n.close(); };
+  }catch(e){ console.warn(e); }
+}
+
+function contarMias(){
+  let n=0; autos.filter(a=>!a.archivado).forEach(v=> n += pendientesMias(v).length); return n;
+}
+
+function avisoTareas(){
+  if(!puedeAvisar()) return;
+  const items=[];
+  autos.filter(a=>!a.archivado).forEach(v=> pendientesMias(v).forEach(t=> items.push({v,t})));
+  if(!items.length) return;
+  const p = items[0];
+  lanzar(
+    `⏰ ${items.length} tarea${items.length>1?'s':''} sin marcar`,
+    `${p.t.t}\n🚗 ${p.v.vehiculo}${items.length>1?`\n… y ${items.length-1} más`:''}`,
+    "yesica-tareas"
+  );
+}
+function avisoClientes(){
+  if(!puedeAvisar() || !ncfg.clientesOn) return;
+  if(!(puede('ventas') || puede('marketing'))) return;
+  lanzar("💬 Contestar a clientes", "Revisa los chats y grupos de WhatsApp. No dejes mensajes sin responder.", "yesica-clientes");
+}
+
+function reiniciarTimers(){
+  clearInterval(tmrTareas); clearInterval(tmrClientes);
+  if(!ncfg.on) return;
+  tmrTareas = setInterval(avisoTareas, Math.max(1,ncfg.minTareas)*60000);
+  if(ncfg.clientesOn) tmrClientes = setInterval(avisoClientes, Math.max(1,ncfg.minClientes)*60000);
+}
+
+window.activarNotis = async function(){
+  if(!("Notification" in window)){ toast("Este navegador no soporta avisos.","warn"); return; }
+  let p = Notification.permission;
+  if(p!=="granted") p = await Notification.requestPermission();
+  if(p!=="granted"){ toast("No diste permiso para los avisos.","warn"); pintarCfgNotis(); return; }
+  ncfg.on = true; guardarCfg(); reiniciarTimers(); pintarCfgNotis();
+  lanzar("🔔 Avisos activados", `Te recordaré tus tareas cada ${ncfg.minTareas} min${ncfg.clientesOn?` y contestar clientes cada ${ncfg.minClientes} min`:""}.`, "yesica-test");
+  toast("Avisos activados.");
+};
+window.apagarNotis = function(){ ncfg.on=false; guardarCfg(); reiniciarTimers(); pintarCfgNotis(); toast("Avisos apagados.","warn"); };
+window.setCfg = function(campo, val){
+  if(campo==="clientesOn") ncfg.clientesOn = val;
+  else if(campo==="soloHorario") ncfg.soloHorario = val;
+  else ncfg[campo] = Math.max(1, Number(val)||1);
+  guardarCfg(); reiniciarTimers(); pintarCfgNotis();
+};
+window.probarNoti = function(){
+  if(!puedeAvisar()){ toast(ncfg.on ? "Fuera del horario configurado." : "Primero activa los avisos.","warn"); return; }
+  avisoTareas(); avisoClientes(); toast("Aviso de prueba enviado.");
+};
+
+function pintarCfgNotis(){
+  const c = document.getElementById('cfgNotis'); if(!c) return;
+  const activo = ncfg.on && ("Notification" in window) && Notification.permission==="granted";
+  c.innerHTML = `
+    <div class="flex items-center justify-between gap-3 flex-wrap">
+      <div class="flex items-center gap-2">
+        <span class="chip ${activo?'chip-ok':'chip-gr'}"><span class="dot"></span>${activo?'Avisos encendidos':'Avisos apagados'}</span>
+        ${activo && !enHorario() ? `<span class="chip chip-wn">dormidos hasta las ${ncfg.hIni}:00</span>`:""}
+      </div>
+      <div class="flex gap-2">
+        ${activo ? `<button onclick="probarNoti()" class="btn-g text-[9px] uppercase px-3 py-2 rounded-xl">Probar</button>
+                    <button onclick="apagarNotis()" class="btn-g text-[9px] uppercase px-3 py-2 rounded-xl">Apagar</button>`
+                 : `<button onclick="activarNotis()" class="btn-p text-[9px] uppercase px-4 py-2 rounded-xl">🔔 Activar avisos</button>`}
+      </div>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+      <div class="deep rounded-xl p-3">
+        <label class="font-mono text-[9px] font-bold uppercase block mb-1.5" style="color:var(--txt-soft)">Repetir tareas pendientes cada</label>
+        <div class="flex items-center gap-2">
+          <input type="number" min="1" value="${ncfg.minTareas}" onchange="setCfg('minTareas',this.value)" class="inp w-20 px-2.5 py-1.5 rounded-lg text-xs font-bold">
+          <span class="font-mono text-[10px]" style="color:var(--txt-soft)">minutos</span>
+        </div>
+      </div>
+      <div class="deep rounded-xl p-3">
+        <label class="flex items-center gap-2 font-mono text-[9px] font-bold uppercase mb-1.5 cursor-pointer" style="color:var(--txt-soft)">
+          <input type="checkbox" ${ncfg.clientesOn?'checked':''} onchange="setCfg('clientesOn',this.checked)" class="w-3.5 h-3.5 accent-cyan-400 rounded">
+          Recordar contestar clientes cada
+        </label>
+        <div class="flex items-center gap-2">
+          <input type="number" min="1" value="${ncfg.minClientes}" onchange="setCfg('minClientes',this.value)" ${ncfg.clientesOn?'':'disabled'} class="inp w-20 px-2.5 py-1.5 rounded-lg text-xs font-bold">
+          <span class="font-mono text-[10px]" style="color:var(--txt-soft)">minutos</span>
+        </div>
+      </div>
+      <div class="deep rounded-xl p-3 sm:col-span-2">
+        <label class="flex items-center gap-2 font-mono text-[9px] font-bold uppercase mb-1.5 cursor-pointer" style="color:var(--txt-soft)">
+          <input type="checkbox" ${ncfg.soloHorario?'checked':''} onchange="setCfg('soloHorario',this.checked)" class="w-3.5 h-3.5 accent-cyan-400 rounded">
+          Solo avisar en horario de trabajo (no molestar de noche)
+        </label>
+        <div class="flex items-center gap-2">
+          <input type="number" min="0" max="23" value="${ncfg.hIni}" onchange="setCfg('hIni',this.value)" ${ncfg.soloHorario?'':'disabled'} class="inp w-16 px-2.5 py-1.5 rounded-lg text-xs font-bold">
+          <span class="font-mono text-[10px]" style="color:var(--txt-soft)">a</span>
+          <input type="number" min="1" max="24" value="${ncfg.hFin}" onchange="setCfg('hFin',this.value)" ${ncfg.soloHorario?'':'disabled'} class="inp w-16 px-2.5 py-1.5 rounded-lg text-xs font-bold">
+          <span class="font-mono text-[10px]" style="color:var(--txt-soft)">horas</span>
+        </div>
+      </div>
+    </div>
+    <p class="font-mono text-[9px] mt-3 leading-relaxed" style="color:var(--txt-soft)">
+      ⚠️ Los avisos llegan mientras esta página esté abierta (aunque esté en otra pestaña o minimizada).
+      Déjala abierta en el celular o la compu durante el día de trabajo.
+    </p>`;
+}
+
+// El número de pendientes también se ve en el título de la pestaña
+function actualizarTitulo(){
+  const n = yo ? contarMias() : 0;
+  document.title = (n ? `(${n}) ` : "") + "Centro de Control · Importaciones Yesica";
+}
+setInterval(()=>{ if(yo){ actualizarTitulo(); pintarCfgNotis(); } }, 60000);
+reiniciarTimers();
+setTimeout(()=>{ if(puedeAvisar()) avisoTareas(); }, 10000);
 
 setTipo("Encargo");
 </script>
