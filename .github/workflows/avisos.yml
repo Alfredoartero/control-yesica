@@ -31,4 +31,5 @@ jobs:
       - name: Revisar tareas y enviar avisos
         env:
           FIREBASE_SA: ${{ secrets.FIREBASE_SA }}
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
         run: node scripts/avisos.js
