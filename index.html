@@ -1194,11 +1194,12 @@ function robotVivo(){
 }
 function textoRobot(){
   const m = minutosDesdeRevision();
-  if(m === null) return "aún no ha corrido — revisa que subiste el workflow y el secreto";
-  if(m < 2) return "última revisión: hace un momento";
-  if(m < 60) return `última revisión: hace ${m} min`;
+  const est = cfgRemota.ultimoEstado ? ` · ${cfgRemota.ultimoEstado}` : "";
+  if(m === null) return "aún no ha corrido — revisa el workflow y el secreto en GitHub";
+  if(m < 2)  return "revisó hace un momento" + est;
+  if(m < 60) return `revisó hace ${m} min` + est;
   const h = Math.round(m/60);
-  return `última revisión: hace ${h} h — puede estar detenido`;
+  return `revisó hace ${h} h — puede estar detenido`;
 }
 
 window.crearMiTema = async function(){
