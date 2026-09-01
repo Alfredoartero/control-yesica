@@ -532,6 +532,12 @@ onAuthStateChanged(auth, async user=>{
     pintarUsers(); pintarTodo();
     if(!suscrito){
       suscrito = true;
+      onSnapshot(doc(db,"config","telegram"), s=>{
+        const d = s.exists() ? s.data() : {};
+        tgToken = d.token || "";
+        cfgRemota.botName = d.bot || "";
+        pintarCfgNotis();
+      });
       onSnapshot(doc(db,"config","notificaciones"), s=>{
         cfgRemota = s.exists() ? s.data() : {};
         if(cfgRemota.minTareas){                       // el robot manda: sincronizamos los tiempos
@@ -1158,29 +1164,24 @@ window.crearUnidad = async function(){
   finally{ b.disabled=false; b.innerText="Registrar unidad"; }
 };
 
-/* ════════ PUSH REAL AL CELULAR (ntfy.sh) ════════
-   Los avisos los envía un robot en GitHub Actions cada 15 min.
-   Aquí solo se administra el canal de cada persona y se ve el estado del robot. */
-let cfgRemota = {};   // config/notificaciones — la comparte la web con el robot
+/* ════════ AVISOS POR TELEGRAM ════════
+   Llegan aunque la persona tenga todo cerrado. Los envía el robot de GitHub Actions. */
+let cfgRemota = {};      // config/notificaciones — la comparte la web con el robot
+let tgToken   = "";      // config/telegram — token del bot
 
-function temaDe(u){ return usersData[u]?.ntfy || ""; }
+const escHtml = s => String(s??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 
-async function asegurarTema(u){
-  if(usersData[u]?.ntfy) return usersData[u].ntfy;
-  const t = `yesica-${u}-${Math.random().toString(36).slice(2,10)}`;
-  await updateDoc(doc(db,"usuarios",u), { ntfy:t });
-  return t;
-}
-
-async function enviarPush(topic, titulo, mensaje, tags){
-  if(!topic) return false;
+async function enviarTelegram(chatId, textoHtml){
+  if(!tgToken || !chatId) return false;
   try{
-    const r = await fetch("https://ntfy.sh/", {
-      method:"POST",
-      body: JSON.stringify({ topic, title:titulo, message:mensaje, priority:4, tags: tags||["bell"] })
+    const r = await fetch(`https://api.telegram.org/bot${tgToken}/sendMessage`, {
+      method:"POST", headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ chat_id:String(chatId), text:textoHtml, parse_mode:"HTML" })
     });
-    return r.ok;
-  }catch(e){ console.warn("push falló:", e.message); return false; }
+    const d = await r.json();
+    if(!d.ok) console.warn("Telegram:", d.description);
+    return !!d.ok;
+  }catch(e){ console.warn("Telegram falló:", e.message); return false; }
 }
 
 // ── Estado del robot ──
@@ -1190,34 +1191,81 @@ function minutosDesdeRevision(){
 }
 function robotVivo(){
   const m = minutosDesdeRevision();
-  return m !== null && m < 45;      // debería revisar cada 15 min
+  return m !== null && m < 45;
 }
 function textoRobot(){
   const m = minutosDesdeRevision();
   const est = cfgRemota.ultimoEstado ? ` · ${cfgRemota.ultimoEstado}` : "";
-  if(m === null) return "aún no ha corrido — revisa el workflow y el secreto en GitHub";
+  if(m === null) return "aún no ha corrido — revisa el workflow y los secretos en GitHub";
   if(m < 2)  return "revisó hace un momento" + est;
   if(m < 60) return `revisó hace ${m} min` + est;
-  const h = Math.round(m/60);
-  return `revisó hace ${h} h — puede estar detenido`;
+  return `revisó hace ${Math.round(m/60)} h — puede estar detenido`;
 }
 
-window.crearMiTema = async function(){
-  await asegurarTema(yo.usuario);
-  toast("Tu canal de avisos está listo.");
-  pintarCfgNotis();
+// ── Conectar el bot (solo admin, una vez para todo el equipo) ──
+window.guardarTokenTG = async function(){
+  const t = (document.getElementById('tgTok')?.value || "").trim();
+  if(!t.includes(":") || t.length < 25){ toast("Ese token no parece válido.","warn"); return; }
+  try{
+    const r = await fetch(`https://api.telegram.org/bot${t}/getMe`);
+    const d = await r.json();
+    if(!d.ok){ toast("Telegram rechazó ese token.","err"); return; }
+    await setDoc(doc(db,"config","telegram"), { token:t, bot:d.result.username }, { merge:true });
+    toast(`✓ Bot @${d.result.username} conectado.`);
+  }catch(e){ toast("No se pudo verificar el token.","err"); }
 };
-window.copiarTema = async function(){
-  const t = temaDe(yo.usuario); if(!t) return;
-  try{ await navigator.clipboard.writeText(t); toast("Copiado: "+t); }
-  catch(e){ prompt("Copia este nombre de canal:", t); }
+
+// ── Vinculación de cada persona ──
+const miCodigoTG = () => usersData[yo?.usuario]?.tgCode || "";
+const miChatTG   = () => usersData[yo?.usuario]?.telegram || "";
+
+window.crearCodigoTG = async function(){
+  const code = `vincular-${yo.usuario}-${Math.random().toString(36).slice(2,6)}`;
+  await updateDoc(doc(db,"usuarios",yo.usuario), { tgCode:code });
+  toast("Código listo. Envíaselo al bot en Telegram.");
 };
-window.probarPush = async function(){
-  const t = temaDe(yo.usuario);
-  if(!t){ toast("Primero crea tu canal.","warn"); return; }
-  const ok = await enviarPush(t, "🔔 Prueba de Importaciones Yesica",
-    "Si ves esto en tu celular con la app cerrada, ya quedó funcionando.", ["white_check_mark"]);
-  toast(ok ? "Push enviado. Revisa tu celular." : "No se pudo enviar el push.", ok?"ok":"err");
+
+window.copiarCodigoTG = async function(){
+  const c = miCodigoTG(); if(!c) return;
+  try{ await navigator.clipboard.writeText(c); toast("Copiado: "+c); }
+  catch(e){ prompt("Copia este código y envíaselo al bot:", c); }
+};
+
+window.vincularTG = async function(){
+  const code = miCodigoTG();
+  if(!tgToken){ toast("El bot no está conectado todavía. Pídeselo al administrador.","warn"); return; }
+  if(!code){ toast("Primero genera tu código.","warn"); return; }
+  toast("Buscando tu mensaje en Telegram…","warn");
+  try{
+    const r = await fetch(`https://api.telegram.org/bot${tgToken}/getUpdates?limit=100`);
+    const d = await r.json();
+    if(!d.ok){ toast("Error del bot: "+(d.description||""),"err"); return; }
+    const hit = (d.result||[]).reverse().find(u =>
+      (u.message?.text||"").toLowerCase().includes(code.toLowerCase()));
+    if(!hit){
+      toast("No encontré tu mensaje. Envíale el código al bot y vuelve a intentar.","warn");
+      return;
+    }
+    await updateDoc(doc(db,"usuarios",yo.usuario), {
+      telegram: String(hit.message.chat.id),
+      telegramNombre: hit.message.from?.first_name || ""
+    });
+    toast("✓ Telegram vinculado correctamente.");
+  }catch(e){ toast("No se pudo vincular: "+e.message,"err"); }
+};
+
+window.desvincularTG = async function(){
+  if(!confirm("¿Desvincular tu Telegram? Dejarás de recibir avisos.")) return;
+  await updateDoc(doc(db,"usuarios",yo.usuario), { telegram:"" });
+  toast("Telegram desvinculado.","warn");
+};
+
+window.probarTG = async function(){
+  const chat = miChatTG();
+  if(!chat){ toast("Primero vincula tu Telegram.","warn"); return; }
+  const ok = await enviarTelegram(chat,
+    "🔔 <b>Prueba · Importaciones Yesica</b>\n\nSi ves esto en tu celular, tus avisos ya están funcionando. ✅");
+  toast(ok ? "Enviado. Revisa Telegram." : "No se pudo enviar.", ok?"ok":"err");
 };
 
 /* ════════ NOTIFICACIONES ════════ */
@@ -1387,41 +1435,58 @@ function pintarCfgNotis(){
   else if(permiso==="denied") nota = "🔕 Bloqueaste los avisos en este navegador. Actívalos desde el candado 🔒 de la barra de dirección → Notificaciones → Permitir. Mientras tanto te aviso dentro de la página, con sonido y vibración.";
   else nota = "🔔 Este navegador no da avisos del sistema, así que te aviso <b>dentro de la página</b> con sonido y vibración. Déjala abierta durante el día.";
 
-  const miTema = temaDe(yo?.usuario);
+  const chatTG = miChatTG(), codeTG = miCodigoTG();
+  const botName = cfgRemota.botName || "";
   const pushBox = `
     <div class="deep rounded-2xl p-4 mt-3" style="border-color:var(--brand)">
       <div class="flex items-center justify-between gap-2 flex-wrap mb-2">
-        <p class="font-mono text-[10px] font-black uppercase tracking-wider" style="color:var(--brand)">📲 Push al celular · aunque tengas todo cerrado</p>
-        <span class="chip ${miTema?'chip-ok':'chip-wn'}">${miTema?'canal listo':'sin conectar'}</span>
+        <p class="font-mono text-[10px] font-black uppercase tracking-wider" style="color:var(--brand)">✈️ Avisos por Telegram · aunque tengas todo cerrado</p>
+        <span class="chip ${chatTG?'chip-ok':'chip-wn'}">${chatTG?'vinculado':'sin vincular'}</span>
       </div>
-      ${miTema ? `
-        <p class="text-[11px] leading-relaxed mb-2" style="color:var(--txt-soft)">
-          1) Instala la app <b style="color:var(--txt)">ntfy</b> (gratis, Play Store o App Store).<br>
-          2) Ábrela, toca <b style="color:var(--txt)">+</b> y pega este nombre de canal:
+
+      ${!tgToken ? `
+        <p class="text-[11px] leading-relaxed mb-2" style="color:var(--warn)">
+          ⚠️ El bot todavía no está conectado.${yo?.admin?' Pégale abajo el token que te dio BotFather.':' Pídeselo al administrador.'}
+        </p>` : ""}
+
+      ${chatTG ? `
+        <p class="text-[11px] leading-relaxed mb-2" style="color:var(--ok)">
+          ✅ Tu Telegram está vinculado${usersData[yo.usuario]?.telegramNombre?` como <b>${esc(usersData[yo.usuario].telegramNombre)}</b>`:""}.
+          Los avisos te llegarán ahí aunque tengas todo cerrado.
         </p>
-        <div class="flex gap-2 items-center mb-2 flex-wrap">
-          <code class="font-mono text-[11px] px-3 py-2 rounded-lg flex-1 min-w-[180px] break-all" style="background:var(--bg);color:var(--cyan);border:1px solid var(--line-strong)">${esc(miTema)}</code>
-          <button onclick="copiarTema()" class="btn-g text-[9px] uppercase px-3 py-2 rounded-lg">Copiar</button>
-          <button onclick="probarPush()" class="btn-p text-[9px] uppercase px-3 py-2 rounded-lg">Probar</button>
-        </div>
-        <p class="text-[10px] leading-relaxed" style="color:var(--txt-soft)">
-          Listo: te llegarán avisos al celular aunque la página esté cerrada. Este canal es solo tuyo — no lo compartas.
-        </p>`
-      : `<p class="text-[11px] leading-relaxed mb-2" style="color:var(--txt-soft)">
-          Crea tu canal personal para recibir avisos en el celular aunque no tengas nada abierto.
-        </p>
-        <button onclick="crearMiTema()" class="btn-p text-[9px] uppercase px-4 py-2 rounded-xl">Crear mi canal de avisos</button>`}
+        <div class="flex gap-2 flex-wrap">
+          <button onclick="probarTG()" class="btn-p text-[9px] uppercase px-4 py-2 rounded-xl">Probar aviso</button>
+          <button onclick="desvincularTG()" class="btn-g text-[9px] uppercase px-3 py-2 rounded-xl">Desvincular</button>
+        </div>`
+      : `
+        <ol class="text-[11px] leading-relaxed mb-2 pl-4 space-y-1" style="color:var(--txt-soft);list-style:decimal">
+          <li>Abre Telegram y busca el bot${botName?` <b style="color:var(--cyan)">@${esc(botName)}</b>`:" del negocio"}.</li>
+          <li>Dale a <b style="color:var(--txt)">Iniciar</b> (o escribe /start).</li>
+          <li>Genera tu código aquí abajo y envíaselo como mensaje al bot.</li>
+          <li>Vuelve y dale a <b style="color:var(--txt)">"Ya lo envié"</b>.</li>
+        </ol>
+        ${codeTG ? `
+          <div class="flex gap-2 items-center mb-2 flex-wrap">
+            <code class="font-mono text-[11px] px-3 py-2 rounded-lg flex-1 min-w-[170px] break-all" style="background:var(--bg);color:var(--cyan);border:1px solid var(--line-strong)">${esc(codeTG)}</code>
+            <button onclick="copiarCodigoTG()" class="btn-g text-[9px] uppercase px-3 py-2 rounded-lg">Copiar</button>
+          </div>
+          <button onclick="vincularTG()" class="btn-p text-[9px] uppercase px-4 py-2 rounded-xl">Ya lo envié · Vincular</button>`
+        : `<button onclick="crearCodigoTG()" class="btn-p text-[9px] uppercase px-4 py-2 rounded-xl">Generar mi código</button>`}`}
 
       ${yo?.admin ? `
-        <div class="mt-3 pt-3 border-t" style="border-color:var(--line)">
+        <div class="mt-3 pt-3 border-t space-y-2" style="border-color:var(--line)">
           <div class="flex items-center gap-2 flex-wrap">
             <span class="chip ${robotVivo()?'chip-ok':'chip-wn'}"><span class="dot"></span>🤖 Robot ${robotVivo()?'funcionando':'sin señal'}</span>
             <span class="font-mono text-[9px]" style="color:var(--txt-soft)">${textoRobot()}</span>
           </div>
-          <p class="text-[10px] mt-1.5 leading-relaxed" style="color:var(--txt-soft)">
-            Los avisos los manda un robot en los servidores de GitHub cada 15 minutos.
-            <b style="color:var(--txt)">Nadie necesita tener nada abierto.</b>
-          </p>
+          <details>
+            <summary class="font-mono text-[9px] uppercase cursor-pointer" style="color:var(--txt-soft)">⚙️ Token del bot ${tgToken?'(conectado)':'(falta)'}</summary>
+            <div class="flex gap-2 mt-2 flex-wrap">
+              <input id="tgTok" type="password" placeholder="1234567890:AAxx…" class="inp flex-1 min-w-[180px] px-3 py-2 rounded-xl text-xs font-bold">
+              <button onclick="guardarTokenTG()" class="btn-g text-[9px] uppercase px-3 py-2 rounded-xl">Guardar</button>
+            </div>
+            <p class="text-[9px] mt-1.5" style="color:var(--txt-soft)">Te lo da @BotFather al crear el bot. Solo se pone una vez, sirve para todo el equipo.</p>
+          </details>
         </div>`:""}
     </div>`;
 
