@@ -74,15 +74,22 @@ function tareaOk(usuarios, v, t){
   return req.every(u => !!m[u]);
 }
 
-async function enviarPush(topic, title, message, tags){
-  if(!topic) return false;
+const TG = process.env.TELEGRAM_TOKEN;
+const escHtml = s => String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+
+async function enviarTelegram(chatId, textoHtml){
+  if(!TG){ console.error("Falta el secreto TELEGRAM_TOKEN en GitHub."); return false; }
+  if(!chatId) return false;
   try{
-    const r = await fetch("https://ntfy.sh/", {
+    const r = await fetch(`https://api.telegram.org/bot${TG}/sendMessage`, {
       method: "POST",
-      body: JSON.stringify({ topic, title, message, priority: 4, tags: tags || ["bell"] })
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chat_id: String(chatId), text: textoHtml, parse_mode: "HTML" })
     });
-    return r.ok;
-  }catch(e){ console.error("Push falló:", e.message); return false; }
+    const d = await r.json();
+    if(!d.ok) console.error("Telegram:", d.description);
+    return !!d.ok;
+  }catch(e){ console.error("Telegram falló:", e.message); return false; }
 }
 
 function horaSV(){
@@ -147,15 +154,18 @@ async function main(){
 
     let enviados = 0;
     for(const u of Object.keys(mapa)){
-      const topic = usuarios[u]?.ntfy;
-      if(!topic){ console.log(`· ${u}: ${mapa[u].length} pendientes, pero SIN canal conectado`); continue; }
-      const ls = mapa[u], p = ls[0];
-      const cuerpo = `${p.t.t}\n🚗 ${p.v.vehiculo || "Carro por asignar"}` +
-                     (ls.length > 1 ? `\n\n… y ${ls.length - 1} pendiente${ls.length > 2 ? "s" : ""} más.` : "");
-      const ok = await enviarPush(topic,
-        `⏰ ${ls.length} tarea${ls.length > 1 ? "s" : ""} pendiente${ls.length > 1 ? "s" : ""}`,
-        cuerpo, ["hourglass"]);
-      if(ok){ enviados++; console.log(`✓ ${usuarios[u].nombre}: ${ls.length} tarea(s)`); }
+      const chat = usuarios[u]?.telegram;
+      if(!chat){ console.log(`· ${usuarios[u]?.nombre||u}: ${mapa[u].length} pendiente(s), pero SIN Telegram vinculado`); continue; }
+      const ls = mapa[u];
+      const lista = ls.slice(0,5).map(x =>
+        `• ${escHtml(x.t.t)}\n   \u{1F697} <i>${escHtml(x.v.vehiculo || "Carro por asignar")}</i>`).join("\n");
+      const texto =
+        `\u{23F0} <b>Tienes ${ls.length} tarea${ls.length>1?"s":""} pendiente${ls.length>1?"s":""}</b>\n\n` +
+        lista +
+        (ls.length > 5 ? `\n\n\u2026 y ${ls.length-5} m\u00e1s.` : "") +
+        `\n\n<i>M\u00e1rcalas en el sistema cuando las completes.</i>`;
+      const ok = await enviarTelegram(chat, texto);
+      if(ok){ enviados++; console.log(`\u2713 ${usuarios[u].nombre}: ${ls.length} tarea(s)`); }
     }
     console.log(`Avisos de tareas enviados: ${enviados}`);
     marcar.ultimoTareas = ahora;
@@ -167,10 +177,10 @@ async function main(){
     for(const u of Object.keys(usuarios)){
       const areas = usuarios[u].areas || [];
       if(!(areas.includes("ventas") || areas.includes("marketing"))) continue;
-      const topic = usuarios[u].ntfy;
-      if(!topic) continue;
-      const ok = await enviarPush(topic, "💬 Contestar a clientes",
-        "Revisa los chats y grupos de WhatsApp. No dejes mensajes sin responder.", ["speech_balloon"]);
+      const chat = usuarios[u].telegram;
+      if(!chat) continue;
+      const ok = await enviarTelegram(chat,
+        "\u{1F4AC} <b>Contestar a clientes</b>\n\nRevisa los chats y grupos de WhatsApp. No dejes mensajes sin responder.");
       if(ok) enviados++;
     }
     console.log(`Recordatorios de clientes enviados: ${enviados}`);
