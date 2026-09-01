@@ -97,17 +97,28 @@ async function main(){
   const cfg = { ...DEF, ...(cfgSnap.exists ? cfgSnap.data() : {}) };
   const ahora = Date.now();
 
+  // Dejar constancia SIEMPRE de que el robot corrió, aunque no toque enviar nada.
+  // (Así el sistema sabe que sigue vivo.)
+  const latir = async (estado) => {
+    await cfgRef.set({ ultimaRevision: ahora, robot: true, ultimoEstado: estado }, { merge: true });
+  };
+
   if(cfg.soloHorario){
     const h = horaSV();
     if(h < cfg.hIni || h >= cfg.hFin){
       console.log(`Fuera de horario (son las ${h}:00 en SV). No se envía nada.`);
+      await latir(`fuera de horario (${h}:00)`);
       return;
     }
   }
 
   const tocaTareas   = ahora - (cfg.ultimoTareas   || 0) >= cfg.minTareas   * 60000;
   const tocaClientes = cfg.clientesOn && (ahora - (cfg.ultimoClientes || 0) >= cfg.minClientes * 60000);
-  if(!tocaTareas && !tocaClientes){ console.log("Todavía no toca enviar."); return; }
+  if(!tocaTareas && !tocaClientes){
+    console.log("Todavía no toca enviar (el intervalo aún no se cumple).");
+    await latir("sin envíos, esperando el intervalo");
+    return;
+  }
 
   // Traer usuarios y vehículos
   const usuarios = {};
@@ -168,6 +179,7 @@ async function main(){
 
   marcar.ultimaRevision = ahora;
   marcar.robot = true;
+  marcar.ultimoEstado = "avisos enviados";
   await cfgRef.set(marcar, { merge: true });
   console.log("Listo.");
 }
