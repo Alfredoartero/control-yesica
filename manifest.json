@@ -1,0 +1,16 @@
+{
+  "name": "Centro de Control · Importaciones Yesica",
+  "short_name": "Control Yesica",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#070b14",
+  "theme_color": "#070b14",
+  "orientation": "any",
+  "icons": [
+    { "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='42' fill='%23070b14'/%3E%3Ctext x='96' y='128' font-family='monospace' font-size='108' font-weight='bold' fill='%23ff2e88' text-anchor='middle'%3EY%3C/text%3E%3C/svg%3E",
+      "sizes": "192x192", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='112' fill='%23070b14'/%3E%3Ctext x='256' y='342' font-family='monospace' font-size='288' font-weight='bold' fill='%23ff2e88' text-anchor='middle'%3EY%3C/text%3E%3C/svg%3E",
+      "sizes": "512x512", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
