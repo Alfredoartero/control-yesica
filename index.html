@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Centro de Control · Importaciones Yesica</title>
+<meta name="theme-color" content="#070b14">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Control Yesica">
+<link rel="manifest" href="manifest.json">
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Montserrat:wght@700;900&display=swap" rel="stylesheet">
@@ -527,6 +532,16 @@ onAuthStateChanged(auth, async user=>{
     pintarUsers(); pintarTodo();
     if(!suscrito){
       suscrito = true;
+      onSnapshot(doc(db,"config","notificaciones"), s=>{
+        cfgRemota = s.exists() ? s.data() : {};
+        if(cfgRemota.minTareas){                       // el robot manda: sincronizamos los tiempos
+          ncfg = { ...ncfg, minTareas:cfgRemota.minTareas, minClientes:cfgRemota.minClientes,
+                   clientesOn:cfgRemota.clientesOn!==false, soloHorario:cfgRemota.soloHorario!==false,
+                   hIni:cfgRemota.hIni??ncfg.hIni, hFin:cfgRemota.hFin??ncfg.hFin };
+          guardarCfg();
+        }
+        pintarCfgNotis();
+      });
       onSnapshot(collection(db,"vehiculos"), sn=>{
         autos = []; sn.forEach(d=> autos.push({ id:d.id, ...d.data() }));
         autos.sort((a,b)=> (b.fecha_registro||"").localeCompare(a.fecha_registro||""));
@@ -1143,27 +1158,149 @@ window.crearUnidad = async function(){
   finally{ b.disabled=false; b.innerText="Registrar unidad"; }
 };
 
+/* ════════ PUSH REAL AL CELULAR (ntfy.sh) ════════
+   Los avisos los envía un robot en GitHub Actions cada 15 min.
+   Aquí solo se administra el canal de cada persona y se ve el estado del robot. */
+let cfgRemota = {};   // config/notificaciones — la comparte la web con el robot
+
+function temaDe(u){ return usersData[u]?.ntfy || ""; }
+
+async function asegurarTema(u){
+  if(usersData[u]?.ntfy) return usersData[u].ntfy;
+  const t = `yesica-${u}-${Math.random().toString(36).slice(2,10)}`;
+  await updateDoc(doc(db,"usuarios",u), { ntfy:t });
+  return t;
+}
+
+async function enviarPush(topic, titulo, mensaje, tags){
+  if(!topic) return false;
+  try{
+    const r = await fetch("https://ntfy.sh/", {
+      method:"POST",
+      body: JSON.stringify({ topic, title:titulo, message:mensaje, priority:4, tags: tags||["bell"] })
+    });
+    return r.ok;
+  }catch(e){ console.warn("push falló:", e.message); return false; }
+}
+
+// ── Estado del robot ──
+function minutosDesdeRevision(){
+  if(!cfgRemota.ultimaRevision) return null;
+  return Math.round((Date.now() - cfgRemota.ultimaRevision)/60000);
+}
+function robotVivo(){
+  const m = minutosDesdeRevision();
+  return m !== null && m < 45;      // debería revisar cada 15 min
+}
+function textoRobot(){
+  const m = minutosDesdeRevision();
+  if(m === null) return "aún no ha corrido — revisa que subiste el workflow y el secreto";
+  if(m < 2) return "última revisión: hace un momento";
+  if(m < 60) return `última revisión: hace ${m} min`;
+  const h = Math.round(m/60);
+  return `última revisión: hace ${h} h — puede estar detenido`;
+}
+
+window.crearMiTema = async function(){
+  await asegurarTema(yo.usuario);
+  toast("Tu canal de avisos está listo.");
+  pintarCfgNotis();
+};
+window.copiarTema = async function(){
+  const t = temaDe(yo.usuario); if(!t) return;
+  try{ await navigator.clipboard.writeText(t); toast("Copiado: "+t); }
+  catch(e){ prompt("Copia este nombre de canal:", t); }
+};
+window.probarPush = async function(){
+  const t = temaDe(yo.usuario);
+  if(!t){ toast("Primero crea tu canal.","warn"); return; }
+  const ok = await enviarPush(t, "🔔 Prueba de Importaciones Yesica",
+    "Si ves esto en tu celular con la app cerrada, ya quedó funcionando.", ["white_check_mark"]);
+  toast(ok ? "Push enviado. Revisa tu celular." : "No se pudo enviar el push.", ok?"ok":"err");
+};
+
 /* ════════ NOTIFICACIONES ════════ */
 const NK = "yesica_noti_cfg";
 let ncfg = { on:false, minTareas:30, minClientes:15, clientesOn:true, soloHorario:true, hIni:7, hFin:20 };
-let tmrTareas=null, tmrClientes=null;
+let tmrTareas=null, tmrClientes=null, swReg=null;
 
 (function(){ try{ ncfg = { ...ncfg, ...JSON.parse(localStorage.getItem(NK)||"{}") }; }catch(e){} })();
 function guardarCfg(){ localStorage.setItem(NK, JSON.stringify(ncfg)); }
+
+// El service worker es lo que permite avisos reales en Android/Chrome
+(async function(){
+  if(!('serviceWorker' in navigator)) return;
+  try{ swReg = await navigator.serviceWorker.register('sw.js'); }
+  catch(e){ console.warn('Service worker no disponible:', e.message); }
+})();
+
+const esIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+              (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
+const esApp = window.navigator.standalone===true ||
+              window.matchMedia('(display-mode: standalone)').matches;
+
+// "si" = avisos del sistema | "ios" = hay que instalarla como app | "no" = solo avisos dentro de la página
+function soporteSistema(){
+  if(!("Notification" in window)) return esIOS && !esApp ? "ios" : "no";
+  return "si";
+}
 
 function enHorario(){
   if(!ncfg.soloHorario) return true;
   const h = new Date().getHours();
   return h >= ncfg.hIni && h < ncfg.hFin;
 }
-function puedeAvisar(){
-  return ncfg.on && yo && ("Notification" in window) && Notification.permission==="granted" && enHorario();
-}
-function lanzar(titulo, cuerpo, tag){
+function puedeAvisar(){ return ncfg.on && yo && enHorario(); }
+
+// Pitido corto (funciona aunque el celular no soporte notificaciones)
+function pitido(){
   try{
-    const n = new Notification(titulo, { body:cuerpo, tag, renotify:true, requireInteraction:false });
-    n.onclick = ()=>{ window.focus(); ir('mias'); n.close(); };
-  }catch(e){ console.warn(e); }
+    const AC = window.AudioContext || window.webkitAudioContext; if(!AC) return;
+    const ctx = new AC(), o = ctx.createOscillator(), g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.type='sine'; o.frequency.value=880;
+    g.gain.setValueAtTime(.0001, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(.25, ctx.currentTime+.02);
+    g.gain.exponentialRampToValueAtTime(.0001, ctx.currentTime+.45);
+    o.start(); o.stop(ctx.currentTime+.5);
+    setTimeout(()=>ctx.close(), 900);
+  }catch(e){}
+}
+
+// Aviso grande dentro de la página: el respaldo que SÍ funciona en todo celular
+function bannerAviso(titulo, cuerpo){
+  pitido();
+  if(navigator.vibrate) { try{ navigator.vibrate([300,120,300]); }catch(e){} }
+  document.getElementById('bannerNoti')?.remove();
+  const d = document.createElement('div');
+  d.id = "bannerNoti";
+  d.style.cssText = "position:fixed;top:0;left:0;right:0;z-index:300;padding:14px 16px;cursor:pointer;"+
+    "background:linear-gradient(90deg,var(--brand),#ff5fa3);color:#05070c;box-shadow:0 8px 26px -6px rgba(255,46,136,.7);"+
+    "display:flex;align-items:center;gap:12px;animation:slideIn .3s ease";
+  d.innerHTML = `<span style="font-size:22px">🔔</span>
+    <div style="flex:1;min-width:0">
+      <p style="font-family:'JetBrains Mono',monospace;font-weight:800;font-size:12px;text-transform:uppercase;margin:0">${esc(titulo)}</p>
+      <p style="font-size:12px;font-weight:600;margin:2px 0 0;white-space:pre-line">${esc(cuerpo)}</p>
+    </div>
+    <span style="font-family:'JetBrains Mono',monospace;font-weight:800;font-size:11px;opacity:.7">VER ✕</span>`;
+  d.onclick = ()=>{ ir('mias'); d.remove(); };
+  document.body.appendChild(d);
+  setTimeout(()=>d.remove(), 25000);
+}
+
+async function lanzar(titulo, cuerpo, tag){
+  // 1) Aviso del sistema (sale aunque estés en otra app), si el celular lo permite
+  if(("Notification" in window) && Notification.permission==="granted"){
+    const opts = { body:cuerpo, tag, renotify:true, vibrate:[300,120,300], badge:undefined };
+    try{
+      if(swReg && swReg.showNotification){ await swReg.showNotification(titulo, opts); return; }
+      const n = new Notification(titulo, opts);
+      n.onclick = ()=>{ window.focus(); ir('mias'); n.close(); };
+      return;
+    }catch(e){ /* algunos Android no dejan el constructor directo → cae al banner */ }
+  }
+  // 2) Respaldo: aviso dentro de la página, con sonido y vibración
+  bannerAviso(titulo, cuerpo);
 }
 
 function contarMias(){
@@ -1178,7 +1315,7 @@ function avisoTareas(){
   const p = items[0];
   lanzar(
     `⏰ ${items.length} tarea${items.length>1?'s':''} sin marcar`,
-    `${p.t.t}\n🚗 ${p.v.vehiculo}${items.length>1?`\n… y ${items.length-1} más`:''}`,
+    `${p.t.t}\n🚗 ${p.v.vehiculo||"Carro por asignar"}${items.length>1?`\n… y ${items.length-1} más`:''}`,
     "yesica-tareas"
   );
 }
@@ -1196,41 +1333,112 @@ function reiniciarTimers(){
 }
 
 window.activarNotis = async function(){
-  if(!("Notification" in window)){ toast("Este navegador no soporta avisos.","warn"); return; }
-  let p = Notification.permission;
-  if(p!=="granted") p = await Notification.requestPermission();
-  if(p!=="granted"){ toast("No diste permiso para los avisos.","warn"); pintarCfgNotis(); return; }
+  const sop = soporteSistema();
+  if(sop === "si"){
+    let p = Notification.permission;
+    if(p === "default"){ try{ p = await Notification.requestPermission(); }catch(e){} }
+    if(p !== "granted")
+      toast("Sin permiso del sistema: te avisaré dentro de la página.","warn");
+  } else if(sop === "ios"){
+    toast("En iPhone: usa Compartir → “Añadir a inicio” para avisos fuera de la app.","warn");
+  }
   ncfg.on = true; guardarCfg(); reiniciarTimers(); pintarCfgNotis();
-  lanzar("🔔 Avisos activados", `Te recordaré tus tareas cada ${ncfg.minTareas} min${ncfg.clientesOn?` y contestar clientes cada ${ncfg.minClientes} min`:""}.`, "yesica-test");
-  toast("Avisos activados.");
+  lanzar("🔔 Avisos activados",
+    `Te recordaré tus tareas cada ${ncfg.minTareas} min${ncfg.clientesOn?` y contestar clientes cada ${ncfg.minClientes} min`:""}.`,
+    "yesica-test");
 };
 window.apagarNotis = function(){ ncfg.on=false; guardarCfg(); reiniciarTimers(); pintarCfgNotis(); toast("Avisos apagados.","warn"); };
-window.setCfg = function(campo, val){
+window.setCfg = async function(campo, val){
   if(campo==="clientesOn") ncfg.clientesOn = val;
   else if(campo==="soloHorario") ncfg.soloHorario = val;
-  else ncfg[campo] = Math.max(1, Number(val)||1);
+  else ncfg[campo] = Math.max(0, Number(val)||0);
   guardarCfg(); reiniciarTimers(); pintarCfgNotis();
+  // El admin define los tiempos que usa el robot
+  if(yo?.admin){
+    try{
+      await setDoc(doc(db,"config","notificaciones"), {
+        minTareas:ncfg.minTareas, minClientes:ncfg.minClientes,
+        clientesOn:ncfg.clientesOn, soloHorario:ncfg.soloHorario,
+        hIni:ncfg.hIni, hFin:ncfg.hFin
+      }, { merge:true });
+    }catch(e){ console.warn("no se pudo guardar la config del robot:", e.message); }
+  }
 };
 window.probarNoti = function(){
-  if(!puedeAvisar()){ toast(ncfg.on ? "Fuera del horario configurado." : "Primero activa los avisos.","warn"); return; }
-  avisoTareas(); avisoClientes(); toast("Aviso de prueba enviado.");
+  if(!ncfg.on){ toast("Primero activa los avisos.","warn"); return; }
+  if(!enHorario()){ toast("Estás fuera del horario configurado.","warn"); return; }
+  avisoTareas(); avisoClientes();
+  setTimeout(()=>{ if(!contarMias()) lanzar("🔔 Prueba de aviso","Así se verán tus recordatorios.","yesica-test"); }, 300);
 };
 
 function pintarCfgNotis(){
   const c = document.getElementById('cfgNotis'); if(!c) return;
-  const activo = ncfg.on && ("Notification" in window) && Notification.permission==="granted";
+  const sop = soporteSistema();
+  const permiso = ("Notification" in window) ? Notification.permission : "unsupported";
+  const sistemaOk = sop==="si" && permiso==="granted";
+
+  let nota = "";
+  if(!ncfg.on) nota = "";
+  else if(sistemaOk) nota = swReg
+      ? "✅ Avisos completos: te llegan aunque estés en otra app o con la pantalla apagada (mientras la página siga abierta en el navegador)."
+      : "✅ Avisos del sistema activos. Deja esta página abierta en una pestaña.";
+  else if(sop==="ios") nota = "📱 <b>iPhone:</b> toca el botón <b>Compartir</b> ⬆️ de Safari y elige <b>“Añadir a pantalla de inicio”</b>. Abre la app desde ese ícono y vuelve a activar los avisos: así te llegarán como los de WhatsApp. Mientras tanto verás el aviso dentro de la página, con sonido y vibración.";
+  else if(permiso==="denied") nota = "🔕 Bloqueaste los avisos en este navegador. Actívalos desde el candado 🔒 de la barra de dirección → Notificaciones → Permitir. Mientras tanto te aviso dentro de la página, con sonido y vibración.";
+  else nota = "🔔 Este navegador no da avisos del sistema, así que te aviso <b>dentro de la página</b> con sonido y vibración. Déjala abierta durante el día.";
+
+  const miTema = temaDe(yo?.usuario);
+  const pushBox = `
+    <div class="deep rounded-2xl p-4 mt-3" style="border-color:var(--brand)">
+      <div class="flex items-center justify-between gap-2 flex-wrap mb-2">
+        <p class="font-mono text-[10px] font-black uppercase tracking-wider" style="color:var(--brand)">📲 Push al celular · aunque tengas todo cerrado</p>
+        <span class="chip ${miTema?'chip-ok':'chip-wn'}">${miTema?'canal listo':'sin conectar'}</span>
+      </div>
+      ${miTema ? `
+        <p class="text-[11px] leading-relaxed mb-2" style="color:var(--txt-soft)">
+          1) Instala la app <b style="color:var(--txt)">ntfy</b> (gratis, Play Store o App Store).<br>
+          2) Ábrela, toca <b style="color:var(--txt)">+</b> y pega este nombre de canal:
+        </p>
+        <div class="flex gap-2 items-center mb-2 flex-wrap">
+          <code class="font-mono text-[11px] px-3 py-2 rounded-lg flex-1 min-w-[180px] break-all" style="background:var(--bg);color:var(--cyan);border:1px solid var(--line-strong)">${esc(miTema)}</code>
+          <button onclick="copiarTema()" class="btn-g text-[9px] uppercase px-3 py-2 rounded-lg">Copiar</button>
+          <button onclick="probarPush()" class="btn-p text-[9px] uppercase px-3 py-2 rounded-lg">Probar</button>
+        </div>
+        <p class="text-[10px] leading-relaxed" style="color:var(--txt-soft)">
+          Listo: te llegarán avisos al celular aunque la página esté cerrada. Este canal es solo tuyo — no lo compartas.
+        </p>`
+      : `<p class="text-[11px] leading-relaxed mb-2" style="color:var(--txt-soft)">
+          Crea tu canal personal para recibir avisos en el celular aunque no tengas nada abierto.
+        </p>
+        <button onclick="crearMiTema()" class="btn-p text-[9px] uppercase px-4 py-2 rounded-xl">Crear mi canal de avisos</button>`}
+
+      ${yo?.admin ? `
+        <div class="mt-3 pt-3 border-t" style="border-color:var(--line)">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="chip ${robotVivo()?'chip-ok':'chip-wn'}"><span class="dot"></span>🤖 Robot ${robotVivo()?'funcionando':'sin señal'}</span>
+            <span class="font-mono text-[9px]" style="color:var(--txt-soft)">${textoRobot()}</span>
+          </div>
+          <p class="text-[10px] mt-1.5 leading-relaxed" style="color:var(--txt-soft)">
+            Los avisos los manda un robot en los servidores de GitHub cada 15 minutos.
+            <b style="color:var(--txt)">Nadie necesita tener nada abierto.</b>
+          </p>
+        </div>`:""}
+    </div>`;
+
   c.innerHTML = `
     <div class="flex items-center justify-between gap-3 flex-wrap">
-      <div class="flex items-center gap-2">
-        <span class="chip ${activo?'chip-ok':'chip-gr'}"><span class="dot"></span>${activo?'Avisos encendidos':'Avisos apagados'}</span>
-        ${activo && !enHorario() ? `<span class="chip chip-wn">dormidos hasta las ${ncfg.hIni}:00</span>`:""}
+      <div class="flex items-center gap-2 flex-wrap">
+        <span class="chip ${ncfg.on?'chip-ok':'chip-gr'}"><span class="dot"></span>${ncfg.on?'Avisos encendidos':'Avisos apagados'}</span>
+        ${ncfg.on ? `<span class="chip ${sistemaOk?'chip-cy':'chip-wn'}">${sistemaOk?'📲 del sistema':'📄 dentro de la página'}</span>`:""}
+        ${ncfg.on && !enHorario() ? `<span class="chip chip-wn">dormidos hasta las ${ncfg.hIni}:00</span>`:""}
       </div>
       <div class="flex gap-2">
-        ${activo ? `<button onclick="probarNoti()" class="btn-g text-[9px] uppercase px-3 py-2 rounded-xl">Probar</button>
+        ${ncfg.on ? `<button onclick="probarNoti()" class="btn-g text-[9px] uppercase px-3 py-2 rounded-xl">Probar</button>
                     <button onclick="apagarNotis()" class="btn-g text-[9px] uppercase px-3 py-2 rounded-xl">Apagar</button>`
                  : `<button onclick="activarNotis()" class="btn-p text-[9px] uppercase px-4 py-2 rounded-xl">🔔 Activar avisos</button>`}
       </div>
     </div>
+    ${nota?`<p class="text-[11px] mt-3 leading-relaxed deep rounded-xl p-3" style="color:var(--txt-soft)">${nota}</p>`:""}
+    ${pushBox}
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
       <div class="deep rounded-xl p-3">
         <label class="font-mono text-[9px] font-bold uppercase block mb-1.5" style="color:var(--txt-soft)">Repetir tareas pendientes cada</label>
@@ -1261,11 +1469,7 @@ function pintarCfgNotis(){
           <span class="font-mono text-[10px]" style="color:var(--txt-soft)">horas</span>
         </div>
       </div>
-    </div>
-    <p class="font-mono text-[9px] mt-3 leading-relaxed" style="color:var(--txt-soft)">
-      ⚠️ Los avisos llegan mientras esta página esté abierta (aunque esté en otra pestaña o minimizada).
-      Déjala abierta en el celular o la compu durante el día de trabajo.
-    </p>`;
+    </div>`;
 }
 
 // El número de pendientes también se ve en el título de la pestaña
