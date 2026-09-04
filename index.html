@@ -14,18 +14,24 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Montserrat:wght@700;900&display=swap" rel="stylesheet">
 <style>
 :root{
-  --brand:#ff2e88; --brand-soft:rgba(255,46,136,.12);
+  --brand:#ff2e88; --brand-soft:rgba(255,46,136,.12); --brand-2:#ff5fa3;
   --cyan:#22e2e2; --cyan-soft:rgba(34,226,226,.10);
-  --ok:#34d399; --warn:#fbbf24; --danger:#fb7185;
+  --ok:#34d399; --warn:#fbbf24; --danger:#fb7185; --info:#22e2e2;
   --bg:#070b14; --panel:#0e1524; --panel-hi:#131b2e; --deep:#0a0f1c;
   --line:rgba(148,163,184,.14); --line-strong:rgba(148,163,184,.28);
   --txt:#e7ecf5; --txt-soft:#8a95ab;
+  --glow:0 0 24px -4px rgba(255,46,136,.45);
 }
 *{box-sizing:border-box}
 body{
   font-family:'Inter',sans-serif;color:var(--txt);margin:0;background-color:var(--bg);
-  background-image:linear-gradient(rgba(34,226,226,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(34,226,226,.05) 1px,transparent 1px);
-  background-size:34px 34px;
+  background-image:
+    radial-gradient(900px 500px at 12% -10%, rgba(255,46,136,.10), transparent 60%),
+    radial-gradient(700px 400px at 100% 0%, rgba(34,226,226,.07), transparent 55%),
+    linear-gradient(rgba(34,226,226,.035) 1px,transparent 1px),
+    linear-gradient(90deg, rgba(34,226,226,.035) 1px,transparent 1px);
+  background-size:auto,auto,38px 38px,38px 38px;
+  background-attachment:fixed;
 }
 ::-webkit-scrollbar{width:8px;height:8px}
 ::-webkit-scrollbar-track{background:var(--bg)}
@@ -36,10 +42,10 @@ body{
 .font-display{font-family:'Space Grotesk',sans-serif}
 .brand-logo{font-family:'Montserrat',sans-serif}
 
-.glass{background:linear-gradient(180deg,var(--panel-hi),var(--panel));border:1px solid var(--line);box-shadow:0 20px 40px -20px rgba(0,0,0,.6)}
+.glass{background:linear-gradient(180deg,var(--panel-hi),var(--panel));border:1px solid var(--line);box-shadow:0 24px 48px -24px rgba(0,0,0,.85), inset 0 1px 0 rgba(255,255,255,.03)}
 .deep{background:var(--deep);border:1px solid var(--line)}
 .lift{transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
-.lift:hover{transform:translateY(-3px);border-color:rgba(34,226,226,.35);box-shadow:0 16px 32px -12px rgba(34,226,226,.15)}
+.lift:hover{transform:translateY(-3px);border-color:rgba(34,226,226,.35);box-shadow:0 18px 36px -14px rgba(34,226,226,.20)}
 
 .hud{position:absolute;width:14px;height:14px;border-color:var(--cyan);pointer-events:none}
 .hud.tl{top:-1px;left:-1px;border-top:2px solid;border-left:2px solid;border-radius:5px 0 0 0}
@@ -58,11 +64,11 @@ select.inp option{background:var(--panel);color:var(--txt)}
 .tab{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
   padding:9px 14px;border-radius:.6rem;color:var(--txt-soft);background:transparent;border:none;cursor:pointer;transition:all .15s;white-space:nowrap}
 .tab:hover{color:var(--txt)}
-.tab.on{background:linear-gradient(90deg,var(--brand),#ff5fa3);color:#05070c;box-shadow:0 4px 16px -4px rgba(255,46,136,.5)}
+.tab.on{background:linear-gradient(90deg,var(--brand),var(--brand-2));color:#05070c;box-shadow:var(--glow)}
 @media(max-width:640px){.tab{padding:8px 8px;font-size:9px;white-space:normal;line-height:1.2}}
 
-.btn-p{background:linear-gradient(90deg,var(--brand),#ff5fa3);color:#05070c;font-family:'JetBrains Mono',monospace;font-weight:800;
-  box-shadow:0 0 0 1px rgba(255,46,136,.4),0 10px 30px -8px rgba(255,46,136,.55);border:none;cursor:pointer;transition:all .15s}
+.btn-p{background:linear-gradient(90deg,var(--brand),var(--brand-2));color:#05070c;font-family:'JetBrains Mono',monospace;font-weight:800;
+  box-shadow:0 0 0 1px rgba(255,46,136,.4), var(--glow);border:none;cursor:pointer;transition:all .15s}
 .btn-p:hover{filter:brightness(1.08)}
 .btn-p:disabled{opacity:.5;cursor:not-allowed;filter:none}
 .btn-g{background:var(--deep);color:var(--txt-soft);border:1px solid var(--line-strong);font-family:'JetBrains Mono',monospace;font-weight:700;cursor:pointer;transition:all .15s}
@@ -78,7 +84,10 @@ select.inp option{background:var(--panel);color:var(--txt)}
 .chip-gr{background:var(--deep);color:var(--txt-soft);border:1px solid var(--line-strong)}
 
 .stat{background:linear-gradient(180deg,var(--panel-hi),var(--panel));border:1px solid var(--line);border-radius:1rem;padding:14px 16px;position:relative;overflow:hidden}
-.stat::before{content:"";position:absolute;top:0;left:0;width:100%;height:2px;background:linear-gradient(90deg,var(--brand),var(--cyan))}
+.stat::before{content:"";position:absolute;top:0;left:0;width:100%;height:2px;background:linear-gradient(90deg,var(--brand),transparent)}
+.stat::after{content:"";position:absolute;right:-30px;top:-30px;width:110px;height:110px;border-radius:999px;
+  background:radial-gradient(circle,rgba(255,46,136,.10),transparent 70%);pointer-events:none}
+.stat:hover{border-color:var(--line-strong)}
 
 .icon-badge{width:34px;height:34px;border-radius:.65rem;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;
   background:linear-gradient(135deg,rgba(255,46,136,.18),rgba(34,226,226,.12));border:1px solid var(--line-strong)}
@@ -90,7 +99,7 @@ select.inp option{background:var(--panel);color:var(--txt)}
 .tbox{width:20px;height:20px;border-radius:6px;border:2px solid var(--line-strong);flex-shrink:0;display:flex;align-items:center;
   justify-content:center;font-size:12px;cursor:pointer;transition:all .15s;margin-top:1px;background:transparent;color:transparent}
 .tbox:hover{border-color:var(--cyan)}
-.tbox.on{background:var(--ok);border-color:var(--ok);color:#05070c}
+.tbox.on{background:var(--ok);border-color:var(--ok);color:#05070c;box-shadow:0 0 10px -2px rgba(52,211,153,.7)}
 .tbox.lock{cursor:not-allowed;border-style:dashed}
 .tbox.lock:hover{border-color:var(--line-strong)}
 
@@ -103,6 +112,13 @@ select.inp option{background:var(--panel);color:var(--txt)}
 .toast{padding:12px 14px;border-radius:.8rem;font-size:12px;font-weight:700;animation:slideIn .25s ease;background:var(--panel-hi);border:1px solid var(--line-strong);box-shadow:0 12px 28px -10px rgba(0,0,0,.7)}
 @keyframes slideIn{from{transform:translateX(30px);opacity:0}to{transform:translateX(0);opacity:1}}
 
+.ring-wrap{position:relative;display:inline-flex;align-items:center;justify-content:center}
+.ring-wrap .ring-txt{position:absolute;text-align:center;line-height:1.1}
+.ring-wrap .ring-num{font-family:'JetBrains Mono',monospace;font-weight:700;color:#fff}
+.ring-wrap .ring-lbl{font-family:'JetBrains Mono',monospace;font-size:8px;text-transform:uppercase;letter-spacing:.1em;color:var(--txt-soft)}
+.glow-txt{text-shadow:0 0 18px rgba(255,46,136,.55)}
+.icon-badge{background:linear-gradient(135deg,rgba(255,46,136,.20),rgba(34,226,226,.10))!important;border-color:var(--line-strong)!important}
+.bar>i{background:linear-gradient(90deg,var(--brand),var(--cyan))!important;box-shadow:0 0 12px -2px rgba(255,46,136,.6)}
 .fase-h{display:flex;align-items:center;gap:8px;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:800;
   text-transform:uppercase;letter-spacing:.12em;color:var(--txt-soft);margin:14px 0 7px}
 .fase-h::after{content:"";flex:1;height:1px;background:var(--line)}
@@ -118,7 +134,7 @@ select.inp option{background:var(--panel);color:var(--txt)}
     <div class="hud tl"></div><div class="hud tr"></div><div class="hud bl"></div><div class="hud br"></div>
     <div class="text-center space-y-2">
       <div class="w-14 h-14 mx-auto rounded-2xl flex items-center justify-center font-mono font-bold text-[#05070c] text-2xl relative"
-           style="background:linear-gradient(135deg,var(--brand),var(--cyan))">Y
+           style="background:linear-gradient(135deg,var(--brand),var(--brand-2))">Y
         <span class="absolute -top-1 -right-1 w-3 h-3 rounded-full glow" style="background:var(--cyan)"></span>
       </div>
       <h1 class="brand-logo text-lg font-black text-white italic uppercase tracking-tight">Centro de Control</h1>
@@ -147,11 +163,11 @@ select.inp option{background:var(--panel);color:var(--txt)}
   <div class="max-w-[1500px] mx-auto flex flex-col lg:flex-row justify-between items-center gap-3">
     <div class="flex items-center gap-3 w-full lg:w-auto">
       <div class="w-10 h-10 rounded-xl flex items-center justify-center font-mono font-bold text-[#05070c] text-lg relative flex-shrink-0"
-           style="background:linear-gradient(135deg,var(--brand),var(--cyan))">Y
+           style="background:linear-gradient(135deg,var(--brand),var(--brand-2))">Y
         <span class="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full glow" style="background:var(--cyan)"></span>
       </div>
       <div class="flex-1">
-        <h1 class="brand-logo text-base font-black text-white italic tracking-tight uppercase">Importaciones <span style="color:var(--brand)">Yesica</span></h1>
+        <h1 class="brand-logo text-base font-black text-white italic tracking-tight uppercase">Importaciones <span style="color:var(--brand)" class="glow-txt">Yesica</span></h1>
         <p class="font-mono text-[9px] font-bold uppercase tracking-wider" style="color:var(--txt-soft)">// Centro de Operaciones</p>
       </div>
       <div class="flex items-center gap-2 lg:hidden">
@@ -165,6 +181,7 @@ select.inp option{background:var(--panel);color:var(--txt)}
         <button onclick="ir('flota')"    id="tbFlota"  class="tab on">🚗 Flota</button>
         <button onclick="ir('mias')"     id="tbMias"   class="tab">✅ Mis Tareas <span id="badgeMias" class="ml-1 px-1.5 rounded-full" style="background:var(--brand);color:#05070c">0</span></button>
         <button onclick="ir('nuevo')"    id="tbNuevo"  class="tab">➕ Nueva Unidad</button>
+        <button onclick="ir('finanzas')" id="tbFin"    class="tab">💰 Finanzas</button>
         <button onclick="ir('archivo')"  id="tbArch"   class="tab">📂 Archivo</button>
         <button onclick="ir('usuarios')" id="tbUsers"  class="tab hidden">👤 Usuarios</button>
       </div>
@@ -215,7 +232,7 @@ select.inp option{background:var(--panel);color:var(--txt)}
         <div class="icon-badge">🔔</div>
         <div>
           <h2 class="font-mono text-xs font-black text-white uppercase tracking-wide">Avisos automáticos</h2>
-          <p class="font-mono text-[9px] font-bold uppercase tracking-wide mt-0.5" style="color:var(--txt-soft)">// Te repite el recordatorio hasta que marques</p>
+          <p class="font-mono text-[9px] font-bold uppercase tracking-wide mt-0.5" style="color:var(--txt-soft)">// El robot te escribe a Telegram hasta que marques</p>
         </div>
       </div>
       <div id="cfgNotis"></div>
@@ -295,6 +312,49 @@ select.inp option{background:var(--panel);color:var(--txt)}
       </div>
 
       <button onclick="crearUnidad()" id="btnCrear" class="btn-p w-full py-3.5 rounded-2xl uppercase tracking-wider text-xs">Registrar unidad</button>
+    </div>
+  </section>
+
+  <!-- ══ FINANZAS ══ -->
+  <section id="pgFin" class="hidden space-y-5">
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-5">
+      <div class="glass rounded-3xl p-6 xl:col-span-2 relative" style="border-top:2px solid var(--brand)">
+        <div class="hud tl"></div><div class="hud tr"></div>
+        <div class="flex items-center gap-3 mb-5">
+          <div class="icon-badge">💰</div>
+          <div>
+            <h2 class="font-mono text-xs font-black text-white uppercase tracking-wide">Resumen financiero</h2>
+            <p class="font-mono text-[9px] font-bold uppercase tracking-wide mt-0.5" style="color:var(--txt-soft)">// Solo unidades activas</p>
+          </div>
+        </div>
+        <div id="finCifras" class="grid grid-cols-2 lg:grid-cols-4 gap-3"></div>
+        <div id="finBarras" class="mt-5 space-y-3"></div>
+      </div>
+
+      <div class="glass rounded-3xl p-6 flex flex-col items-center justify-center gap-4" style="border-top:2px solid var(--brand)">
+        <p class="font-mono text-[10px] font-black uppercase tracking-[0.2em]" style="color:var(--txt-soft)">Cobrado del total</p>
+        <div id="finAnillo"></div>
+        <div id="finAnilloDet" class="text-center"></div>
+      </div>
+    </div>
+
+    <div class="glass rounded-3xl overflow-hidden" style="border-top:2px solid var(--brand)">
+      <div class="px-6 py-4 border-b flex items-center gap-3" style="background:var(--deep);border-color:var(--line)">
+        <div class="icon-badge">📊</div>
+        <div>
+          <h2 class="font-mono text-xs font-black text-white uppercase tracking-wide">Detalle por unidad</h2>
+          <p class="font-mono text-[9px] font-bold uppercase tracking-wide mt-0.5" style="color:var(--txt-soft)">// Costo, venta, cobrado y saldo</p>
+        </div>
+      </div>
+      <div class="overflow-x-auto"><table class="w-full text-left border-collapse">
+        <thead><tr class="font-mono text-[10px] uppercase font-black border-b" style="background:var(--bg);border-color:var(--line);color:var(--txt-soft)">
+          <th class="p-4">Vehículo</th><th class="p-4">Cliente</th>
+          <th class="p-4 text-right">Costo</th><th class="p-4 text-right">Venta</th>
+          <th class="p-4 text-right">Cobrado</th><th class="p-4 text-right">Saldo</th>
+          <th class="p-4 text-right">Ganancia</th><th class="p-4 text-center">Avance</th>
+        </tr></thead>
+        <tbody id="finTabla" class="text-xs"></tbody>
+      </table></div>
     </div>
   </section>
 
@@ -446,6 +506,24 @@ let yo = null, usersData = {}, autos = [], filtro = "todos", tipoNuevo = "Encarg
 const esc = s => String(s??"").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money = n => "$" + Number(n||0).toLocaleString('en-US',{maximumFractionDigits:0});
 
+// Anillo de progreso estilo dashboard
+function anillo(pct, size=120, grosor=9, etiqueta=""){
+  pct = Math.max(0, Math.min(100, Math.round(pct)));
+  const r = (size/2) - grosor - 2, circ = 2*Math.PI*r, off = circ - (pct/100)*circ;
+  return `<div class="ring-wrap" style="width:${size}px;height:${size}px">
+    <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" style="transform:rotate(-90deg)">
+      <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="${grosor}"/>
+      <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="var(--cyan)" stroke-width="${grosor}"
+        stroke-linecap="round" stroke-dasharray="${circ}" stroke-dashoffset="${off}"
+        style="filter:drop-shadow(0 0 6px rgba(34,226,226,.8));transition:stroke-dashoffset .6s ease"/>
+    </svg>
+    <div class="ring-txt">
+      <div class="ring-num" style="font-size:${Math.round(size*0.21)}px;text-shadow:0 0 18px rgba(34,226,226,.6)">${pct}%</div>
+      ${etiqueta?`<div class="ring-lbl">${esc(etiqueta)}</div>`:""}
+    </div>
+  </div>`;
+}
+
 function toast(msg, tipo="ok"){
   const col = tipo==="err" ? "var(--danger)" : tipo==="warn" ? "var(--warn)" : "var(--ok)";
   const d = document.createElement('div');
@@ -558,8 +636,9 @@ onAuthStateChanged(auth, async user=>{
 });
 
 /* ════════ NAVEGACIÓN ════════ */
-const PGS = { flota:["pgFlota","tbFlota"], mias:["pgMias","tbMias"], nuevo:["pgNuevo","tbNuevo"], archivo:["pgArch","tbArch"], usuarios:["pgUsers","tbUsers"] };
+const PGS = { flota:["pgFlota","tbFlota"], mias:["pgMias","tbMias"], nuevo:["pgNuevo","tbNuevo"], finanzas:["pgFin","tbFin"], archivo:["pgArch","tbArch"], usuarios:["pgUsers","tbUsers"] };
 window.ir = function(p){
+  if(p==='finanzas') pintarFinanzas();
   Object.keys(PGS).forEach(k=>{
     document.getElementById(PGS[k][0]).classList.toggle('hidden', k!==p);
     document.getElementById(PGS[k][1]).classList.toggle('on', k===p);
@@ -625,7 +704,7 @@ function faseActual(v){
 }
 
 /* ════════ RENDER ════════ */
-function pintarTodo(){ pintarStats(); pintarFlota(); pintarMias(); pintarArchivo(); pintarCfgNotis(); actualizarTitulo(); }
+function pintarTodo(){ pintarStats(); pintarFlota(); pintarMias(); pintarArchivo(); pintarFinanzas(); pintarCfgNotis(); actualizarTitulo(); }
 
 function pintarStats(){
   const act = autos.filter(a=>!a.archivado);
@@ -670,21 +749,22 @@ function pintarFlota(){
         ? `<p class="font-mono text-[11px] font-bold" style="color:var(--cyan)">👤 ${esc(v.nombreCliente)}</p>`
         : `<p class="font-mono text-[11px] font-bold" style="color:var(--txt-soft)">👤 Sin cliente asignado</p>`}
 
-      <div>
-        <div class="flex justify-between items-end mb-1.5">
-          <span class="font-mono text-[9px] font-bold uppercase tracking-wider" style="color:var(--txt-soft)">${esc(defF(v)[fa])}</span>
-          <span class="font-mono text-xs font-black" style="color:var(--cyan)">${p}%</span>
+      <div class="flex items-center gap-4">
+        ${anillo(p, 78, 7)}
+        <div class="flex-1 min-w-0 space-y-2">
+          <div>
+            <p class="font-mono text-[8px] uppercase font-bold tracking-wider" style="color:var(--txt-soft)">Fase actual</p>
+            <p class="font-mono text-[11px] font-bold truncate" style="color:var(--cyan)">${esc(defF(v)[fa])}</p>
+          </div>
+          ${sig ? `<div class="deep rounded-xl p-2 flex items-center gap-2">
+            <span class="text-sm">${areaI(sig.a)}</span>
+            <div class="min-w-0 flex-1">
+              <p class="font-mono text-[8px] uppercase font-bold" style="color:var(--txt-soft)">Sigue · ${esc(areaN(sig.a))}</p>
+              <p class="text-[11px] font-bold truncate">${esc(sig.t)}</p>
+            </div></div>`
+          : `<div class="deep rounded-xl p-2 text-center"><span class="chip chip-ok"><span class="dot"></span>Proceso completo</span></div>`}
         </div>
-        <div class="bar"><i style="width:${p}%"></i></div>
       </div>
-
-      ${sig ? `<div class="deep rounded-xl p-2.5 flex items-center gap-2">
-        <span class="text-sm">${areaI(sig.a)}</span>
-        <div class="min-w-0 flex-1">
-          <p class="font-mono text-[8px] uppercase font-bold" style="color:var(--txt-soft)">Sigue ahora · ${esc(areaN(sig.a))}</p>
-          <p class="text-[11px] font-bold truncate">${esc(sig.t)}</p>
-        </div></div>`
-      : `<div class="deep rounded-xl p-2.5 text-center"><span class="chip chip-ok"><span class="dot"></span>Proceso completo</span></div>`}
 
       <div class="flex justify-between items-center pt-1 border-t" style="border-color:var(--line)">
         <div class="font-mono text-[10px]" style="color:var(--txt-soft)">
@@ -727,6 +807,73 @@ function pintarMias(){
         <button onclick="event.stopPropagation();abrirDetalle('${v.id}')" class="btn-g text-[9px] uppercase px-2.5 py-1.5 rounded-lg flex-shrink-0">Ver</button>
       </div>`).join("")}
   `).join("");
+}
+
+function pintarFinanzas(){
+  const act = autos.filter(a=>!a.archivado);
+  const costo   = act.reduce((s,a)=> s + Number(a.costo_subasta||0), 0);
+  const venta   = act.reduce((s,a)=> s + Number(a.precio_venta||0), 0);
+  const cobrado = act.reduce((s,a)=> s + pagado(a), 0);
+  const porCobrar = act.reduce((s,a)=> s + saldo(a), 0);
+  const ganancia  = venta - costo;
+  const pctCobrado = venta > 0 ? (cobrado/venta)*100 : 0;
+  const margen = venta > 0 ? (ganancia/venta)*100 : 0;
+
+  const tarjeta = (icono,label,valor,color) => `
+    <div class="stat">
+      <div class="flex items-center justify-between"><span class="text-lg">${icono}</span>
+        <span class="font-mono text-base font-bold" style="color:${color}">${money(valor)}</span></div>
+      <p class="font-mono text-[9px] font-bold uppercase tracking-wider mt-1.5" style="color:var(--txt-soft)">${label}</p>
+    </div>`;
+
+  document.getElementById('finCifras').innerHTML =
+      tarjeta("📥","Invertido (costos)", costo, "var(--txt)")
+    + tarjeta("🏷️","Venta proyectada", venta, "var(--info)")
+    + tarjeta("✅","Ya cobrado", cobrado, "var(--ok)")
+    + tarjeta("⏳","Por cobrar", porCobrar, "var(--warn)");
+
+  const barra = (label,val,tot,color) => {
+    const p = tot>0 ? Math.round((val/tot)*100) : 0;
+    return `<div>
+      <div class="flex justify-between font-mono text-[10px] mb-1">
+        <span style="color:var(--txt-soft)">${label}</span>
+        <span style="color:${color}">${money(val)} · ${p}%</span>
+      </div>
+      <div class="bar"><i style="width:${p}%;background:${color}!important"></i></div>
+    </div>`;
+  };
+  document.getElementById('finBarras').innerHTML =
+      barra("Costo sobre la venta", costo, venta, "var(--info)")
+    + barra("Ganancia bruta proyectada", ganancia, venta, "var(--brand)")
+    + barra("Cobrado hasta hoy", cobrado, venta, "var(--ok)");
+
+  document.getElementById('finAnillo').innerHTML = anillo(pctCobrado, 165, 12, "cobrado");
+  document.getElementById('finAnilloDet').innerHTML = `
+    <p class="font-mono text-lg font-bold" style="color:var(--ok)">${money(cobrado)}</p>
+    <p class="font-mono text-[10px]" style="color:var(--txt-soft)">de ${money(venta)} proyectados</p>
+    <div class="mt-3 pt-3 border-t" style="border-color:var(--line)">
+      <p class="font-mono text-[9px] uppercase tracking-wider" style="color:var(--txt-soft)">Ganancia proyectada</p>
+      <p class="font-mono text-base font-bold" style="color:${ganancia>=0?'var(--brand)':'var(--danger)'}">${money(ganancia)} <span class="text-[10px]">(${Math.round(margen)}% margen)</span></p>
+    </div>`;
+
+  const t = document.getElementById('finTabla');
+  if(!act.length){
+    t.innerHTML = `<tr><td colspan="8" class="p-14 text-center font-mono font-bold" style="color:var(--txt-soft)"><div class="text-3xl mb-2">📊</div>No hay unidades activas.</td></tr>`;
+    return;
+  }
+  t.innerHTML = act.map(v=>{
+    const g = Number(v.precio_venta||0) - Number(v.costo_subasta||0);
+    return `<tr class="border-b hover:bg-white/5 cursor-pointer" style="border-color:var(--line)" onclick="abrirDetalle('${v.id}')">
+      <td class="p-4 font-bold text-white">${esc(v.vehiculo)||"Por asignar"}</td>
+      <td class="p-4" style="color:var(--cyan)">${esc(v.nombreCliente)||"—"}</td>
+      <td class="p-4 text-right font-mono">${money(v.costo_subasta)}</td>
+      <td class="p-4 text-right font-mono" style="color:var(--info)">${money(v.precio_venta)}</td>
+      <td class="p-4 text-right font-mono" style="color:var(--ok)">${money(pagado(v))}</td>
+      <td class="p-4 text-right font-mono" style="color:var(--warn)">${money(saldo(v))}</td>
+      <td class="p-4 text-right font-mono font-bold" style="color:${g>=0?'var(--brand)':'var(--danger)'}">${money(g)}</td>
+      <td class="p-4 text-center font-mono font-black" style="color:var(--cyan)">${progreso(v)}%</td>
+    </tr>`;
+  }).join("");
 }
 
 function pintarArchivo(){
@@ -917,14 +1064,21 @@ window.abrirDetalle = function(id, silencioso){
 
     <div class="p-6 space-y-5">
       ${panelDatos}
+      <div class="flex items-center gap-5 deep rounded-2xl p-4">
+        ${anillo(p, 104, 9, "avance")}
+        <div class="flex-1 min-w-0 grid grid-cols-2 gap-3">
+          <div><p class="font-mono text-[8px] uppercase font-bold" style="color:var(--txt-soft)">Ya cobrado</p><p class="font-mono text-base font-bold" style="color:var(--ok)">${money(pagado(v))}</p></div>
+          <div><p class="font-mono text-[8px] uppercase font-bold" style="color:var(--txt-soft)">Falta cobrar</p><p class="font-mono text-base font-bold" style="color:var(--warn)">${money(saldo(v))}</p></div>
+          <div><p class="font-mono text-[8px] uppercase font-bold" style="color:var(--txt-soft)">Ganancia proyectada</p><p class="font-mono text-base font-bold" style="color:${(Number(v.precio_venta||0)-Number(v.costo_subasta||0))>=0?'var(--brand)':'var(--danger)'}">${money(Number(v.precio_venta||0)-Number(v.costo_subasta||0))}</p></div>
+          <div><p class="font-mono text-[8px] uppercase font-bold" style="color:var(--txt-soft)">Fase</p><p class="font-mono text-[11px] font-bold truncate" style="color:var(--cyan)">${esc(fases[faseActual(v)])}</p></div>
+        </div>
+      </div>
+
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <div class="deep rounded-xl p-3"><p class="font-mono text-[8px] uppercase font-bold" style="color:var(--txt-soft)">Avance</p><p class="font-mono text-lg font-black" style="color:var(--cyan)">${p}%</p></div>
         <div class="deep rounded-xl p-3"><p class="font-mono text-[8px] uppercase font-bold" style="color:var(--txt-soft)">Costo</p><p class="font-mono text-lg font-black text-white">${money(v.costo_subasta)}</p></div>
         <div class="deep rounded-xl p-3"><p class="font-mono text-[8px] uppercase font-bold" style="color:var(--txt-soft)">Precio venta</p>
           <input type="number" value="${Number(v.precio_venta||0)}" onchange="setVenta('${v.id}',this.value)" class="inp w-full mt-1 px-2 py-1 rounded-lg text-sm font-black" style="color:var(--brand)"></div>
-        <div class="deep rounded-xl p-3"><p class="font-mono text-[8px] uppercase font-bold" style="color:var(--txt-soft)">Falta cobrar</p><p class="font-mono text-lg font-black" style="color:var(--warn)">${money(saldo(v))}</p></div>
       </div>
-      <div class="bar"><i style="width:${p}%"></i></div>
 
       <div class="deep rounded-2xl p-4">
         <div class="flex justify-between items-center mb-2">
@@ -1191,7 +1345,7 @@ function minutosDesdeRevision(){
 }
 function robotVivo(){
   const m = minutosDesdeRevision();
-  return m !== null && m < 45;
+  return m !== null && m < 20;     // debería revisar cada 5 min
 }
 function textoRobot(){
   const m = minutosDesdeRevision();
@@ -1479,6 +1633,11 @@ function pintarCfgNotis(){
             <span class="chip ${robotVivo()?'chip-ok':'chip-wn'}"><span class="dot"></span>🤖 Robot ${robotVivo()?'funcionando':'sin señal'}</span>
             <span class="font-mono text-[9px]" style="color:var(--txt-soft)">${textoRobot()}</span>
           </div>
+          ${!robotVivo() && minutosDesdeRevision()!==null ? `
+            <p class="text-[10px] leading-relaxed mt-1.5 p-2 rounded-lg" style="color:var(--warn);background:rgba(251,191,36,.08)">
+              ⚠️ GitHub se está saltando corridas (les da baja prioridad a los repos gratuitos).
+              Para que los avisos salgan puntuales, conecta el disparador externo de cron-job.org.
+            </p>`:""}
           <details>
             <summary class="font-mono text-[9px] uppercase cursor-pointer" style="color:var(--txt-soft)">⚙️ Token del bot ${tgToken?'(conectado)':'(falta)'}</summary>
             <div class="flex gap-2 mt-2 flex-wrap">
@@ -1491,20 +1650,28 @@ function pintarCfgNotis(){
     </div>`;
 
   c.innerHTML = `
-    <div class="flex items-center justify-between gap-3 flex-wrap">
-      <div class="flex items-center gap-2 flex-wrap">
-        <span class="chip ${ncfg.on?'chip-ok':'chip-gr'}"><span class="dot"></span>${ncfg.on?'Avisos encendidos':'Avisos apagados'}</span>
-        ${ncfg.on ? `<span class="chip ${sistemaOk?'chip-cy':'chip-wn'}">${sistemaOk?'📲 del sistema':'📄 dentro de la página'}</span>`:""}
-        ${ncfg.on && !enHorario() ? `<span class="chip chip-wn">dormidos hasta las ${ncfg.hIni}:00</span>`:""}
-      </div>
-      <div class="flex gap-2">
-        ${ncfg.on ? `<button onclick="probarNoti()" class="btn-g text-[9px] uppercase px-3 py-2 rounded-xl">Probar</button>
-                    <button onclick="apagarNotis()" class="btn-g text-[9px] uppercase px-3 py-2 rounded-xl">Apagar</button>`
-                 : `<button onclick="activarNotis()" class="btn-p text-[9px] uppercase px-4 py-2 rounded-xl">🔔 Activar avisos</button>`}
-      </div>
+    <div class="flex items-center gap-2 flex-wrap mb-1">
+      <span class="chip ${chatTG?'chip-ok':'chip-wn'}"><span class="dot"></span>${chatTG?'Telegram activo':'Telegram sin vincular'}</span>
+      ${chatTG && !enHorario() ? `<span class="chip chip-wn">en pausa hasta las ${ncfg.hIni}:00</span>`:""}
     </div>
-    ${nota?`<p class="text-[11px] mt-3 leading-relaxed deep rounded-xl p-3" style="color:var(--txt-soft)">${nota}</p>`:""}
     ${pushBox}
+    <details class="mt-3">
+      <summary class="font-mono text-[10px] uppercase cursor-pointer px-3 py-2 rounded-xl deep" style="color:var(--txt-soft)">
+        ${ncfg.on?'🔔':'🔕'} Avisos dentro del navegador (opcional) — ${ncfg.on?'encendidos':'apagados'}
+      </summary>
+      <div class="mt-2 deep rounded-xl p-3">
+        <p class="text-[11px] leading-relaxed mb-2" style="color:var(--txt-soft)">
+          Esto es <b style="color:var(--txt)">aparte de Telegram</b>: son avisos que salen solo mientras tengas esta página abierta.
+          No hace falta encenderlos — con Telegram basta.
+        </p>
+        <div class="flex gap-2 flex-wrap">
+          ${ncfg.on ? `<button onclick="probarNoti()" class="btn-g text-[9px] uppercase px-3 py-2 rounded-xl">Probar</button>
+                       <button onclick="apagarNotis()" class="btn-g text-[9px] uppercase px-3 py-2 rounded-xl">Apagar</button>`
+                    : `<button onclick="activarNotis()" class="btn-g text-[9px] uppercase px-3 py-2 rounded-xl">Encender de todos modos</button>`}
+        </div>
+        ${nota?`<p class="text-[10px] mt-2 leading-relaxed" style="color:var(--txt-soft)">${nota}</p>`:""}
+      </div>
+    </details>
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
       <div class="deep rounded-xl p-3">
         <label class="font-mono text-[9px] font-bold uppercase block mb-1.5" style="color:var(--txt-soft)">Repetir tareas pendientes cada</label>
