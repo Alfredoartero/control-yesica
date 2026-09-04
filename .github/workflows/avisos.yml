@@ -2,9 +2,14 @@ name: Avisos Importaciones Yesica
 
 on:
   schedule:
-    # Cada 15 minutos. GitHub puede retrasarlo unos minutos en horas pico.
-    - cron: '*/15 * * * *'
-  workflow_dispatch:      # botón para correrlo a mano y probar
+    # Cada 5 minutos. OJO: GitHub NO garantiza los cron en repos gratuitos y se
+    # salta corridas cuando sus servidores están cargados. Por eso pedimos cada 5:
+    # aunque se salte varias, alguna cae dentro del intervalo de avisos.
+    # Para puntualidad real, usar el disparador externo de abajo (repository_dispatch).
+    - cron: '*/5 * * * *'
+  workflow_dispatch:      # botón para correrlo a mano
+  repository_dispatch:    # disparador externo (cron-job.org) — puntual al minuto
+    types: [avisar]
 
 # Evita que se encimen dos corridas
 concurrency:
