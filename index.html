@@ -122,6 +122,64 @@ select.inp option{background:var(--panel);color:var(--txt)}
 .fase-h{display:flex;align-items:center;gap:8px;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:800;
   text-transform:uppercase;letter-spacing:.12em;color:var(--txt-soft);margin:14px 0 7px}
 .fase-h::after{content:"";flex:1;height:1px;background:var(--line)}
+
+/* ═══ SHELL: riel lateral + contenido ═══ */
+.rail{
+  position:fixed;left:0;top:0;bottom:0;width:74px;z-index:60;
+  background:linear-gradient(180deg,#0c1322,#080d18);border-right:1px solid var(--line);
+  display:flex;flex-direction:column;align-items:center;padding:16px 0;gap:6px;
+}
+.rail-btn{
+  width:46px;height:46px;border-radius:15px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:2px;cursor:pointer;border:1px solid transparent;background:transparent;color:var(--txt-soft);
+  transition:all .18s;position:relative;font-size:18px;
+}
+.rail-btn small{font-family:'JetBrains Mono',monospace;font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:.02em;opacity:.85}
+.rail-btn:hover{color:var(--txt);background:rgba(255,255,255,.04)}
+.rail-btn.on{
+  color:#fff;background:linear-gradient(160deg,rgba(255,46,136,.22),rgba(34,226,226,.10));
+  border-color:rgba(255,46,136,.35);box-shadow:0 8px 22px -10px rgba(255,46,136,.7);
+}
+.rail-btn.on::before{content:"";position:absolute;left:-16px;top:50%;transform:translateY(-50%);width:3px;height:22px;border-radius:0 4px 4px 0;background:var(--brand);box-shadow:0 0 12px var(--brand)}
+.rail-badge{position:absolute;top:4px;right:4px;min-width:16px;height:16px;padding:0 4px;border-radius:999px;
+  background:var(--brand);color:#05070c;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:800;
+  display:flex;align-items:center;justify-content:center;box-shadow:0 0 10px -1px var(--brand)}
+.shell{margin-left:74px;min-height:100vh}
+.topbar{
+  position:sticky;top:0;z-index:50;padding:14px 22px;
+  background:rgba(7,11,20,.82);backdrop-filter:blur(14px);border-bottom:1px solid var(--line);
+}
+.pill{background:var(--deep);border:1px solid var(--line);border-radius:999px}
+
+@media(max-width:1023px){
+  .rail{top:auto;right:0;bottom:0;width:100%;height:64px;flex-direction:row;justify-content:space-around;
+    padding:0 4px;border-right:none;border-top:1px solid var(--line)}
+  .rail-btn{width:auto;flex:1;height:52px;border-radius:13px}
+  .rail-btn.on::before{left:50%;top:-1px;transform:translateX(-50%);width:26px;height:3px;border-radius:0 0 4px 4px}
+  .rail .rail-logo{display:none}
+  .shell{margin-left:0;padding-bottom:70px}
+  .topbar{padding:12px 14px}
+}
+
+/* ═══ Detalles ricos ═══ */
+.avatar{width:26px;height:26px;border-radius:999px;display:flex;align-items:center;justify-content:center;
+  font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:800;color:#05070c;border:2px solid var(--panel);flex-shrink:0}
+.avatar-stack{display:flex}
+.avatar-stack .avatar:not(:first-child){margin-left:-9px}
+.hero{
+  position:relative;overflow:hidden;border-radius:1.6rem;
+  background:linear-gradient(135deg,#16203a 0%,#0f1626 55%,#131b2e 100%);
+  border:1px solid var(--line);
+}
+.hero::before{content:"";position:absolute;width:420px;height:420px;right:-140px;top:-190px;border-radius:999px;
+  background:radial-gradient(circle,rgba(255,46,136,.30),transparent 62%);pointer-events:none}
+.hero::after{content:"";position:absolute;width:340px;height:340px;left:-120px;bottom:-190px;border-radius:999px;
+  background:radial-gradient(circle,rgba(34,226,226,.22),transparent 62%);pointer-events:none}
+.kpi-up{color:var(--ok)} .kpi-down{color:var(--danger)}
+.fade-up{animation:fadeUp .45s cubic-bezier(.2,.7,.3,1) both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.grad-txt{background:linear-gradient(90deg,#fff,var(--cyan));-webkit-background-clip:text;background-clip:text;color:transparent}
+.divider{height:1px;background:linear-gradient(90deg,transparent,var(--line-strong),transparent)}
 </style>
 </head>
 <body class="min-h-screen pb-20 selection:bg-pink-600 selection:text-white">
@@ -159,57 +217,105 @@ select.inp option{background:var(--panel);color:var(--txt)}
 <!-- ══════════ APP ══════════ -->
 <div id="app" class="hidden">
 
-<nav class="glass sticky top-0 z-50 px-4 lg:px-7 py-3.5" style="border-bottom:1px solid var(--line)">
-  <div class="max-w-[1500px] mx-auto flex flex-col lg:flex-row justify-between items-center gap-3">
-    <div class="flex items-center gap-3 w-full lg:w-auto">
-      <div class="w-10 h-10 rounded-xl flex items-center justify-center font-mono font-bold text-[#05070c] text-lg relative flex-shrink-0"
-           style="background:linear-gradient(135deg,var(--brand),var(--brand-2))">Y
-        <span class="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full glow" style="background:var(--cyan)"></span>
+<!-- ═══ RIEL LATERAL ═══ -->
+<aside class="rail">
+  <div class="rail-logo mb-3 w-11 h-11 rounded-2xl flex items-center justify-center font-mono font-bold text-[#05070c] text-lg relative flex-shrink-0"
+       style="background:linear-gradient(135deg,var(--brand),var(--cyan))">Y
+    <span class="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full glow" style="background:var(--cyan)"></span>
+  </div>
+  <button onclick="ir('flota')"    id="tbFlota" class="rail-btn on" title="Flota">🚗<small>Flota</small></button>
+  <button onclick="ir('mias')"     id="tbMias"  class="rail-btn"    title="Mis tareas">✅<small>Tareas</small>
+    <span id="badgeMias" class="rail-badge">0</span></button>
+  <button onclick="ir('nuevo')"    id="tbNuevo" class="rail-btn"    title="Nueva unidad">➕<small>Nueva</small></button>
+  <button onclick="ir('finanzas')" id="tbFin"   class="rail-btn"    title="Finanzas">💰<small>$$</small></button>
+  <button onclick="ir('archivo')"  id="tbArch"  class="rail-btn"    title="Archivo">📂<small>Archivo</small></button>
+  <button onclick="ir('usuarios')" id="tbUsers" class="rail-btn hidden" title="Usuarios">👤<small>Equipo</small></button>
+</aside>
+
+<div class="shell">
+  <!-- ═══ BARRA SUPERIOR ═══ -->
+  <header class="topbar">
+    <div class="max-w-[1500px] mx-auto flex items-center gap-3">
+      <div class="min-w-0 flex-1">
+        <h1 id="tituloPagina" class="font-display text-lg lg:text-xl font-bold text-white leading-none truncate">Flota activa</h1>
+        <p id="subPagina" class="font-mono text-[9px] font-bold uppercase tracking-[0.18em] mt-1" style="color:var(--txt-soft)">// Importaciones Yesica</p>
       </div>
-      <div class="flex-1">
-        <h1 class="brand-logo text-base font-black text-white italic tracking-tight uppercase">Importaciones <span style="color:var(--brand)" class="glow-txt">Yesica</span></h1>
-        <p class="font-mono text-[9px] font-bold uppercase tracking-wider" style="color:var(--txt-soft)">// Centro de Operaciones</p>
+      <div class="hidden md:flex items-center gap-2 px-3.5 py-2 pill">
+        <span class="text-xs">📅</span>
+        <span id="fechaHoy" class="font-mono text-[10px] font-bold" style="color:var(--txt-soft)"></span>
       </div>
-      <div class="flex items-center gap-2 lg:hidden">
-        <span id="mMe" class="font-mono text-[10px] font-bold" style="color:var(--cyan)">—</span>
-        <button onclick="salir()" class="btn-g text-[9px] uppercase px-2 py-1 rounded-lg">Salir</button>
+      <div class="flex items-center gap-2 px-2.5 py-1.5 pill">
+        <span id="avatarYo" class="avatar" style="background:linear-gradient(135deg,var(--brand),var(--cyan))">A</span>
+        <div class="hidden sm:block leading-none">
+          <p id="dMe" class="font-mono text-[11px] font-bold" style="color:var(--txt)">—</p>
+          <p id="dRol" class="font-mono text-[8px] uppercase tracking-wider mt-0.5" style="color:var(--txt-soft)">v3</p>
+        </div>
+        <button onclick="salir()" class="btn-g text-[9px] uppercase px-2 py-1 rounded-lg ml-1">Salir</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-[1500px] mx-auto px-4 lg:px-7 py-7 space-y-6">
+
+  <!-- ═══ HERO + STATS ═══ -->
+  <div class="grid grid-cols-1 xl:grid-cols-[1.55fr_1fr] gap-5 fade-up">
+
+    <div class="hero p-6 lg:p-7">
+      <div class="relative z-10">
+        <div class="flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <p class="font-mono text-[10px] font-bold uppercase tracking-[0.22em]" style="color:var(--txt-soft)">Valor de la flota en proceso</p>
+            <div class="flex items-end gap-3 mt-2">
+              <h2 id="heroVenta" class="font-display text-4xl lg:text-5xl font-bold text-white leading-none">$0</h2>
+              <span id="heroDelta" class="chip chip-ok mb-1.5"><span class="dot"></span>0%</span>
+            </div>
+            <p id="heroSub" class="font-mono text-[11px] mt-2" style="color:var(--txt-soft)">Sin unidades activas</p>
+          </div>
+          <div id="heroAnillo" class="flex-shrink-0"></div>
+        </div>
+
+        <div id="heroSpark" class="mt-5"></div>
+
+        <div class="divider my-5"></div>
+
+        <div class="grid grid-cols-3 gap-4">
+          <div>
+            <p class="font-mono text-[9px] uppercase tracking-wider" style="color:var(--txt-soft)">Invertido</p>
+            <p id="heroCosto" class="font-mono text-base lg:text-lg font-bold text-white mt-1">$0</p>
+          </div>
+          <div>
+            <p class="font-mono text-[9px] uppercase tracking-wider" style="color:var(--txt-soft)">Cobrado</p>
+            <p id="heroCobrado" class="font-mono text-base lg:text-lg font-bold mt-1" style="color:var(--ok)">$0</p>
+          </div>
+          <div>
+            <p class="font-mono text-[9px] uppercase tracking-wider" style="color:var(--txt-soft)">Ganancia proy.</p>
+            <p id="heroGanancia" class="font-mono text-base lg:text-lg font-bold mt-1" style="color:var(--brand)">$0</p>
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="flex flex-wrap items-center justify-center gap-2.5 w-full lg:w-auto">
-      <div class="p-1 rounded-2xl flex gap-1 flex-wrap justify-center deep">
-        <button onclick="ir('flota')"    id="tbFlota"  class="tab on">🚗 Flota</button>
-        <button onclick="ir('mias')"     id="tbMias"   class="tab">✅ Mis Tareas <span id="badgeMias" class="ml-1 px-1.5 rounded-full" style="background:var(--brand);color:#05070c">0</span></button>
-        <button onclick="ir('nuevo')"    id="tbNuevo"  class="tab">➕ Nueva Unidad</button>
-        <button onclick="ir('finanzas')" id="tbFin"    class="tab">💰 Finanzas</button>
-        <button onclick="ir('archivo')"  id="tbArch"   class="tab">📂 Archivo</button>
-        <button onclick="ir('usuarios')" id="tbUsers"  class="tab hidden">👤 Usuarios</button>
-      </div>
-      <div class="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-2xl deep">
-        <span class="chip chip-cy"><span class="dot"></span></span>
-        <span id="dMe" class="font-mono text-[10px] font-bold" style="color:var(--cyan)">—</span>
-        <span id="dRol" class="font-mono text-[8px] px-1.5 py-0.5 rounded" style="color:var(--txt-soft);border:1px solid var(--line)">v3</span>
-        <button onclick="salir()" class="btn-g text-[9px] uppercase px-2 py-1 rounded-lg">Salir</button>
+    <div class="grid grid-cols-2 gap-4 content-start">
+      <div class="stat lift"><div class="flex items-center justify-between"><span class="text-xl">🚗</span><span id="sTot" class="font-mono text-2xl font-bold text-white">0</span></div>
+        <p class="font-mono text-[9px] font-bold uppercase tracking-wider mt-1.5" style="color:var(--txt-soft)">Unidades activas</p></div>
+      <div class="stat lift"><div class="flex items-center justify-between"><span class="text-xl">🤝</span><span id="sEnc" class="font-mono text-2xl font-bold" style="color:var(--cyan)">0</span></div>
+        <p class="font-mono text-[9px] font-bold uppercase tracking-wider mt-1.5" style="color:var(--txt-soft)">Por encargo</p></div>
+      <div class="stat lift"><div class="flex items-center justify-between"><span class="text-xl">📦</span><span id="sStk" class="font-mono text-2xl font-bold" style="color:var(--ok)">0</span></div>
+        <p class="font-mono text-[9px] font-bold uppercase tracking-wider mt-1.5" style="color:var(--txt-soft)">En stock</p></div>
+      <div class="stat lift"><div class="flex items-center justify-between"><span class="text-xl">⏳</span><span id="sSal" class="font-mono text-lg font-bold" style="color:var(--warn)">$0</span></div>
+        <p class="font-mono text-[9px] font-bold uppercase tracking-wider mt-1.5" style="color:var(--txt-soft)">Saldo por cobrar</p></div>
+
+      <div class="stat lift col-span-2">
+        <div class="flex items-center justify-between mb-2.5">
+          <p class="font-mono text-[9px] font-bold uppercase tracking-wider" style="color:var(--txt-soft)">Carga del equipo hoy</p>
+          <span class="font-mono text-[9px]" style="color:var(--cyan)">pendientes</span>
+        </div>
+        <div id="cargaEquipo" class="space-y-2"></div>
       </div>
     </div>
   </div>
-</nav>
 
-<main class="max-w-[1500px] mx-auto px-4 lg:px-7 py-7 space-y-6">
-
-  <!-- STATS -->
-  <div class="grid grid-cols-2 lg:grid-cols-5 gap-3.5">
-    <div class="stat"><div class="flex items-center justify-between"><span class="text-xl">🚗</span><span id="sTot" class="font-mono text-2xl font-bold text-white">0</span></div>
-      <p class="font-mono text-[9px] font-bold uppercase tracking-wider mt-1.5" style="color:var(--txt-soft)">Unidades activas</p></div>
-    <div class="stat"><div class="flex items-center justify-between"><span class="text-xl">🤝</span><span id="sEnc" class="font-mono text-2xl font-bold" style="color:var(--cyan)">0</span></div>
-      <p class="font-mono text-[9px] font-bold uppercase tracking-wider mt-1.5" style="color:var(--txt-soft)">Por encargo</p></div>
-    <div class="stat"><div class="flex items-center justify-between"><span class="text-xl">📦</span><span id="sStk" class="font-mono text-2xl font-bold" style="color:var(--ok)">0</span></div>
-      <p class="font-mono text-[9px] font-bold uppercase tracking-wider mt-1.5" style="color:var(--txt-soft)">En stock</p></div>
-    <div class="stat"><div class="flex items-center justify-between"><span class="text-xl">⚡</span><span id="sPro" class="font-mono text-2xl font-bold" style="color:var(--brand)">0%</span></div>
-      <p class="font-mono text-[9px] font-bold uppercase tracking-wider mt-1.5" style="color:var(--txt-soft)">Avance promedio</p></div>
-    <div class="stat col-span-2 lg:col-span-1"><div class="flex items-center justify-between"><span class="text-xl">💰</span><span id="sSal" class="font-mono text-lg font-bold" style="color:var(--warn)">$0</span></div>
-      <p class="font-mono text-[9px] font-bold uppercase tracking-wider mt-1.5" style="color:var(--txt-soft)">Saldo por cobrar</p></div>
-  </div>
+  <div class="hidden"><span id="sPro">0%</span></div>
 
   <!-- ══ FLOTA ══ -->
   <section id="pgFlota" class="space-y-4">
@@ -402,6 +508,7 @@ select.inp option{background:var(--panel);color:var(--txt)}
   </section>
 
 </main>
+</div>
 </div>
 
 <div id="modal" class="hidden"></div>
@@ -603,7 +710,7 @@ onAuthStateChanged(auth, async user=>{
     document.getElementById('login').classList.add('hidden');
     document.getElementById('app').classList.remove('hidden');
     document.getElementById('dMe').innerText = yo.nombre;
-    document.getElementById('mMe').innerText = yo.nombre;
+    document.getElementById('avatarYo').innerText = (yo.nombre||"?").charAt(0).toUpperCase();
     document.getElementById('dRol').innerText = (yo.admin ? "ADMIN" : "v3") ;
     document.getElementById('dRol').style.color = yo.admin ? "var(--brand)" : "var(--txt-soft)";
     document.getElementById('tbUsers').classList.toggle('hidden', !yo.admin);
@@ -637,12 +744,26 @@ onAuthStateChanged(auth, async user=>{
 
 /* ════════ NAVEGACIÓN ════════ */
 const PGS = { flota:["pgFlota","tbFlota"], mias:["pgMias","tbMias"], nuevo:["pgNuevo","tbNuevo"], finanzas:["pgFin","tbFin"], archivo:["pgArch","tbArch"], usuarios:["pgUsers","tbUsers"] };
+const TITULOS = {
+  flota:    ["Flota activa",       "// Todo lo que está en proceso ahora"],
+  mias:     ["Mis tareas",         "// Solo lo que te toca a ti"],
+  nuevo:    ["Nueva unidad",       "// Registra un carro o un cliente"],
+  finanzas: ["Panel financiero",   "// Inversión, cobros y ganancia"],
+  archivo:  ["Archivo histórico",  "// Unidades finalizadas"],
+  usuarios: ["Equipo y permisos",  "// Quién hace qué"],
+};
 window.ir = function(p){
   if(p==='finanzas') pintarFinanzas();
   Object.keys(PGS).forEach(k=>{
     document.getElementById(PGS[k][0]).classList.toggle('hidden', k!==p);
     document.getElementById(PGS[k][1]).classList.toggle('on', k===p);
   });
+  const t = TITULOS[p];
+  if(t){
+    document.getElementById('tituloPagina').innerText = t[0];
+    document.getElementById('subPagina').innerText = t[1];
+  }
+  window.scrollTo({top:0, behavior:'smooth'});
 };
 window.setF = function(f){
   filtro=f;
@@ -706,13 +827,94 @@ function faseActual(v){
 /* ════════ RENDER ════════ */
 function pintarTodo(){ pintarStats(); pintarFlota(); pintarMias(); pintarArchivo(); pintarFinanzas(); pintarCfgNotis(); actualizarTitulo(); }
 
+// Mini gráfico de línea con el avance de cada unidad
+function sparkline(vals, w=560, h=64){
+  if(!vals.length) vals = [0];
+  if(vals.length === 1) vals = [0, vals[0]];
+  const max = 100, paso = w/(vals.length-1);
+  const pts = vals.map((v,i)=> [i*paso, h - (v/max)*(h-10) - 5]);
+  const linea = pts.map((p,i)=>{
+    if(i===0) return `M ${p[0]},${p[1]}`;
+    const pv = pts[i-1], cx = (pv[0]+p[0])/2;
+    return `C ${cx},${pv[1]} ${cx},${p[1]} ${p[0]},${p[1]}`;
+  }).join(" ");
+  const area = `${linea} L ${w},${h} L 0,${h} Z`;
+  const ult = pts[pts.length-1];
+  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="width:100%;height:${h}px;overflow:visible">
+    <defs>
+      <linearGradient id="spGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="var(--brand)" stop-opacity=".28"/>
+        <stop offset="100%" stop-color="var(--brand)" stop-opacity="0"/>
+      </linearGradient>
+      <linearGradient id="spLine" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%" stop-color="var(--cyan)"/><stop offset="100%" stop-color="var(--brand)"/>
+      </linearGradient>
+    </defs>
+    <path d="${area}" fill="url(#spGrad)"/>
+    <path d="${linea}" fill="none" stroke="url(#spLine)" stroke-width="2.5" stroke-linecap="round"
+      style="filter:drop-shadow(0 0 6px rgba(255,46,136,.5))"/>
+    <circle cx="${ult[0]}" cy="${ult[1]}" r="4.5" fill="var(--brand)" style="filter:drop-shadow(0 0 8px var(--brand))"/>
+  </svg>`;
+}
+
+const COLORES_AV = ["#ff2e88","#22e2e2","#34d399","#fbbf24","#a78bfa","#fb7185","#38bdf8"];
+function avatarDe(u, i){
+  const n = usersData[u]?.nombre || u;
+  return `<span class="avatar" title="${esc(n)}" style="background:${COLORES_AV[i % COLORES_AV.length]}">${esc(n.charAt(0).toUpperCase())}</span>`;
+}
+
 function pintarStats(){
   const act = autos.filter(a=>!a.archivado);
+  const costo   = act.reduce((s,a)=> s+Number(a.costo_subasta||0), 0);
+  const venta   = act.reduce((s,a)=> s+Number(a.precio_venta||0), 0);
+  const cobrado = act.reduce((s,a)=> s+pagado(a), 0);
+  const porCobrar = act.reduce((s,a)=> s+saldo(a), 0);
+  const avance = act.length ? Math.round(act.reduce((s,a)=>s+progreso(a),0)/act.length) : 0;
+  const ganancia = venta - costo;
+  const margen = venta>0 ? Math.round((ganancia/venta)*100) : 0;
+
   document.getElementById('sTot').innerText = act.length;
   document.getElementById('sEnc').innerText = act.filter(a=>a.tipoProceso==="Encargo").length;
   document.getElementById('sStk').innerText = act.filter(a=>a.tipoProceso!=="Encargo").length;
-  document.getElementById('sPro').innerText = (act.length ? Math.round(act.reduce((s,a)=>s+progreso(a),0)/act.length) : 0)+"%";
-  document.getElementById('sSal').innerText = money(act.reduce((s,a)=>s+saldo(a),0));
+  document.getElementById('sPro').innerText = avance+"%";
+  document.getElementById('sSal').innerText = money(porCobrar);
+
+  // ── Hero ──
+  document.getElementById('heroVenta').innerText    = money(venta);
+  document.getElementById('heroCosto').innerText    = money(costo);
+  document.getElementById('heroCobrado').innerText  = money(cobrado);
+  document.getElementById('heroGanancia').innerText = money(ganancia);
+  const delta = document.getElementById('heroDelta');
+  delta.className = "chip " + (margen>=0 ? "chip-ok" : "chip-wn") + " mb-1.5";
+  delta.innerHTML = `<span class="dot"></span>${margen>=0?"+":""}${margen}% margen`;
+  document.getElementById('heroSub').innerText = act.length
+    ? `${act.length} unidad${act.length>1?"es":""} en proceso · avance promedio ${avance}%`
+    : "Sin unidades activas todavía";
+  document.getElementById('heroAnillo').innerHTML = anillo(avance, 92, 8, "avance");
+
+  const serie = act.slice().sort((a,b)=>(a.fecha_registro||"").localeCompare(b.fecha_registro||"")).map(a=>progreso(a));
+  document.getElementById('heroSpark').innerHTML = sparkline(serie);
+
+  // ── Carga del equipo ──
+  const carga = {};
+  act.forEach(v => defT(v).forEach(t=>{
+    if(t.opc || tareaOk(v,t)) return;
+    respons(t.a).forEach(u=>{
+      if(t.multi && (v.tareas?.[t.k]?.marcas||{})[u]) return;
+      carga[u] = (carga[u]||0) + 1;
+    });
+  }));
+  const orden = Object.keys(carga).sort((a,b)=>carga[b]-carga[a]).slice(0,5);
+  const maxC = Math.max(1, ...Object.values(carga));
+  const cont = document.getElementById('cargaEquipo');
+  cont.innerHTML = orden.length ? orden.map((u,i)=>`
+    <div class="flex items-center gap-2.5">
+      ${avatarDe(u,i)}
+      <span class="font-mono text-[10px] flex-1 truncate" style="color:var(--txt-soft)">${esc(usersData[u]?.nombre||u)}</span>
+      <div class="bar" style="width:88px"><i style="width:${Math.round(carga[u]/maxC*100)}%"></i></div>
+      <span class="font-mono text-[10px] font-bold w-5 text-right" style="color:var(--cyan)">${carga[u]}</span>
+    </div>`).join("")
+    : `<p class="font-mono text-[10px]" style="color:var(--txt-soft)">Nadie tiene tareas pendientes 🎉</p>`;
 }
 
 function pintarFlota(){
@@ -732,11 +934,15 @@ function pintarFlota(){
     return;
   }
 
-  cont.innerHTML = ls.map(v=>{
+  cont.innerHTML = ls.map((v,idx)=>{
     const p = progreso(v), mias = pendientesMias(v).length, fa = faseActual(v);
     const enc = v.tipoProceso==="Encargo";
     const sig = defT(v).filter(t=>!t.opc).find(t=> !tareaOk(v,t));
-    return `<div class="glass lift rounded-2xl p-5 space-y-3.5 relative cursor-pointer" onclick="abrirDetalle('${v.id}')" style="border-top:2px solid ${enc?'var(--cyan)':'var(--ok)'}">
+    const equipoTarea = sig ? respons(sig.a).slice(0,4) : [];
+    return `<div class="glass lift fade-up rounded-2xl p-5 space-y-3.5 relative cursor-pointer overflow-hidden" onclick="abrirDetalle('${v.id}')"
+      style="border-top:2px solid ${enc?'var(--cyan)':'var(--ok)'};animation-delay:${idx*45}ms">
+      <span style="position:absolute;right:-50px;top:-50px;width:150px;height:150px;border-radius:999px;pointer-events:none;
+        background:radial-gradient(circle,${enc?'rgba(34,226,226,.10)':'rgba(52,211,153,.10)'},transparent 70%)"></span>
       <div class="flex justify-between items-start gap-3">
         <div class="min-w-0">
           <h3 class="font-display font-bold text-base leading-tight truncate" style="color:${v.vehiculo?'#fff':'var(--warn)'}">${esc(v.vehiculo) || "🔎 Carro por asignar"}</h3>
@@ -766,11 +972,16 @@ function pintarFlota(){
         </div>
       </div>
 
-      <div class="flex justify-between items-center pt-1 border-t" style="border-color:var(--line)">
-        <div class="font-mono text-[10px]" style="color:var(--txt-soft)">
-          Pagado <b style="color:var(--ok)">${money(pagado(v))}</b> · Falta <b style="color:var(--warn)">${money(saldo(v))}</b>
+      <div class="flex justify-between items-center pt-2.5 border-t gap-2" style="border-color:var(--line)">
+        <div class="flex items-center gap-2 min-w-0">
+          ${equipoTarea.length ? `<div class="avatar-stack">${equipoTarea.map((u,i)=>avatarDe(u,i)).join("")}</div>`
+                               : `<span class="font-mono text-[9px]" style="color:var(--warn)">sin asignar</span>`}
+          <span class="font-mono text-[10px] truncate" style="color:var(--txt-soft)">
+            <b style="color:var(--ok)">${money(pagado(v))}</b> / ${money(v.precio_venta)}
+          </span>
         </div>
-        ${mias ? `<span class="chip chip-pk"><span class="dot"></span>${mias} para ti</span>` : `<span class="font-mono text-[10px]" style="color:var(--txt-soft)">${money(v.precio_venta)}</span>`}
+        ${mias ? `<span class="chip chip-pk flex-shrink-0"><span class="dot"></span>${mias} para ti</span>`
+               : `<span class="font-mono text-[10px] flex-shrink-0" style="color:var(--warn)">falta ${money(saldo(v))}</span>`}
       </div>
     </div>`;
   }).join("");
@@ -1715,6 +1926,8 @@ reiniciarTimers();
 setTimeout(()=>{ if(puedeAvisar()) avisoTareas(); }, 10000);
 
 setTipo("Encargo");
+document.getElementById('fechaHoy').innerText =
+  new Date().toLocaleDateString('es-SV',{ weekday:'short', day:'numeric', month:'short' });
 </script>
 </body>
 </html>
