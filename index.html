@@ -125,7 +125,7 @@ select.inp option{background:var(--panel);color:var(--txt)}
 
 /* ═══ SHELL: riel lateral + contenido ═══ */
 .rail{
-  position:fixed;left:0;top:0;bottom:0;width:74px;z-index:60;
+  position:absolute;left:0;top:0;bottom:0;width:74px;z-index:60;
   background:linear-gradient(180deg,#0c1322,#080d18);border-right:1px solid var(--line);
   display:flex;flex-direction:column;align-items:center;padding:16px 0;gap:6px;
 }
@@ -152,7 +152,7 @@ select.inp option{background:var(--panel);color:var(--txt)}
 .pill{background:var(--deep);border:1px solid var(--line);border-radius:999px}
 
 @media(max-width:1023px){
-  .rail{top:auto;right:0;bottom:0;width:100%;height:64px;flex-direction:row;justify-content:space-around;
+  .rail{position:fixed;top:auto;right:0;bottom:0;width:100%;height:64px;flex-direction:row;justify-content:space-around;
     padding:0 4px;border-right:none;border-top:1px solid var(--line)}
   .rail-btn{width:auto;flex:1;height:52px;border-radius:13px}
   .rail-btn.on::before{left:50%;top:-1px;transform:translateX(-50%);width:26px;height:3px;border-radius:0 0 4px 4px}
@@ -160,6 +160,53 @@ select.inp option{background:var(--panel);color:var(--txt)}
   .shell{margin-left:0;padding-bottom:70px}
   .topbar{padding:12px 14px}
 }
+
+/* ═══ Ventana flotante tipo app ═══ */
+.app-frame{
+  margin:14px; border-radius:28px; overflow:hidden; position:relative;
+  background:#080d16; border:1px solid rgba(255,255,255,.07);
+  box-shadow:0 40px 90px -30px rgba(0,0,0,.9), 0 0 0 1px rgba(255,255,255,.02) inset;
+  min-height:calc(100vh - 28px);
+}
+@media(max-width:1023px){ .app-frame{margin:0;border-radius:0;border:none;min-height:100vh} }
+
+/* ═══ Tareas que dan gusto marcar ═══ */
+.task-card{
+  display:flex;align-items:center;gap:14px;padding:15px 16px;border-radius:1.1rem;
+  background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.012));
+  border:1px solid var(--line);transition:all .2s cubic-bezier(.2,.7,.3,1);cursor:pointer;position:relative;overflow:hidden;
+}
+.task-card:hover{border-color:var(--line-strong);transform:translateX(3px);background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02))}
+.task-card.done{opacity:.45}
+.task-card.done .task-title{text-decoration:line-through}
+.task-check{
+  width:30px;height:30px;border-radius:11px;border:2px solid var(--line-strong);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:15px;color:transparent;
+  transition:all .25s cubic-bezier(.2,.9,.3,1.3);background:transparent;
+}
+.task-card:hover .task-check{border-color:var(--cyan);transform:scale(1.08)}
+.task-check.on{background:linear-gradient(135deg,var(--ok),#22e2a8);border-color:transparent;color:#05070c;transform:scale(1)}
+.task-check.lock{border-style:dashed;opacity:.5}
+.task-title{font-size:14px;font-weight:600;line-height:1.3}
+.task-meta{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--txt-soft);margin-top:3px}
+.task-area{
+  width:34px;height:34px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;
+  background:rgba(255,255,255,.04);border:1px solid var(--line);
+}
+@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.25)}100%{transform:scale(1)}}
+.pop{animation:pop .4s cubic-bezier(.2,.9,.3,1.3)}
+
+/* Cabecera de grupo de tareas */
+.group-head{display:flex;align-items:center;gap:10px;margin:20px 0 10px}
+.group-head .gh-ico{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;
+  background:linear-gradient(135deg,rgba(255,46,136,.18),rgba(34,226,226,.10));border:1px solid var(--line-strong)}
+.group-head .gh-line{flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent)}
+
+/* Control segmentado */
+.seg{display:inline-flex;padding:3px;border-radius:12px;background:var(--deep);border:1px solid var(--line)}
+.seg button{padding:6px 14px;border-radius:9px;border:none;background:transparent;cursor:pointer;
+  font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;text-transform:uppercase;color:var(--txt-soft);transition:all .15s}
+.seg button.on{background:rgba(255,255,255,.08);color:#fff}
 
 /* ═══ Detalles ricos ═══ */
 .avatar{width:26px;height:26px;border-radius:999px;display:flex;align-items:center;justify-content:center;
@@ -217,6 +264,7 @@ select.inp option{background:var(--panel);color:var(--txt)}
 <!-- ══════════ APP ══════════ -->
 <div id="app" class="hidden">
 
+<div class="app-frame">
 <!-- ═══ RIEL LATERAL ═══ -->
 <aside class="rail">
   <div class="rail-logo mb-3 w-11 h-11 rounded-2xl flex items-center justify-center font-mono font-bold text-[#05070c] text-lg relative flex-shrink-0"
@@ -257,65 +305,33 @@ select.inp option{background:var(--panel);color:var(--txt)}
 
   <main class="max-w-[1500px] mx-auto px-4 lg:px-7 py-7 space-y-6">
 
-  <!-- ═══ HERO + STATS ═══ -->
-  <div class="grid grid-cols-1 xl:grid-cols-[1.55fr_1fr] gap-5 fade-up">
-
-    <div class="hero p-6 lg:p-7">
-      <div class="relative z-10">
-        <div class="flex items-start justify-between gap-4 flex-wrap">
-          <div>
-            <p class="font-mono text-[10px] font-bold uppercase tracking-[0.22em]" style="color:var(--txt-soft)">Valor de la flota en proceso</p>
-            <div class="flex items-end gap-3 mt-2">
-              <h2 id="heroVenta" class="font-display text-4xl lg:text-5xl font-bold text-white leading-none">$0</h2>
-              <span id="heroDelta" class="chip chip-ok mb-1.5"><span class="dot"></span>0%</span>
-            </div>
-            <p id="heroSub" class="font-mono text-[11px] mt-2" style="color:var(--txt-soft)">Sin unidades activas</p>
-          </div>
-          <div id="heroAnillo" class="flex-shrink-0"></div>
-        </div>
-
-        <div id="heroSpark" class="mt-5"></div>
-
-        <div class="divider my-5"></div>
-
-        <div class="grid grid-cols-3 gap-4">
-          <div>
-            <p class="font-mono text-[9px] uppercase tracking-wider" style="color:var(--txt-soft)">Invertido</p>
-            <p id="heroCosto" class="font-mono text-base lg:text-lg font-bold text-white mt-1">$0</p>
-          </div>
-          <div>
-            <p class="font-mono text-[9px] uppercase tracking-wider" style="color:var(--txt-soft)">Cobrado</p>
-            <p id="heroCobrado" class="font-mono text-base lg:text-lg font-bold mt-1" style="color:var(--ok)">$0</p>
-          </div>
-          <div>
-            <p class="font-mono text-[9px] uppercase tracking-wider" style="color:var(--txt-soft)">Ganancia proy.</p>
-            <p id="heroGanancia" class="font-mono text-base lg:text-lg font-bold mt-1" style="color:var(--brand)">$0</p>
-          </div>
-        </div>
-      </div>
+  <!-- ═══ RESUMEN ═══ -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 fade-up">
+    <div class="stat lift">
+      <p class="font-mono text-[9px] font-bold uppercase tracking-wider" style="color:var(--txt-soft)">Unidades activas</p>
+      <p id="sTot" class="font-mono text-3xl font-bold text-white mt-1.5">0</p>
+      <p id="sMix" class="font-mono text-[10px] mt-1" style="color:var(--txt-soft)">—</p>
     </div>
-
-    <div class="grid grid-cols-2 gap-4 content-start">
-      <div class="stat lift"><div class="flex items-center justify-between"><span class="text-xl">🚗</span><span id="sTot" class="font-mono text-2xl font-bold text-white">0</span></div>
-        <p class="font-mono text-[9px] font-bold uppercase tracking-wider mt-1.5" style="color:var(--txt-soft)">Unidades activas</p></div>
-      <div class="stat lift"><div class="flex items-center justify-between"><span class="text-xl">🤝</span><span id="sEnc" class="font-mono text-2xl font-bold" style="color:var(--cyan)">0</span></div>
-        <p class="font-mono text-[9px] font-bold uppercase tracking-wider mt-1.5" style="color:var(--txt-soft)">Por encargo</p></div>
-      <div class="stat lift"><div class="flex items-center justify-between"><span class="text-xl">📦</span><span id="sStk" class="font-mono text-2xl font-bold" style="color:var(--ok)">0</span></div>
-        <p class="font-mono text-[9px] font-bold uppercase tracking-wider mt-1.5" style="color:var(--txt-soft)">En stock</p></div>
-      <div class="stat lift"><div class="flex items-center justify-between"><span class="text-xl">⏳</span><span id="sSal" class="font-mono text-lg font-bold" style="color:var(--warn)">$0</span></div>
-        <p class="font-mono text-[9px] font-bold uppercase tracking-wider mt-1.5" style="color:var(--txt-soft)">Saldo por cobrar</p></div>
-
-      <div class="stat lift col-span-2">
-        <div class="flex items-center justify-between mb-2.5">
-          <p class="font-mono text-[9px] font-bold uppercase tracking-wider" style="color:var(--txt-soft)">Carga del equipo hoy</p>
-          <span class="font-mono text-[9px]" style="color:var(--cyan)">pendientes</span>
-        </div>
-        <div id="cargaEquipo" class="space-y-2"></div>
-      </div>
+    <div class="stat lift">
+      <p class="font-mono text-[9px] font-bold uppercase tracking-wider" style="color:var(--txt-soft)">Avance promedio</p>
+      <p id="sPro" class="font-mono text-3xl font-bold mt-1.5" style="color:var(--cyan)">0%</p>
+      <div class="bar mt-2.5"><i id="sProBar" style="width:0%"></i></div>
+    </div>
+    <div class="stat lift">
+      <p class="font-mono text-[9px] font-bold uppercase tracking-wider" style="color:var(--txt-soft)">Por cobrar</p>
+      <p id="sSal" class="font-mono text-3xl font-bold mt-1.5" style="color:var(--warn)">$0</p>
+      <p id="sCobrado" class="font-mono text-[10px] mt-1" style="color:var(--txt-soft)">—</p>
+    </div>
+    <div class="stat lift">
+      <p class="font-mono text-[9px] font-bold uppercase tracking-wider" style="color:var(--txt-soft)">Tus pendientes</p>
+      <p id="sMias" class="font-mono text-3xl font-bold mt-1.5" style="color:var(--brand)">0</p>
+      <p class="font-mono text-[10px] mt-1" style="color:var(--txt-soft)">tareas para ti</p>
     </div>
   </div>
 
-  <div class="hidden"><span id="sPro">0%</span></div>
+  <div class="hidden">
+    <span id="sEnc">0</span><span id="sStk">0</span>
+  </div>
 
   <!-- ══ FLOTA ══ -->
   <section id="pgFlota" class="space-y-4">
@@ -332,28 +348,37 @@ select.inp option{background:var(--panel);color:var(--txt)}
   </section>
 
   <!-- ══ MIS TAREAS ══ -->
-  <section id="pgMias" class="hidden space-y-4">
-    <div class="glass rounded-3xl p-6 relative" style="border-top:2px solid var(--warn)">
-      <div class="flex items-center gap-3 mb-3">
-        <div class="icon-badge">🔔</div>
-        <div>
-          <h2 class="font-mono text-xs font-black text-white uppercase tracking-wide">Avisos automáticos</h2>
-          <p class="font-mono text-[9px] font-bold uppercase tracking-wide mt-0.5" style="color:var(--txt-soft)">// El robot te escribe a Telegram hasta que marques</p>
-        </div>
-      </div>
-      <div id="cfgNotis"></div>
-    </div>
+  <section id="pgMias" class="hidden">
+    <div class="grid grid-cols-1 xl:grid-cols-[1fr_330px] gap-5 items-start">
 
-    <div class="glass rounded-3xl p-6 relative" style="border-top:2px solid var(--cyan)">
-      <div class="hud tl"></div><div class="hud tr"></div>
-      <div class="flex items-center gap-3 border-b pb-4 mb-4" style="border-color:var(--line)">
-        <div class="icon-badge">✅</div>
-        <div class="flex-1">
-          <h2 class="font-mono text-xs font-black text-white uppercase tracking-wide">Mis tareas pendientes</h2>
-          <p id="miasSub" class="text-xs mt-0.5" style="color:var(--txt-soft)">Solo lo que te toca a ti.</p>
+      <div class="space-y-4">
+        <div class="glass rounded-3xl p-6 fade-up">
+          <div class="flex items-center justify-between gap-4 flex-wrap mb-1">
+            <div>
+              <p class="font-mono text-[10px] font-bold uppercase tracking-[0.2em]" style="color:var(--txt-soft)">Tu jornada</p>
+              <h2 id="miasTitulo" class="font-display text-2xl font-bold text-white mt-1">Todo listo</h2>
+              <p id="miasSub" class="text-xs mt-1" style="color:var(--txt-soft)">Solo lo que te toca a ti.</p>
+            </div>
+            <div id="miasAnillo"></div>
+          </div>
+        </div>
+
+        <div id="mias" class="space-y-1.5"></div>
+      </div>
+
+      <div class="space-y-4 xl:sticky xl:top-24">
+        <div class="glass rounded-3xl p-5 fade-up">
+          <div class="flex items-center gap-2.5 mb-3">
+            <div class="icon-badge">🔔</div>
+            <div>
+              <p class="font-mono text-[10px] font-black text-white uppercase tracking-wide">Avisos</p>
+              <p class="font-mono text-[8px] uppercase tracking-wide" style="color:var(--txt-soft)">// por Telegram</p>
+            </div>
+          </div>
+          <div id="cfgNotis"></div>
         </div>
       </div>
-      <div id="mias" class="space-y-3"></div>
+
     </div>
   </section>
 
@@ -510,6 +535,7 @@ select.inp option{background:var(--panel);color:var(--txt)}
 </main>
 </div>
 </div>
+</div>
 
 <div id="modal" class="hidden"></div>
 
@@ -629,6 +655,25 @@ function anillo(pct, size=120, grosor=9, etiqueta=""){
       ${etiqueta?`<div class="ring-lbl">${esc(etiqueta)}</div>`:""}
     </div>
   </div>`;
+}
+
+// Chispas al completar una tarea
+function celebrar(){
+  const cols = ["#ff2e88","#22e2e2","#34d399","#fbbf24"];
+  for(let i=0;i<14;i++){
+    const p = document.createElement('div');
+    const size = 5 + Math.random()*5;
+    p.style.cssText = `position:fixed;left:${45+Math.random()*10}%;top:52%;width:${size}px;height:${size}px;
+      background:${cols[i%cols.length]};border-radius:${Math.random()>.5?'999px':'2px'};z-index:400;pointer-events:none;
+      box-shadow:0 0 8px currentColor;color:${cols[i%cols.length]}`;
+    document.body.appendChild(p);
+    const ang = Math.random()*Math.PI*2, dist = 90 + Math.random()*130;
+    p.animate([
+      { transform:'translate(0,0) scale(1)', opacity:1 },
+      { transform:`translate(${Math.cos(ang)*dist}px, ${Math.sin(ang)*dist - 40}px) scale(0)`, opacity:0 }
+    ], { duration: 700 + Math.random()*400, easing:'cubic-bezier(.15,.7,.4,1)' })
+     .onfinish = ()=> p.remove();
+  }
 }
 
 function toast(msg, tipo="ok"){
@@ -865,56 +910,22 @@ function avatarDe(u, i){
 
 function pintarStats(){
   const act = autos.filter(a=>!a.archivado);
-  const costo   = act.reduce((s,a)=> s+Number(a.costo_subasta||0), 0);
   const venta   = act.reduce((s,a)=> s+Number(a.precio_venta||0), 0);
   const cobrado = act.reduce((s,a)=> s+pagado(a), 0);
   const porCobrar = act.reduce((s,a)=> s+saldo(a), 0);
   const avance = act.length ? Math.round(act.reduce((s,a)=>s+progreso(a),0)/act.length) : 0;
-  const ganancia = venta - costo;
-  const margen = venta>0 ? Math.round((ganancia/venta)*100) : 0;
+  const enc = act.filter(a=>a.tipoProceso==="Encargo").length;
+  const stk = act.length - enc;
 
   document.getElementById('sTot').innerText = act.length;
-  document.getElementById('sEnc').innerText = act.filter(a=>a.tipoProceso==="Encargo").length;
-  document.getElementById('sStk').innerText = act.filter(a=>a.tipoProceso!=="Encargo").length;
-  document.getElementById('sPro').innerText = avance+"%";
+  document.getElementById('sEnc').innerText = enc;
+  document.getElementById('sStk').innerText = stk;
+  document.getElementById('sMix').innerText = act.length ? `${enc} por encargo · ${stk} en stock` : "sin unidades";
+  document.getElementById('sPro').innerText = avance + "%";
+  document.getElementById('sProBar').style.width = avance + "%";
   document.getElementById('sSal').innerText = money(porCobrar);
-
-  // ── Hero ──
-  document.getElementById('heroVenta').innerText    = money(venta);
-  document.getElementById('heroCosto').innerText    = money(costo);
-  document.getElementById('heroCobrado').innerText  = money(cobrado);
-  document.getElementById('heroGanancia').innerText = money(ganancia);
-  const delta = document.getElementById('heroDelta');
-  delta.className = "chip " + (margen>=0 ? "chip-ok" : "chip-wn") + " mb-1.5";
-  delta.innerHTML = `<span class="dot"></span>${margen>=0?"+":""}${margen}% margen`;
-  document.getElementById('heroSub').innerText = act.length
-    ? `${act.length} unidad${act.length>1?"es":""} en proceso · avance promedio ${avance}%`
-    : "Sin unidades activas todavía";
-  document.getElementById('heroAnillo').innerHTML = anillo(avance, 92, 8, "avance");
-
-  const serie = act.slice().sort((a,b)=>(a.fecha_registro||"").localeCompare(b.fecha_registro||"")).map(a=>progreso(a));
-  document.getElementById('heroSpark').innerHTML = sparkline(serie);
-
-  // ── Carga del equipo ──
-  const carga = {};
-  act.forEach(v => defT(v).forEach(t=>{
-    if(t.opc || tareaOk(v,t)) return;
-    respons(t.a).forEach(u=>{
-      if(t.multi && (v.tareas?.[t.k]?.marcas||{})[u]) return;
-      carga[u] = (carga[u]||0) + 1;
-    });
-  }));
-  const orden = Object.keys(carga).sort((a,b)=>carga[b]-carga[a]).slice(0,5);
-  const maxC = Math.max(1, ...Object.values(carga));
-  const cont = document.getElementById('cargaEquipo');
-  cont.innerHTML = orden.length ? orden.map((u,i)=>`
-    <div class="flex items-center gap-2.5">
-      ${avatarDe(u,i)}
-      <span class="font-mono text-[10px] flex-1 truncate" style="color:var(--txt-soft)">${esc(usersData[u]?.nombre||u)}</span>
-      <div class="bar" style="width:88px"><i style="width:${Math.round(carga[u]/maxC*100)}%"></i></div>
-      <span class="font-mono text-[10px] font-bold w-5 text-right" style="color:var(--cyan)">${carga[u]}</span>
-    </div>`).join("")
-    : `<p class="font-mono text-[10px]" style="color:var(--txt-soft)">Nadie tiene tareas pendientes 🎉</p>`;
+  document.getElementById('sCobrado').innerText = venta ? `cobrado ${money(cobrado)} de ${money(venta)}` : "—";
+  document.getElementById('sMias').innerText = yo ? contarMias() : 0;
 }
 
 function pintarFlota(){
@@ -940,9 +951,7 @@ function pintarFlota(){
     const sig = defT(v).filter(t=>!t.opc).find(t=> !tareaOk(v,t));
     const equipoTarea = sig ? respons(sig.a).slice(0,4) : [];
     return `<div class="glass lift fade-up rounded-2xl p-5 space-y-3.5 relative cursor-pointer overflow-hidden" onclick="abrirDetalle('${v.id}')"
-      style="border-top:2px solid ${enc?'var(--cyan)':'var(--ok)'};animation-delay:${idx*45}ms">
-      <span style="position:absolute;right:-50px;top:-50px;width:150px;height:150px;border-radius:999px;pointer-events:none;
-        background:radial-gradient(circle,${enc?'rgba(34,226,226,.10)':'rgba(52,211,153,.10)'},transparent 70%)"></span>
+      style="border-top:2px solid ${enc?'var(--cyan)':'var(--ok)'};animation-delay:${Math.min(idx,8)*40}ms">
       <div class="flex justify-between items-start gap-3">
         <div class="min-w-0">
           <h3 class="font-display font-bold text-base leading-tight truncate" style="color:${v.vehiculo?'#fff':'var(--warn)'}">${esc(v.vehiculo) || "🔎 Carro por asignar"}</h3>
@@ -955,70 +964,105 @@ function pintarFlota(){
         ? `<p class="font-mono text-[11px] font-bold" style="color:var(--cyan)">👤 ${esc(v.nombreCliente)}</p>`
         : `<p class="font-mono text-[11px] font-bold" style="color:var(--txt-soft)">👤 Sin cliente asignado</p>`}
 
-      <div class="flex items-center gap-4">
-        ${anillo(p, 78, 7)}
-        <div class="flex-1 min-w-0 space-y-2">
-          <div>
-            <p class="font-mono text-[8px] uppercase font-bold tracking-wider" style="color:var(--txt-soft)">Fase actual</p>
-            <p class="font-mono text-[11px] font-bold truncate" style="color:var(--cyan)">${esc(defF(v)[fa])}</p>
-          </div>
-          ${sig ? `<div class="deep rounded-xl p-2 flex items-center gap-2">
-            <span class="text-sm">${areaI(sig.a)}</span>
-            <div class="min-w-0 flex-1">
-              <p class="font-mono text-[8px] uppercase font-bold" style="color:var(--txt-soft)">Sigue · ${esc(areaN(sig.a))}</p>
-              <p class="text-[11px] font-bold truncate">${esc(sig.t)}</p>
-            </div></div>`
-          : `<div class="deep rounded-xl p-2 text-center"><span class="chip chip-ok"><span class="dot"></span>Proceso completo</span></div>`}
+      <div>
+        <div class="flex justify-between items-baseline mb-1.5">
+          <span class="font-mono text-[9px] uppercase tracking-wider truncate" style="color:var(--txt-soft)">${esc(defF(v)[fa])}</span>
+          <span class="font-mono text-xs font-bold flex-shrink-0" style="color:var(--cyan)">${p}%</span>
         </div>
+        <div class="bar"><i style="width:${p}%"></i></div>
       </div>
 
+      ${sig ? `<div class="flex items-center gap-2.5 min-w-0">
+        <span class="text-base flex-shrink-0">${areaI(sig.a)}</span>
+        <p class="text-[12px] font-semibold truncate flex-1">${esc(sig.t)}</p>
+      </div>`
+      : `<span class="chip chip-ok"><span class="dot"></span>Proceso completo</span>`}
+
       <div class="flex justify-between items-center pt-2.5 border-t gap-2" style="border-color:var(--line)">
-        <div class="flex items-center gap-2 min-w-0">
-          ${equipoTarea.length ? `<div class="avatar-stack">${equipoTarea.map((u,i)=>avatarDe(u,i)).join("")}</div>`
-                               : `<span class="font-mono text-[9px]" style="color:var(--warn)">sin asignar</span>`}
-          <span class="font-mono text-[10px] truncate" style="color:var(--txt-soft)">
-            <b style="color:var(--ok)">${money(pagado(v))}</b> / ${money(v.precio_venta)}
-          </span>
-        </div>
+        <span class="font-mono text-[10px] truncate" style="color:var(--txt-soft)">
+          <b style="color:var(--ok)">${money(pagado(v))}</b> de ${money(v.precio_venta)}
+        </span>
         ${mias ? `<span class="chip chip-pk flex-shrink-0"><span class="dot"></span>${mias} para ti</span>`
-               : `<span class="font-mono text-[10px] flex-shrink-0" style="color:var(--warn)">falta ${money(saldo(v))}</span>`}
+               : (equipoTarea.length ? `<div class="avatar-stack flex-shrink-0">${equipoTarea.slice(0,3).map((u,i)=>avatarDe(u,i)).join("")}</div>` : "")}
       </div>
     </div>`;
   }).join("");
 }
 
 function pintarMias(){
-  const cont = document.getElementById('mias'); if(!yo) return;
+  const cont = document.getElementById('mias'); if(!yo || !cont) return;
+
   const items = [];
   autos.filter(a=>!a.archivado).forEach(v=> pendientesMias(v).forEach(t=> items.push({v,t})));
   document.getElementById('badgeMias').innerText = items.length;
-  document.getElementById('miasSub').innerText = yo.admin
-    ? "Eres administrador: ves todas las áreas."
-    : "Áreas habilitadas: " + ((yo.areas||[]).map(areaN).join(", ") || "ninguna todavía — pídele acceso a Alfredo.");
+
+  // Cuántas se han completado hoy (de mis áreas) para dar sensación de avance
+  const hoy = new Date().toDateString();
+  let hechasHoy = 0, totalMias = items.length;
+  autos.filter(a=>!a.archivado).forEach(v=> defT(v).forEach(t=>{
+    if(t.opc || !puede(t.a)) return;
+    const st = v.tareas?.[t.k];
+    if(st?.ok && st.fecha && new Date(st.fecha).toDateString()===hoy) hechasHoy++;
+    if(t.multi){ const m = st?.marcas?.[yo.usuario]; if(m && new Date(m).toDateString()===hoy) hechasHoy++; }
+  }));
+  const totalDia = hechasHoy + totalMias;
+  const pctDia = totalDia ? Math.round((hechasHoy/totalDia)*100) : 100;
+
+  document.getElementById('miasAnillo').innerHTML = anillo(pctDia, 96, 8, "hoy");
+  const tit = document.getElementById('miasTitulo');
+  const sub = document.getElementById('miasSub');
+  if(!items.length){
+    tit.innerText = hechasHoy ? "¡Día limpio!" : "Nada pendiente";
+    sub.innerText = hechasHoy ? `Completaste ${hechasHoy} tarea${hechasHoy>1?"s":""} hoy. Bien ahí.` : "No tienes tareas asignadas por ahora.";
+  } else {
+    tit.innerText = `${items.length} pendiente${items.length>1?"s":""}`;
+    sub.innerText = hechasHoy
+      ? `Ya completaste ${hechasHoy} hoy · te ${items.length>1?"quedan":"queda"} ${items.length}`
+      : (yo.admin ? "Eres administrador: ves todas tus áreas." : "Áreas: " + ((yo.areas||[]).map(areaN).join(", ") || "ninguna todavía"));
+  }
 
   if(!items.length){
-    cont.innerHTML = `<div class="deep rounded-2xl p-12 text-center">
-      <div class="text-4xl mb-3">🎉</div>
-      <p class="font-mono font-bold text-sm" style="color:var(--ok)">¡No tienes tareas pendientes!</p></div>`;
+    cont.innerHTML = `<div class="glass rounded-3xl p-14 text-center fade-up">
+      <div class="text-5xl mb-3">${hechasHoy?"🎉":"☕"}</div>
+      <p class="font-display text-lg font-bold text-white">${hechasHoy?"Terminaste todo":"Sin pendientes"}</p>
+      <p class="text-xs mt-1.5" style="color:var(--txt-soft)">${hechasHoy?"Puedes tomarte un respiro.":"Cuando te asignen algo aparecerá aquí."}</p>
+    </div>`;
     return;
   }
+
+  // Agrupar por área
   const grupos = {};
-  items.forEach(it=>{ (grupos[it.t.a] ||= []).push(it); });
+  items.forEach(it => (grupos[it.t.a] ||= []).push(it));
+
   cont.innerHTML = Object.keys(grupos).map(a=>`
-    <div class="fase-h">${areaI(a)} ${esc(areaN(a))} · ${grupos[a].length}</div>
-    ${grupos[a].map(({v,t})=>`
-      <div class="tarea">
-        <div class="tbox" onclick="${t.foto?`abrirDetalle('${v.id}')`:`marcar('${v.id}','${t.k}',false)`}" ${t.foto?'title="Requiere comprobante: ábrela para subir la foto"':''}>${t.foto?'📎':''}</div>
+    <div class="group-head">
+      <span class="gh-ico">${areaI(a)}</span>
+      <span class="font-mono text-[10px] font-black uppercase tracking-[0.14em] text-white">${esc(areaN(a))}</span>
+      <span class="font-mono text-[10px]" style="color:var(--txt-soft)">${grupos[a].length}</span>
+      <span class="gh-line"></span>
+    </div>
+    ${grupos[a].map(({v,t},i)=>`
+      <div class="task-card fade-up" id="tc-${v.id}-${t.k}" style="animation-delay:${Math.min(i,8)*35}ms"
+           onclick="${t.foto?`abrirDetalle('${v.id}')`:`marcarDesdeLista('${v.id}','${t.k}')`}">
+        <div class="task-check" id="chk-${v.id}-${t.k}">${t.foto?'📎':'✓'}</div>
         <div class="flex-1 min-w-0">
-          <p class="text-[13px] font-bold leading-snug">${esc(t.t)}${t.foto?' <span title="Requiere comprobante">📎</span>':""}${t.multi&&respons(t.a).length?` <span class="chip chip-wn ml-1">tu parte · ${respons(t.a).filter(u=>(v.tareas?.[t.k]?.marcas||{})[u]).length}/${respons(t.a).length}</span>`:""}</p>
-          <p class="font-mono text-[10px] mt-0.5" style="color:var(--txt-soft)">
-            ${esc(v.vehiculo)||"Carro por asignar"} · ${esc(v.vin)||"sin VIN"}${v.nombreCliente?` · 👤 ${esc(v.nombreCliente)}`:""}
-          </p>
+          <p class="task-title truncate">${esc(t.t)}</p>
+          <p class="task-meta truncate">${esc(v.vehiculo)||"Carro por asignar"}${v.nombreCliente?` · ${esc(v.nombreCliente)}`:""}${t.multi&&respons(t.a).length?` · tu parte (${respons(t.a).filter(u=>(v.tareas?.[t.k]?.marcas||{})[u]).length}/${respons(t.a).length})`:""}</p>
         </div>
+        ${t.foto?`<span class="chip chip-wn flex-shrink-0">comprobante</span>`:""}
         <button onclick="event.stopPropagation();abrirDetalle('${v.id}')" class="btn-g text-[9px] uppercase px-2.5 py-1.5 rounded-lg flex-shrink-0">Ver</button>
       </div>`).join("")}
   `).join("");
 }
+
+// Marcar desde la lista con animación antes de guardar
+window.marcarDesdeLista = function(id, k){
+  const chk = document.getElementById(`chk-${id}-${k}`);
+  const card = document.getElementById(`tc-${id}-${k}`);
+  if(chk){ chk.classList.add('on','pop'); }
+  if(card){ card.classList.add('done'); }
+  setTimeout(()=> marcar(id, k, false), 260);
+};
 
 function pintarFinanzas(){
   const act = autos.filter(a=>!a.archivado);
@@ -1375,7 +1419,7 @@ window.marcar = async function(id, k, ok){
     : { ...st, ok:true, por:yo.usuario, fecha:new Date().toISOString(), ...(sinComprobante?{sinComprobante}:{}) };
   try{
     await updateDoc(doc(db,"vehiculos",id), { tareas });
-    toast(ok ? "Tarea reabierta." : "✓ "+def.t);
+    if(!ok){ celebrar(); toast("✓ "+def.t); } else toast("Tarea reabierta.");
   }catch(e){ toast("No se pudo guardar: "+e.code,"err"); }
 };
 
@@ -1435,6 +1479,7 @@ window.marcarMulti = async function(id, k, yaHecho){
   try{
     await updateDoc(doc(db,"vehiculos",id), { tareas });
     const req = respons(def.a), listos = req.filter(u=>marcas[u]).length;
+    if(!yaHecho) celebrar();
     toast(yaHecho ? "Quitaste tu marca." : `✓ Tu parte lista (${listos}/${req.length})`);
   }catch(e){ toast("No se pudo guardar: "+e.code,"err"); }
 };
