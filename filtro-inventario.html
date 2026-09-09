@@ -1,0 +1,2186 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Filtro de inventario</title>
+<style>
+:root{
+  --steel:#e8ecef; --panel:#ffffff; --ink:#16202b; --ink-soft:#5b6b7a;
+  --line:#c9d3db; --line-soft:#e2e8ed;
+  --green:#1f7a4d; --amber:#c8860d; --red:#b03030; --blue:#20567d;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--steel); color:var(--ink);
+  font:14px/1.45 "Helvetica Neue",Helvetica,Arial,sans-serif;
+  font-variant-numeric:tabular-nums;
+}
+h1{font-size:19px;font-weight:700;letter-spacing:-.2px;margin:0}
+h2{font-size:12px;font-weight:700;margin:0 0 8px;color:var(--ink-soft)}
+a{color:var(--blue)}
+
+header{
+  background:var(--ink);color:#fff;padding:12px 18px;
+  display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+  position:sticky;top:0;z-index:20;
+}
+header h1{color:#fff}
+header .stat{font-size:12px;color:#9fb2c2}
+header .stat b{color:#fff;font-size:15px}
+
+.wrap{display:flex;align-items:flex-start;gap:14px;padding:14px;max-width:1900px}
+.rail{width:320px;flex:none;position:sticky;top:60px;max-height:calc(100vh - 72px);overflow-y:auto;
+  padding-right:6px;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+.rail::-webkit-scrollbar{width:9px}
+.rail::-webkit-scrollbar-track{background:transparent}
+.rail::-webkit-scrollbar-thumb{background:var(--line);border-radius:5px;border:2px solid var(--steel)}
+.rail::-webkit-scrollbar-thumb:hover{background:var(--ink-soft)}
+.main{flex:1;min-width:0}
+
+.card{background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:12px;margin-bottom:10px}
+
+label.f{display:block;font-size:12px;color:var(--ink-soft);margin:8px 0 3px}
+input[type=text],input[type=number],select,textarea{
+  width:100%;padding:6px 7px;border:1px solid var(--line);border-radius:2px;
+  font:inherit;font-variant-numeric:tabular-nums;background:#fff;color:var(--ink)
+}
+textarea{resize:vertical;min-height:52px;font-size:12px}
+.row2{display:flex;gap:8px}
+.row2>*{flex:1;min-width:0}
+
+.chk{display:flex;align-items:center;gap:6px;font-size:13px;padding:2px 0;cursor:pointer}
+.chk input{margin:0;flex:none}
+.chk span.n{margin-left:auto;color:var(--ink-soft);font-size:11px}
+
+button{
+  font:inherit;font-weight:600;padding:8px 12px;border-radius:2px;cursor:pointer;
+  border:1px solid var(--ink);background:var(--ink);color:#fff
+}
+button.ghost{background:#fff;color:var(--ink)}
+button:disabled{opacity:.4;cursor:default}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,
+.chk:focus-within{outline:2px solid var(--blue);outline-offset:1px}
+
+#drop{
+  border:2px dashed var(--line);border-radius:3px;background:#fff;
+  padding:36px 20px;text-align:center;cursor:pointer
+}
+#drop.over{border-color:var(--ink);background:#f2f6f9}
+#drop p{margin:6px 0;color:var(--ink-soft)}
+#drop strong{display:block;font-size:16px;color:var(--ink);margin-bottom:4px}
+
+/* objetivos */
+table.tgt{width:100%;border-collapse:collapse;font-size:12px}
+table.tgt th{text-align:left;font-weight:600;color:var(--ink-soft);padding:2px 3px;font-size:11px}
+table.tgt td{padding:1px 2px}
+table.tgt input{padding:4px 5px;font-size:12px}
+table.tgt td.x{width:22px}
+table.tgt td.x button{padding:2px 6px;border-color:var(--line);background:#fff;color:var(--ink-soft);font-weight:400}
+
+/* funnel */
+.funnel{font-size:12px}
+.funnel div{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:baseline;padding:3px 0;border-bottom:1px solid var(--line-soft)}
+.funnel div span:last-child{text-align:right;min-width:86px}
+.funnel div:last-child{border:0;font-weight:700;font-size:13px}
+.funnel span:last-child{font-variant-numeric:tabular-nums}
+
+/* resultados */
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+.toolbar .sp{flex:1}
+table.res{width:100%;border-collapse:collapse;background:#fff;font-size:12.5px}
+table.res th{
+  background:var(--ink);color:#fff;text-align:left;padding:7px 6px;font-size:11px;
+  position:sticky;top:56px;z-index:5;cursor:pointer;white-space:nowrap
+}
+table.res th.na{cursor:default}
+table.res td{padding:5px 6px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+table.res tbody tr:hover{background:#f2f6f9}
+td.num{text-align:right}
+td.veh{min-width:190px}
+td.veh b{display:block}
+td.veh small{color:var(--ink-soft)}
+img.th{width:78px;height:58px;object-fit:cover;background:var(--line-soft);border-radius:2px;display:block}
+
+.lamp{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:baseline}
+.lamp.g{background:var(--green)} .lamp.a{background:var(--amber)} .lamp.r{background:var(--red)}
+.oferta{font-weight:700}
+.oferta.g{color:var(--green)} .oferta.r{color:var(--red)}
+
+.tag{
+  display:inline-block;font-size:10px;padding:1px 5px;border-radius:2px;
+  border:1px solid var(--line);color:var(--ink-soft);margin:1px 3px 1px 0;white-space:nowrap
+}
+.tag.rd{border-color:var(--green);color:var(--green)}
+.tag.st{border-color:var(--amber);color:var(--amber)}
+.tag.nk{border-color:var(--red);color:var(--red)}
+.tag.nv{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:700}
+.tag.of{border-color:var(--green);color:var(--green)}
+.tag.dl{background:var(--amber);border-color:var(--amber);color:#fff;font-weight:700}
+.tag.bn{background:var(--green);border-color:var(--green);color:#fff;font-weight:700}
+
+.empty{background:#fff;border:1px solid var(--line);padding:40px;text-align:center;color:var(--ink-soft)}
+.hide{display:none !important}
+.bar{height:3px;background:var(--line-soft);border-radius:2px;overflow:hidden;margin-top:8px}
+.bar i{display:block;height:100%;background:var(--ink);width:0;transition:width .15s}
+.note{font-size:11px;color:var(--ink-soft);margin-top:6px}
+#modal{position:fixed;inset:0;background:rgba(10,18,26,.72);z-index:100;display:flex;padding:18px}
+#modalCaja{background:#fff;border-radius:4px;flex:1;display:flex;flex-direction:column;overflow:hidden;max-width:1500px;margin:auto;height:100%}
+#modalTop{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--ink);color:#fff;flex-wrap:wrap}
+#modalTop b{display:block;font-size:14px}
+#modalTop small{color:#9fb2c2;font-size:11px}
+#btnUsar{background:var(--green);border-color:var(--green)}
+#calcFrame{flex:1;width:100%;border:0;background:#070b14}
+@media (max-width:760px){ #modal{padding:0} #modalCaja{border-radius:0} }
+#hoja{background:#fff;border:1px solid var(--line);border-radius:3px;padding:14px}
+.hoja-top{display:flex;align-items:flex-start;gap:14px;border-bottom:2px solid var(--ink);padding-bottom:10px}
+.hoja-sum{text-align:right}
+.hoja-sum small{display:block;font-size:10px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.4px}
+.hoja-sum b{font-size:19px}
+.dia{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--ink-soft);
+     border-bottom:1px solid var(--line);padding:14px 0 4px;margin-bottom:8px}
+.lote{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--line-soft);break-inside:avoid;page-break-inside:avoid}
+.lote-foto{width:132px;flex:none}
+.lote-foto img{width:132px;height:99px;object-fit:cover;border-radius:2px;background:var(--line-soft)}
+.lote-cuerpo{flex:1;min-width:0}
+.lote-cab{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;margin-bottom:6px}
+.lote-cab b{font-size:15px}
+.lote-id{display:flex;align-items:center;gap:7px;font-size:12px}
+.lotenum{font-weight:700;font-size:15px;letter-spacing:.5px;background:var(--line-soft);padding:1px 7px;border-radius:2px;user-select:all}
+.lote-datos{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:4px 12px}
+.lote-datos small{display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--ink-soft)}
+.lote-datos span{font-size:12.5px}
+.lote-bid{width:132px;flex:none;text-align:right;display:flex;flex-direction:column;gap:5px;align-items:flex-end}
+.lote-bid small{font-size:9.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--ink-soft)}
+.bidrow{display:flex;align-items:center;gap:2px;border:2px solid var(--ink);border-radius:2px;padding:2px 5px;background:#fff}
+.bidrow .sig{font-weight:700}
+.bidrow input{border:0;padding:2px;font-size:17px;font-weight:700;text-align:right;width:82px}
+button.mini{padding:2px 7px;font-size:11px;font-weight:400;border-color:var(--line);color:var(--ink-soft)}
+.solo-print{display:none}
+@media (max-width:760px){
+  .lote{flex-wrap:wrap} .lote-foto,.lote-foto img{width:100%;height:auto}
+  .lote-bid{width:100%;text-align:left;align-items:stretch}
+  .bidrow input{width:100%;font-size:20px}
+}
+.atajos{display:flex;gap:4px;flex-wrap:wrap}
+.atajos button{flex:1;min-width:52px;padding:5px 4px;font-size:11.5px}
+.atajos button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+@media print{
+  .solo-print{display:block;font-size:11px;color:#333}
+  #hoja{border:0;padding:0}
+  .lote-foto,.lote-foto img{width:104px} .lote-foto img{height:78px}
+  .lotenum{background:none;padding:0;border:1px solid #000}
+  .bidrow{border-color:#000}
+
+  header,.rail,.toolbar,.noprint,#cardFunnel{display:none !important}
+  .wrap{display:block;padding:0} body{background:#fff}
+  .card{border:0;padding:0} table.res th{background:#fff;color:#000;border-bottom:2px solid #000;position:static}
+  table.res{font-size:11px} a{color:#000;text-decoration:none}
+}
+@media (max-width:760px){
+  header{padding:10px 12px} header h1{font-size:16px}
+  #calcUrl{width:100%;order:9}
+  .wrap{padding:8px;gap:8px}
+  table.res thead{display:none}
+  table.res tr{display:grid;grid-template-columns:88px 1fr;gap:0 10px;
+    border:1px solid var(--line);border-radius:3px;margin-bottom:8px;padding:8px;background:#fff}
+  table.res td{border:0;padding:2px 0}
+  table.res td:first-child{grid-column:1/-1}
+  table.res td:nth-child(2){grid-row:2/6}
+  img.th{width:88px;height:66px}
+  td.num{text-align:left}
+  .toolbar{position:sticky;top:52px;background:var(--steel);z-index:8;padding:6px 0}
+  input,select,button{font-size:16px}
+  table.tgt td input{font-size:16px}
+}
+@media (max-width:1100px){ .wrap{flex-direction:column} .rail{width:100%;position:static;max-height:none;overflow:visible} }
+@media (prefers-reduced-motion:reduce){*{transition:none !important}}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Filtro de inventario</h1>
+  <div class="stat" id="hstat"></div>
+  <div style="flex:1"></div>
+  <input type="text" id="calcUrl" value="https://alfredoartero.github.io/calculadora/"
+         style="width:250px;padding:5px 7px;font-size:12px" title="Dirección de tu calculadora">
+  <button class="ghost" id="btnCalc">Conectar</button>
+  <input type="file" id="calcFile" accept=".html" class="hide">
+  <button class="ghost" id="btnCalcFile" title="Si el link no jala, cargá el archivo">archivo</button>
+  <button class="ghost" id="btnRecibir">Abrir selección recibida</button>
+  <input type="file" id="selFile" accept=".json" class="hide">
+  <button class="ghost" id="btnCfgSave">Guardar ajustes</button>
+  <button class="ghost" id="btnCfgLoad">Cargar ajustes</button>
+  <input type="file" id="cfgFile" accept=".json" class="hide">
+</header>
+
+<div class="wrap">
+
+<!-- ================= RAIL ================= -->
+<div class="rail">
+
+  <div class="card">
+    <h2>Archivo del día</h2>
+    <div id="drop">
+      <strong>Soltá el CSV aquí</strong>
+      <p>o hacé clic para buscarlo</p>
+    </div>
+    <input type="file" id="file" accept=".csv" class="hide">
+    <div class="bar hide" id="bar"><i></i></div>
+    <div class="note" id="fname"></div>
+
+    <label class="f" style="margin-top:12px">Archivo de ayer (opcional)</label>
+    <button class="ghost" id="btnAyer" style="width:100%">Cargar el CSV de ayer</button>
+    <input type="file" id="fileAyer" accept=".csv" class="hide">
+    <div class="note" id="fnameAyer">Sirve para marcar cuáles lotes entraron hoy.</div>
+    <label class="chk" style="margin-top:6px"><input type="checkbox" id="soloNuevos"> Mostrar solo los nuevos</label>
+  </div>
+
+  <div class="card" id="cardSync">
+    <h2>Equipo <span id="syncLuz" style="float:right;font-size:10px;color:var(--ink-soft)">sin conectar</span></h2>
+    <div id="syncOff">
+      <label class="f">Dirección Supabase</label>
+      <input type="text" id="sbUrl" placeholder="https://xxxx.supabase.co">
+      <label class="f">Llave anon</label>
+      <input type="text" id="sbKey" placeholder="eyJhbGci...">
+      <div class="row2" style="margin-top:6px">
+        <div><label class="f">Correo</label><input type="text" id="sbMail"></div>
+        <div><label class="f">Clave</label><input type="password" id="sbPass"></div>
+      </div>
+      <button id="btnEntrar" style="width:100%;margin-top:8px">Entrar</button>
+      <div class="note" id="syncMsg">Sin conectar trabajás solo en esta compu. Conectado, lo que marques lo ven todos.</div>
+    </div>
+    <div id="syncOn" class="hide">
+      <div class="note" id="syncQuien"></div>
+      <button class="ghost" id="btnSubir" style="width:100%;margin-top:6px">Subir mi selección</button>
+      <button class="ghost" id="btnBajar" style="width:100%;margin-top:4px">Traer la del equipo</button>
+      <label class="chk" style="margin-top:6px"><input type="checkbox" id="sbAuto" checked> Sincronizar solo cada 30s</label>
+      <button class="ghost mini" id="btnSalir" style="width:100%;margin-top:6px">Salir</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Fecha de subasta</h2>
+    <div class="atajos">
+      <button class="ghost mini" data-dia="0">Hoy</button>
+      <button class="ghost mini" data-dia="1">Mañana</button>
+      <button class="ghost mini" data-dia="2">Pasado</button>
+      <button class="ghost mini" data-dia="7">7 días</button>
+      <button class="ghost mini" data-dia="-1">Todas</button>
+    </div>
+    <div class="row2" style="margin-top:8px">
+      <div><label class="f">Desde</label><input type="date" id="fDesde"></div>
+      <div><label class="f">Hasta</label><input type="date" id="fHasta"></div>
+    </div>
+    <div class="note" id="fAviso">Sin fechas puestas: se muestran todas.</div>
+  </div>
+
+  <div class="card">
+    <h2>Descarte duro</h2>
+    <div class="row2">
+      <div><label class="f">Año mínimo</label><input type="number" id="anio" value="2018"></div>
+      <div><label class="f">Millas máximo</label><input type="number" id="millas" value="115000"></div>
+    </div>
+    <label class="chk" style="margin-top:8px"><input type="checkbox" id="cero" checked> Descartar los que marcan 0 millas</label>
+    <div class="note">El odómetro "Not Actual" (N) pasa el filtro.</div>
+  </div>
+
+  <div class="card">
+    <h2>Condición de arranque</h2>
+    <label class="chk"><input type="checkbox" class="rd" value="RD" checked> Run &amp; Drive verificado<span class="n" id="nRD"></span></label>
+    <label class="chk"><input type="checkbox" class="rd" value="ST" checked> Solo enciende<span class="n" id="nST"></span></label>
+    <label class="chk"><input type="checkbox" class="rd" value="NV"> No verificado<span class="n" id="nNV"></span></label>
+    <label class="chk"><input type="checkbox" class="rd" value="SD"> Sin dato<span class="n" id="nSD"></span></label>
+    <div class="note">"No verificado" es que Copart no confirmó que arranque. "Sin dato" es que el campo viene vacío.</div>
+  </div>
+
+  <div class="card">
+    <h2>Daños que no queremos</h2>
+    <label class="f" style="margin-top:0">Dónde revisar el daño</label>
+    <select id="dondeDano">
+      <option value="ambos">En principal o secundario</option>
+      <option value="principal">Solo en el principal</option>
+    </select>
+    <div style="height:8px"></div>
+    <div id="danos"></div>
+    <div class="note">Marcado = se descarta. Los números salen del archivo cargado.</div>
+  </div>
+
+  <div class="card">
+    <h2>Origen</h2>
+    <label class="chk"><input type="checkbox" id="soloUSA" checked> Solo Estados Unidos<span class="n" id="nUSA"></span></label>
+    <div class="note">Los lotes de Canadá cotizan en dólares canadienses, así que la oferta calculada no te sirve para comparar.</div>
+    <label class="chk" style="margin-top:8px"><input type="checkbox" id="conFecha" checked> Solo con fecha de subasta<span class="n" id="nFecha"></span></label>
+    <div class="note">Más de la mitad del archivo todavía no tiene fecha asignada. Esos no se pueden ofertar aún.</div>
+  </div>
+
+  <div class="card">
+    <h2>Tipo y combustible</h2>
+    <label class="chk"><input type="checkbox" id="soloAutos" checked> Solo vehículos<span class="n" id="nAutos"></span></label>
+    <div class="note">Saca motos, remolques, lanchas, cuatrimotos y maquinaria.</div>
+    <label class="chk" style="margin-top:8px"><input type="checkbox" id="noElec"> Sacar eléctricos e híbridos<span class="n" id="nElec"></span></label>
+    <div class="note">Batería dañada puede costar más que el carro.</div>
+    <label class="chk" style="margin-top:8px"><input type="checkbox" id="soloOferta"> Solo los que aceptan oferta directa<span class="n" id="nOferta"></span></label>
+    <label class="chk"><input type="checkbox" id="soloBIN"> Solo los que tienen Buy-It-Now<span class="n" id="nBIN"></span></label>
+  </div>
+
+  <div class="card">
+    <h2>Zona dealer</h2>
+    <textarea id="edos" style="min-height:38px">MI, AL, WI</textarea>
+    <div class="note" id="edosAviso">Estados que solo se compran con cuenta dealer. Estos lotes no se descartan: se apartan en su propia lista.</div>
+  </div>
+
+  <div class="card">
+    <h2>Vendedor</h2>
+    <label class="chk"><input type="checkbox" class="vd" value="ase" checked> Aseguradora<span class="n" id="nAse"></span></label>
+    <label class="chk"><input type="checkbox" class="vd" value="otro" checked> Renta, financiera o flota<span class="n" id="nOtro"></span></label>
+    <label class="chk"><input type="checkbox" class="vd" value="sin" checked> Sin identificar<span class="n" id="nSin"></span></label>
+    <label class="f">Qué cuenta como aseguradora</label>
+    <textarea id="palabras">INSURANCE, GEICO, STATE FARM, PROGRESSIVE, ALLSTATE, USAA, NATIONWIDE, LIBERTY MUTUAL, TRAVELERS, ESURANCE, SAFECO, MERCURY, AMICA, ERIE, HARTFORD, CASUALTY, MUTUAL, BRISTOL WEST, ASSURANCE, UNDERWRITERS, INS CO</textarea>
+    <div class="note">Palabras separadas por coma. Si el nombre del vendedor contiene alguna, cuenta como aseguradora.</div>
+  </div>
+
+  <div class="card">
+    <h2>Títulos bloqueados</h2>
+    <textarea id="titulos" placeholder="Ej: CD, NR, JT"></textarea>
+    <div class="note" id="titAviso">Vacío: <b>ningún título está bloqueado</b>, pasan los 198 códigos. Escribí acá los que el aduanero te diga que no entran.</div>
+    <button class="ghost" id="btnTit" style="margin-top:6px;width:100%">Ver códigos del archivo</button>
+  </div>
+
+  <div class="card" style="border-color:var(--ink);border-width:2px">
+    <h2 style="color:var(--ink)">Hasta cuánto ofertar</h2>
+    <label class="f">Costo total objetivo (puesto en El Salvador)</label>
+    <input type="number" id="costoObj" placeholder="Ej: 9500" style="font-size:17px;font-weight:700">
+    <div class="note">La herramienta tantea con tu calculadora hasta dar con la oferta más alta que todavía cabe en ese costo.</div>
+
+    <div class="row2" style="margin-top:8px">
+      <div><label class="f">Subasta</label><select id="cSubasta"><option value="copart">Copart</option><option value="iaai">IAAI</option></select></div>
+      <div><label class="f">Tamaño</label><select id="cTam">
+        <option value="0">Sedán / Pequeño</option><option value="1">Especial</option>
+        <option value="2">Mediano</option><option value="3">Grande</option><option value="4">Extra Grande</option>
+      </select></div>
+    </div>
+    <div class="row2">
+      <div><label class="f">Pago en USA</label><select id="cPago">
+        <option value="transferencia">Transferencia</option><option value="tarjeta">Tarjeta</option></select></div>
+      <div><label class="f">Dividir transf.</label><select id="cDivs">
+        <option>1</option><option>2</option><option>3</option><option>4</option></select></div>
+    </div>
+    <div class="row2">
+      <div><label class="f">Versión</label><select id="cVersion">
+        <option value="normal">Normal</option><option value="cesar">César (+$100)</option></select></div>
+      <div><label class="f">Cuenta dealer</label><select id="cDealer">
+        <option value="0">No</option><option value="1">Sí (+$100)</option></select></div>
+    </div>
+    <label class="f">Castigo por millaje</label>
+    <input type="number" id="castigo" value="20" min="0" max="90" step="1">
+    <div class="note">Se aplica encima del tope de costo. En 0, la oferta es el tope puro.</div>
+    <input type="hidden" id="ofertaBase" value="">
+  </div>
+
+</div>
+
+<!-- ================= MAIN ================= -->
+<div class="main">
+
+  <div class="card">
+    <h2>Qué estamos buscando — marca, modelo y años</h2>
+    <table class="tgt">
+      <thead><tr>
+        <th style="width:15%">Marca</th><th style="width:18%">Modelo</th>
+        <th style="width:9%">Año desde</th><th style="width:9%">Año hasta</th>
+        <th style="width:11%">Millas tope</th><th style="width:13%">Oferta máxima</th>
+        <th style="width:7%">Activo</th><th class="x"></th>
+      </tr></thead>
+      <tbody id="tgtBody"></tbody>
+    </table>
+    <button class="ghost" id="btnAdd" style="margin-top:8px">Agregar renglón</button>
+    <div class="note">Modelo vacío = cualquier modelo de esa marca. Ningún renglón activo = se muestran todos los que pasan el descarte duro. La búsqueda es por "contiene", así que Corolla agarra Corolla LE, SE y XSE.</div>
+  </div>
+
+  <div class="card hide" id="cardFunnel">
+    <h2>Cómo va quedando</h2>
+    <div class="funnel" id="funnel"></div>
+  </div>
+
+  <div class="toolbar hide" id="toolbar">
+    <button id="btnCorrer">Aplicar filtros</button>
+    <button class="ghost" id="btnCsv">Bajar la lista</button>
+    <button class="ghost" id="btnGeneral">General (0)</button>
+    <button class="ghost" id="btnDealer">Zona dealer (0)</button>
+    <button class="ghost" id="btnVerSel">Selección (0)</button>
+    <div class="sp"></div>
+    <label class="f" style="margin:0">Ordenar por</label>
+    <select id="orden" style="width:auto">
+      <option value="fecha">Urgencia (fecha de subasta)</option>
+      <option value="margen">Margen estimado</option>
+      <option value="millas">Millaje</option>
+      <option value="anio">Año</option>
+      <option value="oferta">Oferta actual</option>
+    </select>
+  </div>
+
+  <div id="avisoRestaurado" class="card hide" style="border-color:var(--blue);background:#eef5fb"></div>
+  <div id="salida"><div class="empty">Cargá el archivo del día para empezar.</div></div>
+
+</div>
+</div>
+
+<div id="modal" class="hide">
+  <div id="modalCaja">
+    <div id="modalTop">
+      <div>
+        <b id="modalVeh"></b>
+        <small id="modalLote"></small>
+      </div>
+      <div style="flex:1"></div>
+      <small id="modalAviso" style="color:var(--amber)"></small>
+      <button id="btnUsar">Usar esta oferta →</button>
+      <button class="ghost" id="btnCerrar">Cerrar</button>
+    </div>
+    <iframe id="calcFrame" title="Calculadora"></iframe>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   TABLAS COPIADAS DE TU CALCULADORA (Importaciones Yesica)
+   Cuando cambiés grúas, navieras o fees allá, pegá estos tres
+   bloques aquí también.
+   ============================================================ */
+var NAVIERAS_MAR = {
+            "FL": {
+                "matus": [800, 825, 900, 1350, 1395],
+                "maverick": [800, 875, 925, 1350, 1425]
+            },
+            "PH": {
+                "matus": [825, 900, 1025, 1350, 1395],
+                "maverick": [850, 925, 1050, 1350, 1435]
+            },
+            "CA": {
+                "matus": [995, 1195, 1295, 1350, 1450],
+                "maverick": [1095, 1220, 1320, 1425, 1500]
+            },
+            "TX": {
+                "matus": [0, 0, 0, 0, 0], // Matus no tiene Texas
+                "maverick": [950, 1000, 1050, 1300, 1450]
+            }
+        };
+var CIUDADES = {
+            // ALABAMA
+            "Birmingham (Copart/IAAI)": { zMat: "FL", zMav: "FL", matus: 475, maverick: 500 },
+            "Birmingham Sub lote (Copart)*": { zMat: "FL", zMav: null, matus: 535, maverick: null },
+            "Cusseta (Copart)": { zMat: "FL", zMav: null, matus: 545, maverick: null },
+            "Dothan (Copart/IAAI)": { zMat: "FL", zMav: "FL", matus: 475, maverick: 490 },
+            "Eight Mile": { zMat: null, zMav: "FL", matus: null, maverick: 500 },
+            "Hueytown": { zMat: null, zMav: "FL", matus: null, maverick: 500 },
+            "Huntsville* (IAAI)": { zMat: "FL", zMav: "FL", matus: 485, maverick: 500 },
+            "Mobile (Copart)": { zMat: "FL", zMav: "FL", matus: 450, maverick: 480 },
+            "Mobile South (Copart)": { zMat: "FL", zMav: null, matus: 495, maverick: null },
+            "Montgomery (Copart)": { zMat: "FL", zMav: "FL", matus: 450, maverick: 480 },
+            "Tanner (Copart)": { zMat: "FL", zMav: "FL", matus: 495, maverick: 500 },
+
+            // ARIZONA
+            "Phoenix (Copart/IAAI)": { zMat: "CA", zMav: "CA", matus: 275, maverick: 350 },
+            "Phoenix North (Copart)": { zMat: "CA", zMav: "CA", matus: 325, maverick: 400 },
+            "Tucson (Copart/IAAI)": { zMat: "CA", zMav: "CA", matus: 400, maverick: 400 },
+
+            // ARKANSAS
+            "Fayettevile": { zMat: null, zMav: "FL", matus: null, maverick: 675 },
+            "Fayetteville (Copart/IAAI)": { zMat: "FL", zMav: null, matus: 725, maverick: null },
+            "Fayetteville* Copart & IAAI": { zMat: null, zMav: "TX", matus: null, maverick: 525 },
+            "Fayetteville* Copart *Praire Grove*": { zMat: null, zMav: "TX", matus: null, maverick: 525 },
+            "Little Rock (Copart/IAAI)": { zMat: "FL", zMav: "TX", matus: 750, maverick: 525 },
+            "Little Rock Sub lote (Copart)*": { zMat: "FL", zMav: null, matus: 800, maverick: null },
+
+            // CALIFORNIA
+            "Ace Carson (IAAI)": { zMat: "CA", zMav: "CA", matus: 150, maverick: 185 },
+            "Ace Perris (IAAI)": { zMat: "CA", zMav: "CA", matus: 300, maverick: 300 },
+            "Adelanto (Copart)": { zMat: "CA", zMav: "CA", matus: 300, maverick: 300 },
+            "Anaheim (IAAI)": { zMat: "CA", zMav: "CA", matus: 175, maverick: 175 },
+            "Anaheim Consolidated (IAAI)*": { zMat: "CA", zMav: "CA", matus: null, maverick: 225 },
+            "Antelope (Copart)": { zMat: "CA", zMav: "CA", matus: 350, maverick: 450 },
+            "Bakersfield (Copart)": { zMat: "CA", zMav: "CA", matus: 250, maverick: 300 },
+            "Colton (IAAI)": { zMat: "CA", zMav: "CA", matus: 200, maverick: 210 },
+            "East Bay (IAAI)": { zMat: "CA", zMav: "CA", matus: 385, maverick: 415 },
+            "Fontana (IAAI)": { zMat: "CA", zMav: "CA", matus: 200, maverick: 210 },
+            "Fremont (IAAI)": { zMat: "CA", zMav: "CA", matus: 385, maverick: 415 },
+            "Fresno (Copart/ IAAI)": { zMat: "CA", zMav: "CA", matus: 300, maverick: 305 },
+            "Hayward (Copart)": { zMat: "CA", zMav: "CA", matus: 385, maverick: 415 },
+            "High Desert (IAAI)": { zMat: "CA", zMav: "CA", matus: 275, maverick: 300 },
+            "Jurupa Valley(IAAI)*": { zMat: "CA", zMav: "CA", matus: 225, maverick: 300 },
+            "Lancaster (Copart) *": { zMat: "CA", zMav: "CA", matus: 300, maverick: 450 },
+            "Long Beach (Copart)": { zMat: "CA", zMav: "CA", matus: 150, maverick: 140 },
+            "Los Angeles (Copart/ IAAI)": { zMat: "CA", zMav: "CA", matus: 150, maverick: 150 },
+            "Los Angeles South ( IAAI)": { zMat: "CA", zMav: "CA", matus: 150, maverick: 150 },
+            "Martinez (Copart)": { zMat: "CA", zMav: "CA", matus: 375, maverick: 395 },
+            "Mentone (Copart)": { zMat: "CA", zMav: "CA", matus: 325, maverick: 325 },
+            "Modesto (Copart)*": { zMat: "CA", zMav: "CA", matus: 450, maverick: 225 },
+            "N. Hollywood (IAAI)": { zMat: "CA", zMav: "CA", matus: 225, maverick: 250 },
+            "Napa (Copart)": { zMat: "CA", zMav: "CA", matus: 450, maverick: 510 },
+            "R.Cucamonga (Copart)": { zMat: "CA", zMav: "CA", matus: 200, maverick: 225 },
+            "Redding (Copart)": { zMat: "CA", zMav: "CA", matus: 550, maverick: 575 },
+            "Riverside (IAAI)*": { zMat: "CA", zMav: "CA", matus: 225, maverick: 415 },
+            "Sacramento (Copart/ IAAI)": { zMat: "CA", zMav: "CA", matus: 325, maverick: 390 },
+            "Sacramento West (IAAI)": { zMat: "CA", zMav: null, matus: 500, maverick: null },
+            "San Bernardino (Copart)": { zMat: "CA", zMav: "CA", matus: 190, maverick: 210 },
+            "San Diego (Copart/IAAI)": { zMat: "CA", zMav: "CA", matus: 235, maverick: 270 },
+            "San Jose (Copart)": { zMat: "CA", zMav: "CA", matus: 385, maverick: 415 },
+            "San Jose / San Martin (Copart)*": { zMat: "CA", zMav: "CA", matus: 415, maverick: 300 },
+            "Santa Clarita (IAAI)": { zMat: "CA", zMav: "CA", matus: 300, maverick: 300 },
+            "Santa Paula (Copart)*": { zMat: "CA", zMav: "CA", matus: 300, maverick: null },
+            "So Sacramento (Copart)": { zMat: "CA", zMav: "CA", matus: 325, maverick: 390 },
+            "Stockton (IAAI)": { zMat: "CA", zMav: "CA", matus: 450, maverick: 450 },
+            "Sun Valley (Copart)": { zMat: "CA", zMav: "CA", matus: 200, maverick: 230 },
+            "Vallejo (Copart)": { zMat: "CA", zMav: "CA", matus: 375, maverick: 390 },
+            "Van Nuys (Copart)": { zMat: "CA", zMav: "CA", matus: 195, maverick: 225 },
+
+            // COLORADO
+            "Brighton*": { zMat: null, zMav: "TX", matus: null, maverick: 690 },
+            "Colorado Springs (Copart)": { zMat: "CA", zMav: "TX", matus: 695, maverick: 700 },
+            "Denver (Copart/ IAAI)": { zMat: "CA", zMav: "TX", matus: 695, maverick: 690 },
+            "Denver Central (Copart)": { zMat: "CA", zMav: null, matus: 695, maverick: null },
+            "Denver East (Copart)": { zMat: "CA", zMav: null, matus: 695, maverick: null },
+            "Denver South (Copart)": { zMat: "CA", zMav: "TX", matus: 695, maverick: 690 },
+            "Western Colorado (IAAI)": { zMat: "CA", zMav: null, matus: null, maverick: null },
+
+            // COLUMBIA
+            "Metro": { zMat: null, zMav: "PH", matus: null, maverick: 225 },
+            "Washington": { zMat: null, zMav: "PH", matus: null, maverick: 225 },
+
+            // CONNECTICUT
+            "Hartford (Copart)": { zMat: "PH", zMav: "PH", matus: 300, maverick: 300 },
+            "Hartford New Britain (Copart)": { zMat: "PH", zMav: null, matus: 300, maverick: null },
+            "Hartford Springfield (Copart)": { zMat: "PH", zMav: "PH", matus: 325, maverick: 300 },
+
+            // DELAWARE
+            "New Castle (IAAI)": { zMat: "PH", zMav: "PH", matus: 85, maverick: 125 },
+            "Seaford (Copart)": { zMat: "PH", zMav: "PH", matus: 200, maverick: 225 },
+            "Seaford Fruitland (Copart)": { zMat: "PH", zMav: null, matus: 300, maverick: null },
+            "Wilmington, Delaware": { zMat: null, zMav: "PH", matus: null, maverick: 125 },
+
+            // FLORIDA
+            "Clearwater (IAAI)": { zMat: "FL", zMav: "FL", matus: 220, maverick: 230 },
+            "Clewiston (Copart)*": { zMat: "FL", zMav: null, matus: 175, maverick: null },
+            "Clewiston Fort Pierce (IAAI)*": { zMat: "FL", zMav: null, matus: 175, maverick: null },
+            "Defuniak spring (IAAI)*": { zMat: "FL", zMav: null, matus: null, maverick: null },
+            "Fort. Myers (IAAI)": { zMat: "FL", zMav: "FL", matus: 220, maverick: 230 },
+            "Fort. Pierce (Copart/IAAI)": { zMat: "FL", zMav: "FL", matus: 150, maverick: 150 },
+            "Jacksonville (IAAI)": { zMat: "FL", zMav: "FL", matus: 250, maverick: 250 },
+            "Jacksonville North (Copart)": { zMat: "FL", zMav: null, matus: 250, maverick: null },
+            "Miami (Clewiston Sublote)": { zMat: null, zMav: "FL", matus: null, maverick: 175 },
+            "Miami (IAAI Sublote)": { zMat: null, zMav: "FL", matus: null, maverick: 125 },
+            "Miami Central (Copart)": { zMat: "FL", zMav: null, matus: 100, maverick: null },
+            "Miami Central, North Copart": { zMat: null, zMav: "FL", matus: null, maverick: 100 },
+            "Miami North (Copart/ IAAI)": { zMat: "FL", zMav: null, matus: 100, maverick: null },
+            "Miami North IAAI": { zMat: null, zMav: "FL", matus: null, maverick: 100 },
+            "Miami South (Copart)": { zMat: "FL", zMav: "FL", matus: 100, maverick: 100 },
+            "Mulberry Orlando South Sublot (Copart)*": { zMat: "FL", zMav: null, matus: 250, maverick: null },
+            "Mulberry Tampa South (Copart)*": { zMat: "FL", zMav: null, matus: 250, maverick: null },
+            "Ocala (Copart)": { zMat: "FL", zMav: "FL", matus: 250, maverick: 250 },
+            "Okeechobee (Copart)*": { zMat: "FL", zMav: null, matus: 255, maverick: null },
+            "Orlando (IAAI)": { zMat: "FL", zMav: null, matus: 185, maverick: null },
+            "Orlando Boggy Creek (IAAI)*": { zMat: "FL", zMav: null, matus: 225, maverick: null },
+            "Orlando North (Copart/ IAAI)": { zMat: "FL", zMav: null, matus: 185, maverick: null },
+            "Orlando North Copart - IAAI - Apo": { zMat: null, zMav: "FL", matus: null, maverick: 200 },
+            "Orlando South (Copart)": { zMat: "FL", zMav: null, matus: 185, maverick: null },
+            "Palmetto (IAAI)*": { zMat: "FL", zMav: null, matus: 275, maverick: null },
+            "Pembroke Pines (IAAI)*": { zMat: "FL", zMav: null, matus: 100, maverick: null },
+            "Pensacola (IAAI)": { zMat: "FL", zMav: "FL", matus: 350, maverick: 375 },
+            "Punta Gorda (Copart)": { zMat: "FL", zMav: "FL", matus: 220, maverick: 225 },
+            "Punta Gorda South (Copart)": { zMat: "FL", zMav: "FL", matus: 225, maverick: 250 },
+            "Punta Gorda Sublote": { zMat: null, zMav: "FL", matus: null, maverick: 275 },
+            "Tallahassee (Copart)": { zMat: "FL", zMav: "FL", matus: 320, maverick: 330 },
+            "Tampa (IAAI)": { zMat: "FL", zMav: null, matus: 225, maverick: null },
+            "Tampa East & South": { zMat: null, zMav: "FL", matus: null, maverick: 225 },
+            "Tampa Mulberry (Sublote)": { zMat: null, zMav: "FL", matus: null, maverick: 275 },
+            "Tampa North (IAAI)": { zMat: "FL", zMav: null, matus: 225, maverick: null },
+            "Tampa Noth Copart": { zMat: null, zMav: "FL", matus: null, maverick: 275 },
+            "Tampa South (Copart)": { zMat: "FL", zMav: null, matus: 205, maverick: null },
+            "Thonotosassa (Copart)*": { zMat: "FL", zMav: null, matus: 250, maverick: null },
+            "West Palm Beach (Copart)": { zMat: "FL", zMav: null, matus: 120, maverick: null },
+            "West Palm Beach IAAI": { zMat: null, zMav: "FL", matus: null, maverick: 150 },
+            "West Palm Beach copart": { zMat: null, zMav: "FL", matus: null, maverick: 140 },
+
+            // GEORGIA
+            "Atlanta (IAAI)": { zMat: "FL", zMav: null, matus: 345, maverick: null },
+            "Atlanta Crashedtoys": { zMat: "FL", zMav: null, matus: 345, maverick: null },
+            "Atlanta East/ North/ South (Copart/IAAI)": { zMat: "FL", zMav: null, matus: 345, maverick: null },
+            "Atlanta North Sublote": { zMat: null, zMav: "FL", matus: null, maverick: 370 },
+            "Atlanta North, East, South West": { zMat: null, zMav: "FL", matus: null, maverick: 365 },
+            "Atlanta West (Copart)": { zMat: "FL", zMav: null, matus: 345, maverick: null },
+            "Augusta (Copart)": { zMat: "FL", zMav: "FL", matus: 395, maverick: 450 },
+            "Cartersville (Copart)": { zMat: "FL", zMav: "FL", matus: 345, maverick: 360 },
+            "Fairburn (Copart)": { zMat: "FL", zMav: "FL", matus: 345, maverick: 360 },
+            "Macon (Copart / IAAI)": { zMat: "FL", zMav: "FL", matus: 345, maverick: 360 },
+            "Savannah (Copart/ IAAI)": { zMat: "FL", zMav: "FL", matus: 345, maverick: 360 },
+            "Tifton (Copart/ IAAI)": { zMat: "FL", zMav: "FL", matus: 345, maverick: 360 },
+            "Vertia Augusta (Copart)*": { zMat: "FL", zMav: null, matus: 450, maverick: null },
+            "Vertia Savannah (Copart)*": { zMat: "FL", zMav: null, matus: 450, maverick: null },
+
+            // HAWAII
+            "Honolulu (Copart/IAAI)": { zMat: "CA", zMav: null, matus: null, maverick: null },
+
+            // IDAHO
+            "Boise (Copart / IAAI)": { zMat: "CA", zMav: "TX", matus: 775, maverick: null },
+
+            // ILLINOIS
+            "Aurora Offsite (IAAI)*": { zMat: "FL", zMav: null, matus: 775, maverick: null },
+            "Centreville (IAAI)*": { zMat: "FL", zMav: null, matus: 725, maverick: null },
+            "Chicago Heights (Copart)*": { zMat: "FL", zMav: null, matus: 800, maverick: null },
+            "Chicago North(Copart/ IAAI)": { zMat: "FL", zMav: "FL", matus: 695, maverick: 725 },
+            "Chicago South(Copart/ IAAI)": { zMat: "FL", zMav: "FL", matus: 695, maverick: 750 },
+            "Chicago West (IAAI)": { zMat: "FL", zMav: "FL", matus: 695, maverick: 725 },
+            "Lincoln (IAAI), Illinois": { zMat: "FL", zMav: "FL", matus: 825, maverick: null },
+            "Peoria (Copart)": { zMat: "FL", zMav: "FL", matus: 825, maverick: 850 },
+            "Racehorse Drive Sublot (Copart)*": { zMat: "FL", zMav: null, matus: 725, maverick: null },
+            "Southern Illinois (Copart)": { zMat: "FL", zMav: "FL", matus: 675, maverick: 700 },
+            "St. Louis (IAAI), Illinois": { zMat: "FL", zMav: "FL", matus: 675, maverick: 700 },
+            "Wheeling (Copart)": { zMat: "FL", zMav: "FL", matus: 675, maverick: 700 },
+
+            // INDIANA
+            "Cicero (Copart)": { zMat: "FL", zMav: "FL", matus: 700, maverick: 725 },
+            "Dyer (Copart)": { zMat: "FL", zMav: "FL", matus: 700, maverick: 725 },
+            "Fort Wayne (Copart)": { zMat: "FL", zMav: "FL", matus: 900, maverick: null },
+            "Hammond": { zMat: null, zMav: "FL", matus: null, maverick: 700 },
+            "Indianapolis (Copart/ IAAI)": { zMat: "FL", zMav: "FL", matus: 645, maverick: 675 },
+            "Indianapolis South (IAAI)": { zMat: "FL", zMav: null, matus: 650, maverick: null },
+            "Indy Minnesota Street 46241 (Copart)*": { zMat: "FL", zMav: null, matus: 725, maverick: null },
+            "Offsite-Indianapolis IN 47630 (IAAI)*": { zMat: "FL", zMav: null, matus: 725, maverick: null },
+            "South Bend (IAAI)": { zMat: "FL", zMav: "FL", matus: 875, maverick: null },
+
+            // IOWA
+            "Davenport (Copart/ IAAI)": { zMat: "FL", zMav: "FL", matus: 950, maverick: 975 },
+            "Davenport IA Sub Lot 169 (Copart)*": { zMat: "FL", zMav: null, matus: 975, maverick: null },
+            "Des Moines (Copart/ IAAI)": { zMat: "FL", zMav: "FL", matus: 950, maverick: 975 },
+            "Elbridge": { zMat: null, zMav: "FL", matus: null, maverick: 975 },
+            "Metro Sublot (Copart)*": { zMat: "FL", zMav: null, matus: 975, maverick: null },
+
+            // KANSAS
+            "Gibbs Road Kansas City, Kansas 66111 (Copart)*": { zMat: "FL", zMav: null, matus: 725, maverick: null },
+            "Kansas City (Copart/ IAAI)": { zMat: "FL", zMav: "TX", matus: 675, maverick: 575 },
+            "Kansas City, KS, Sublote Yard 17 (Copart)*": { zMat: "FL", zMav: null, matus: 725, maverick: null },
+            "Wichita (Copart/ IAAI)": { zMat: "FL", zMav: "TX", matus: 800, maverick: 575 },
+
+            // KENTUCKY
+            "Ashland (IAAI)": { zMat: "FL", zMav: "FL", matus: null, maverick: null },
+            "Bowling Green (IAAI)": { zMat: "FL", zMav: "FL", matus: 750, maverick: 750 },
+            "Earlington (Copart)": { zMat: "FL", zMav: "FL", matus: 800, maverick: 800 },
+            "Earlington Sublot (Copart)*": { zMat: "FL", zMav: null, matus: 850, maverick: null },
+            "Greenville Sublot (Copart)*": { zMat: "FL", zMav: null, matus: 725, maverick: null },
+            "Lexington (East/West), Kentucky": { zMat: null, zMav: "FL", matus: null, maverick: 675 },
+            "Lexington East/ West (Copart)": { zMat: "FL", zMav: null, matus: 650, maverick: null },
+            "Louisville (Copart/ IAAI)": { zMat: "FL", zMav: null, matus: 650, maverick: null },
+            "Louisville Copart/IAAI": { zMat: null, zMav: "FL", matus: null, maverick: 675 },
+            "Louisville North (IAAI)": { zMat: "FL", zMav: null, matus: 675, maverick: null },
+            "Paducah (IAAI)": { zMat: "FL", zMav: "FL", matus: 975, maverick: null },
+            "Walton (Copart)": { zMat: "FL", zMav: "FL", matus: 650, maverick: 650 },
+
+            // LOUISIANA
+            "Baton Rogue (Copart/ IAAI)": { zMat: "FL", zMav: null, matus: 495, maverick: null },
+            "Baton Rouge*": { zMat: null, zMav: "TX", matus: null, maverick: 350 },
+            "Lafayette (IAAI)": { zMat: "FL", zMav: "TX", matus: 525, maverick: 325 },
+            "New Orleans (Copart/ IAAI)": { zMat: "FL", zMav: null, matus: 495, maverick: null },
+            "New Orleans East (IAAI)": { zMat: "FL", zMav: null, matus: 495, maverick: null },
+            "New Orleans East * IAAI": { zMat: null, zMav: "TX", matus: null, maverick: 350 },
+            "New Orleans* Copart / IAAI": { zMat: null, zMav: "TX", matus: null, maverick: 350 },
+            "Shreveport (Copart/ IAAI)": { zMat: "FL", zMav: "TX", matus: 675, maverick: 350 },
+
+            // MAINE
+            "Lyman (Copart)": { zMat: "PH", zMav: "PH", matus: 560, maverick: 650 },
+            "Portland Gorham (IAAI)": { zMat: "PH", zMav: "PH", matus: 560, maverick: 625 },
+            "Windham (Copart)": { zMat: "PH", zMav: "PH", matus: 600, maverick: 650 },
+
+            // MARYLAND
+            "Baltimore (Copart/IAAI)": { zMat: "PH", zMav: "PH", matus: 185, maverick: 210 },
+            "Baltimore East (Pataspco)*": { zMat: "PH", zMav: "PH", matus: 240, maverick: 275 },
+            "Baltimore East Laurel (Copart)": { zMat: "PH", zMav: null, matus: 230, maverick: null },
+            "Dundalk (IAAI)": { zMat: "PH", zMav: "PH", matus: 195, maverick: 200 },
+            "Elkton (IAAI)": { zMat: "PH", zMav: "PH", matus: 175, maverick: 175 },
+            "Laurel": { zMat: null, zMav: "PH", matus: null, maverick: 235 },
+            "Metro DC (IAAI)": { zMat: "PH", zMav: null, matus: 195, maverick: null },
+            "Washington DC (Copart)": { zMat: "PH", zMav: null, matus: 195, maverick: null },
+            "White Marsh (Copart)": { zMat: "PH", zMav: null, matus: 250, maverick: null },
+            "White Plaine Washington DC (Copart)*": { zMat: "PH", zMav: null, matus: 225, maverick: null },
+
+            // MASSACHUSETTS
+            "Boston": { zMat: null, zMav: "PH", matus: null, maverick: 500 },
+            "Boston North (Copart)": { zMat: "PH", zMav: null, matus: 445, maverick: null },
+            "Boston North Hudson (Copart)*": { zMat: "PH", zMav: null, matus: 525, maverick: null },
+            "Boston South (Copart)": { zMat: "PH", zMav: null, matus: 435, maverick: null },
+            "Boston-Shirley (IAAI)": { zMat: "PH", zMav: null, matus: 460, maverick: null },
+            "Freetown (Copart)": { zMat: "PH", zMav: "PH", matus: 425, maverick: 500 },
+            "North Boston": { zMat: null, zMav: "PH", matus: null, maverick: 500 },
+            "South Boston*": { zMat: null, zMav: "PH", matus: null, maverick: 500 },
+            "Taunton - IAAI": { zMat: "PH", zMav: null, matus: 400, maverick: null },
+            "Taunton uxbridge (IAAI)*": { zMat: "PH", zMav: null, matus: 475, maverick: null },
+            "Taunton*": { zMat: null, zMav: "PH", matus: null, maverick: 450 },
+            "Templeton (IAAI)": { zMat: "PH", zMav: "PH", matus: 485, maverick: 525 },
+            "West Warren (Copart), Massachusetts": { zMat: "PH", zMav: "PH", matus: 435, maverick: 500 },
+
+            // MICHIGAN
+            "Detroit (Copart/IAAI)": { zMat: "PH", zMav: "PH", matus: 775, maverick: 775 },
+            "Detroit off site (IAAI)*": { zMat: "PH", zMav: null, matus: 825, maverick: null },
+            "Flint (Copart/IAAI)": { zMat: "PH", zMav: "PH", matus: 775, maverick: 750 },
+            "Grand Rapids (IAAI)": { zMat: "PH", zMav: "PH", matus: 800, maverick: null },
+            "Ionia (Copart)": { zMat: "PH", zMav: "PH", matus: null, maverick: null },
+            "Kincheloe (Copart)": { zMat: "PH", zMav: "PH", matus: null, maverick: null },
+            "Lansing (Copart)": { zMat: "PH", zMav: "PH", matus: 775, maverick: 750 },
+            "Wayland (Copart)": { zMat: "PH", zMav: "PH", matus: 775, maverick: null },
+
+            // MINNESOTA
+            "Minneapolis": { zMat: null, zMav: "FL", matus: null, maverick: 800 },
+            "Minneapolis - St. Paul": { zMat: null, zMav: "FL", matus: null, maverick: 825 },
+            "St. Cloud": { zMat: null, zMav: "FL", matus: null, maverick: 850 },
+            "Minneapolis (Copart)": { zMat: "FL", zMav: null, matus: 795, maverick: null },
+            "Minneapolis North (Copart)": { zMat: "FL", zMav: null, matus: 795, maverick: null },
+            "Minneapolis/ St. Paul (IAAI)": { zMat: "FL", zMav: null, matus: 795, maverick: null },
+            "St. Cloud (Copart)": { zMat: "FL", zMav: null, matus: 850, maverick: null },
+            "Blame Minneapolis North (Copart)*": { zMat: "FL", zMav: null, matus: 850, maverick: null },
+            "Elk river Minneapolis North (Copart)*": { zMat: "FL", zMav: null, matus: 850, maverick: null },
+            "Fredley (Copart)*": { zMat: "FL", zMav: null, matus: 850, maverick: null },
+            "Hamlake (Copart)*": { zMat: "FL", zMav: null, matus: 850, maverick: null },
+            "Rice (IAAI)*": { zMat: "FL", zMav: null, matus: 850, maverick: null },
+            "St. Cloud Avon (Copart)*": { zMat: "FL", zMav: null, matus: 850, maverick: null },
+
+            // MISSISSIPPI
+            "Florence": { zMat: null, zMav: "FL", matus: null, maverick: 500 },
+            "Grenada (IAAI)": { zMat: "FL", zMav: "FL", matus: 475, maverick: 500 },
+            "Gulf Coast (IAAI)": { zMat: "FL", zMav: "FL", matus: 485, maverick: 500 },
+            "Gulfport": { zMat: null, zMav: "FL", matus: null, maverick: 500 },
+            "Hattiesburg": { zMat: null, zMav: "FL", matus: null, maverick: 500 },
+            "Jackson (Copart/ IAAI)": { zMat: "FL", zMav: "FL", matus: 475, maverick: 500 },
+
+            // MISSOURI
+            "1619 S Golden Ave Springfield (Copart)*": { zMat: "FL", zMav: null, matus: 775, maverick: null },
+            "Columbia (Copart), Missouri": { zMat: "FL", zMav: "TX", matus: 750, maverick: 650 },
+            "Dunn Road Saint louis, MO 63138": { zMat: "FL", zMav: null, matus: 725, maverick: null },
+            "Kansas City East (IAAI)": { zMat: "FL", zMav: "TX", matus: 695, maverick: 725 },
+            "Sikeston (Copart)": { zMat: "FL", zMav: "TX", matus: null, maverick: 650 },
+            "Springfield (Copart/ IAAI)": { zMat: "FL", zMav: "TX", matus: 725, maverick: 650 },
+            "Springville": { zMat: null, zMav: "FL", matus: null, maverick: 725 },
+            "St. Louis (Copart), Missouri": { zMat: "FL", zMav: "TX", matus: 675, maverick: 650 },
+            "Taussing Avenue Bridgeton (Copart)*": { zMat: "FL", zMav: null, matus: 725, maverick: null },
+
+            // MONTANA
+            "Billings (Copart/ IAAI)": { zMat: "CA", zMav: null, matus: null, maverick: null },
+            "Helena (Copart)": { zMat: "CA", zMav: null, matus: null, maverick: null },
+            "Missoula (IAAI)": { zMat: "CA", zMav: null, matus: null, maverick: null },
+
+            // NEBRASKA
+            "Lincoln*, Nebraska": { zMat: null, zMav: "TX", matus: null, maverick: null },
+            "Omaha*": { zMat: null, zMav: "TX", matus: null, maverick: null },
+
+            // NEVADA
+            "Apex Power (Copart)*": { zMat: "CA", zMav: "CA", matus: 400, maverick: 400 },
+            "Auction lane (Copart)*": { zMat: "CA", zMav: "CA", matus: 350, maverick: 350 },
+            "Las Vegas (Copart/ IAAI)": { zMat: "CA", zMav: "CA", matus: 325, maverick: 335 },
+            "Reno (Copart/ IAAI)": { zMat: "CA", zMav: "CA", matus: 525, maverick: 525 },
+
+            // NEW HAMPSHIRE
+            "Candia (Copart)": { zMat: "PH", zMav: "PH", matus: 500, maverick: 600 },
+            "Manchester (IAAI)": { zMat: "PH", zMav: null, matus: 450, maverick: null },
+            "Manchester/Salem*": { zMat: null, zMav: "PH", matus: null, maverick: 525 },
+
+            // NEW JERSEY
+            "Avenel (IAAI)": { zMat: "PH", zMav: "PH", matus: 170, maverick: 200 },
+            "Central Jersey": { zMat: null, zMav: "PH", matus: null, maverick: 200 },
+            "Central New Jersey (IAAI)": { zMat: "PH", zMav: null, matus: 170, maverick: null },
+            "Chambersburg (Copart)*, New Jersey": { zMat: "PH", zMav: null, matus: 220, maverick: null },
+            "Coplay Copart": { zMat: "PH", zMav: null, matus: 225, maverick: null },
+            "Englishtown (IAAI)": { zMat: "PH", zMav: "PH", matus: 180, maverick: 200 },
+            "Glassboro": { zMat: null, zMav: "PH", matus: null, maverick: 150 },
+            "Glassboro East/West (Copart)": { zMat: "PH", zMav: null, matus: 145, maverick: null },
+            "Jobstown Copart": { zMat: "PH", zMav: null, matus: 225, maverick: null },
+            "North Jersey": { zMat: null, zMav: "PH", matus: null, maverick: 215 },
+            "Port Murray (IAAI)": { zMat: "PH", zMav: "PH", matus: 275, maverick: 275 },
+            "Sayreville (IAAI)": { zMat: "PH", zMav: "PH", matus: 200, maverick: 250 },
+            "Somerville (Copart)": { zMat: "PH", zMav: "PH", matus: 175, maverick: 185 },
+            "Somerville Richlandtown Copart": { zMat: "PH", zMav: null, matus: 225, maverick: null },
+            "Somerville Sublot Grantville": { zMat: "PH", zMav: null, matus: 200, maverick: null },
+            "Somerville Sublot York Haven Copart": { zMat: "PH", zMav: null, matus: 200, maverick: null },
+            "South Jersey": { zMat: null, zMav: "PH", matus: null, maverick: 175 },
+            "Southern New Jersey (IAAI)": { zMat: "PH", zMav: null, matus: 145, maverick: null },
+            "Trenton (Copart)": { zMat: "PH", zMav: "PH", matus: 170, maverick: 200 },
+            "White Plaine (Copart)*": { zMat: "PH", zMav: null, matus: 250, maverick: null },
+            "White Plaine Somerville (Copart)*": { zMat: "PH", zMav: null, matus: 250, maverick: null },
+
+            // NEW MEXICO
+            "Albuquerque (Copart/ IAAI)": { zMat: "CA", zMav: "TX", matus: 795, maverick: 650 },
+
+            // NEW YORK
+            "Albany (Copart/IAAI)": { zMat: "PH", zMav: "PH", matus: 300, maverick: 325 },
+            "Albany Schenectady (IAAI)": { zMat: "PH", zMav: null, matus: 350, maverick: null },
+            "Alden (Copart)": { zMat: "PH", zMav: null, matus: 650, maverick: null },
+            "Amsterdan (Copart)": { zMat: "PH", zMav: null, matus: 425, maverick: null },
+            "Buffalo (IAAI)": { zMat: "PH", zMav: null, matus: 550, maverick: null },
+            "Buffalo Copart*": { zMat: null, zMav: "PH", matus: null, maverick: 625 },
+            "Buffalo IAAI*": { zMat: null, zMav: "PH", matus: null, maverick: 600 },
+            "Buffalo Vulcan (IAAI)": { zMat: "PH", zMav: null, matus: 550, maverick: null },
+            "Long Island (Copart/IAAI)": { zMat: "PH", zMav: null, matus: 280, maverick: null },
+            "Long Island C": { zMat: null, zMav: "PH", matus: null, maverick: 325 },
+            "Medford (IAAI)": { zMat: "PH", zMav: null, matus: 330, maverick: null },
+            "Monticello (IAAI)": { zMat: "PH", zMav: null, matus: 325, maverick: null },
+            "Newburgh (Copart/IAAI)": { zMat: "PH", zMav: "PH", matus: 255, maverick: 300 },
+            "Newburgh Route (Copart)": { zMat: "PH", zMav: null, matus: 275, maverick: null },
+            "Rochester (Copart/IAAI)": { zMat: "PH", zMav: "PH", matus: 415, maverick: 450 },
+            "St. Staten Island": { zMat: null, zMav: "PH", matus: null, maverick: 350 },
+            "Staten Island (IAAI)": { zMat: "PH", zMav: null, matus: 325, maverick: null },
+            "Syracuse (IAAI/Copart)": { zMat: "PH", zMav: "PH", matus: 370, maverick: 385 },
+
+            // NORTH CAROLINA
+            "Asheville (IAAI)": { zMat: "FL", zMav: "FL", matus: 515, maverick: 500 },
+            "Charlotte (IAAI)": { zMat: "FL", zMav: "FL", matus: 400, maverick: 400 },
+            "China Grove (Copart)": { zMat: "FL", zMav: "FL", matus: 400, maverick: 400 },
+            "Concord (Copart / IAAI)": { zMat: "FL", zMav: "FL", matus: 400, maverick: 400 },
+            "Gastonia (Copart)": { zMat: "FL", zMav: "FL", matus: 425, maverick: 425 },
+            "Greensboro (IAAI)": { zMat: "FL", zMav: "FL", matus: 400, maverick: 400 },
+            "High Point": { zMat: "FL", zMav: "FL", matus: 465, maverick: 450 },
+            "LaGrange (Copart)": { zMat: "FL", zMav: null, matus: 495, maverick: null },
+            "Lumberton (Copart)": { zMat: "FL", zMav: "FL", matus: 400, maverick: 400 },
+            "Mebane (Copart)": { zMat: "FL", zMav: "FL", matus: 400, maverick: 400 },
+            "Mebane Sublot (Copart)*": { zMat: "FL", zMav: null, matus: 450, maverick: null },
+            "Mocksville (Copart)": { zMat: "FL", zMav: "FL", matus: 430, maverick: 430 },
+            "Raleigh (Copart/ IAAI)": { zMat: "FL", zMav: "FL", matus: 395, maverick: 400 },
+            "Raleigh North (Copart)": { zMat: "FL", zMav: "FL", matus: 395, maverick: 450 },
+            "Wilmington (IAAI), North Carolina": { zMat: "FL", zMav: "FL", matus: 515, maverick: 500 },
+            "Winston-Salem Sublote (Copart)*": { zMat: "FL", zMav: null, matus: null, maverick: null },
+
+            // NORTH DAKOTA
+            "Fargo*, North Dakota": { zMat: null, zMav: "TX", matus: null, maverick: null },
+
+            // NEW MEXICO
+            "Albuquerque": { zMat: null, zMav: "CA", matus: null, maverick: 795 },
+
+            // OHIO
+            "Akron": { zMat: null, zMav: "PH", matus: null, maverick: 625 },
+            "Akron-Canton (IAAI)": { zMat: "PH", zMav: null, matus: 575, maverick: null },
+            "Cincinnati (IAAI)": { zMat: "PH", zMav: null, matus: 575, maverick: null },
+            "Cincinnati South (IAAI)": { zMat: "PH", zMav: "PH", matus: 575, maverick: 600 },
+            "Cleveland (IAAI)": { zMat: "PH", zMav: "PH", matus: 575, maverick: 600 },
+            "Cleveland East/ West (Copart)": { zMat: "PH", zMav: null, matus: 575, maverick: null },
+            "Columbus (Copart/ IAAI)": { zMat: "PH", zMav: "PH", matus: 575, maverick: 700 },
+            "Dayton (Copart/ IAAI)": { zMat: "PH", zMav: "PH", matus: 575, maverick: 600 },
+
+            // OKLAHOMA
+            "Madera Blvd (Copart)*": { zMat: "FL", zMav: null, matus: 800, maverick: null },
+            "Oklahoma City (Copart/ IAAI)": { zMat: "FL", zMav: "TX", matus: 750, maverick: 475 },
+            "Tulsa (Copart/ IAAI)": { zMat: "FL", zMav: "TX", matus: 750, maverick: 475 },
+            "Tulsa Sublot (Copart)*": { zMat: "FL", zMav: null, matus: 800, maverick: null },
+
+            // OREGON
+            "Eugene (Copart/ IAAI)": { zMat: "CA", zMav: null, matus: 595, maverick: null },
+            "Portland (IAAI)": { zMat: "CA", zMav: null, matus: 595, maverick: null },
+            "Portland North (Copart)": { zMat: "CA", zMav: null, matus: 595, maverick: null },
+            "Portland South (Copart)": { zMat: "CA", zMav: null, matus: 595, maverick: null },
+            "Portland West (IAAI)": { zMat: "CA", zMav: null, matus: 595, maverick: null },
+
+            // PENNSYLVANIA
+            "Altoona (IAAI/Copart)": { zMat: "PH", zMav: "PH", matus: 330, maverick: 350 },
+            "Bridgeport (IAAI)": { zMat: "PH", zMav: "PH", matus: 120, maverick: 145 },
+            "Chambersburg (Copart), Pennsylvania": { zMat: "PH", zMav: "PH", matus: 220, maverick: 225 },
+            "Erie (IAAI)": { zMat: "PH", zMav: "PH", matus: 540, maverick: 550 },
+            "Harrisburg (Copart)": { zMat: "PH", zMav: "PH", matus: 170, maverick: 200 },
+            "Philadelphia (IAAI)": { zMat: "PH", zMav: "PH", matus: 120, maverick: 150 },
+            "Philadelphia East (Copart)": { zMat: "PH", zMav: "PH", matus: 145, maverick: 170 },
+            "Philadelphia East Malvern Copart": { zMat: "PH", zMav: null, matus: 225, maverick: null },
+            "Philadelphia East sub lot Copart": { zMat: "PH", zMav: null, matus: 145, maverick: null },
+            "Pittsburgh (IAAI)": { zMat: "PH", zMav: "PH", matus: 375, maverick: 375 },
+            "Pittsburgh East/South/West (Copart)": { zMat: "PH", zMav: null, matus: 375, maverick: null },
+            "Pittsburgh West Adamsburg Copart": { zMat: "PH", zMav: null, matus: 375, maverick: null },
+            "Pittsburgh-North (IAAI/Copart)": { zMat: "PH", zMav: null, matus: 375, maverick: null },
+            "Scranton (IAAI/Copart)": { zMat: "PH", zMav: "PH", matus: 190, maverick: 225 },
+            "York Haven (Copart )": { zMat: "PH", zMav: "PH", matus: 175, maverick: 180 },
+            "York Springs (IAAI)": { zMat: "PH", zMav: "PH", matus: 190, maverick: 200 },
+
+            // RHODE ISLAND
+            "Exeter (Copart)": { zMat: "PH", zMav: "PH", matus: 410, maverick: 430 },
+            "Providence (IAAI)": { zMat: "PH", zMav: "PH", matus: 400, maverick: 430 },
+
+            // SOUTH CAROLINA
+            "Charleston (IAAI), South Carolina": { zMat: "FL", zMav: "FL", matus: 350, maverick: 350 },
+            "Columbia (Copart/ IAAI), South Carolina": { zMat: "FL", zMav: "FL", matus: 335, maverick: 350 },
+            "Columbia Gaston (Copart)*": { zMat: "FL", zMav: null, matus: 395, maverick: null },
+            "Columbia Sha Liu (Copart)*": { zMat: "FL", zMav: null, matus: 400, maverick: null },
+            "Gaston": { zMat: null, zMav: "FL", matus: null, maverick: 400 },
+            "Greenville (IAAI)": { zMat: "FL", zMav: "FL", matus: 365, maverick: 350 },
+            "Lexington (IAAI), South Carolina": { zMat: "FL", zMav: "FL", matus: 335, maverick: 330 },
+            "North Charleston (Copart)": { zMat: "FL", zMav: "FL", matus: 335, maverick: 350 },
+            "Sha Lui": { zMat: null, zMav: "FL", matus: null, maverick: 400 },
+            "Spartanburg (Copart)": { zMat: "FL", zMav: "FL", matus: 375, maverick: 375 },
+
+            // SOUTH DAKOTA
+            "Fargo*, South Dakota": { zMat: null, zMav: "TX", matus: null, maverick: null },
+
+            // TENNESSEE
+            "Birmingham offsite (IAAI)*": { zMat: "FL", zMav: null, matus: 530, maverick: null },
+            "Chattanooga (IAAI)": { zMat: "FL", zMav: "FL", matus: 550, maverick: 500 },
+            "Knoxville (Copart/ IAAI)": { zMat: "FL", zMav: "FL", matus: 480, maverick: 500 },
+            "Memphis (Copart/ IAAI)": { zMat: "FL", zMav: "FL", matus: 480, maverick: 500 },
+            "Nashville (Copart/ IAAI)": { zMat: "FL", zMav: "FL", matus: 480, maverick: 500 },
+
+            // TEXAS
+            "Abilene*": { zMat: null, zMav: "TX", matus: null, maverick: 350 },
+            "Amarillo*": { zMat: null, zMav: "TX", matus: null, maverick: 450 },
+            "Andrews*": { zMat: null, zMav: "TX", matus: null, maverick: 450 },
+            "Austin (Copart/ IAAI)": { zMat: "FL", zMav: "TX", matus: 500, maverick: 250 },
+            "Austin North (IAAI)": { zMat: "FL", zMav: null, matus: 550, maverick: null },
+            "Corpus Christi": { zMat: null, zMav: "TX", matus: null, maverick: 275 },
+            "Dallas (IAAI)": { zMat: "FL", zMav: "TX", matus: 500, maverick: 300 },
+            "Dallas / Ft Worth (IAAI)": { zMat: "FL", zMav: null, matus: 500, maverick: null },
+            "Dallas South (Copart)": { zMat: "FL", zMav: null, matus: 500, maverick: null },
+            "El Paso*": { zMat: null, zMav: "TX", matus: null, maverick: 425 },
+            "FT. Worth Sublot (Copart)*": { zMat: "FL", zMav: null, matus: 650, maverick: null },
+            "Fort Worth North (IAAI)": { zMat: "FL", zMav: null, matus: 600, maverick: null },
+            "Fort Worth North,/ IAAI Justin": { zMat: null, zMav: "TX", matus: null, maverick: 300 },
+            "Ft Worth (Copart)": { zMat: "FL", zMav: "TX", matus: 600, maverick: 275 },
+            "Houston (Copart/ IAAI)": { zMat: "FL", zMav: null, matus: 565, maverick: null },
+            "Houston East (Copart)": { zMat: "FL", zMav: null, matus: 565, maverick: null },
+            "Houston East/Copart Sublote": { zMat: null, zMav: "TX", matus: null, maverick: 175 },
+            "Houston North (IAAI)": { zMat: "FL", zMav: null, matus: 565, maverick: null },
+            "Houston North Copart / IAAI": { zMat: null, zMav: "TX", matus: null, maverick: 150 },
+            "Houston South (IAAI)": { zMat: "FL", zMav: null, matus: 565, maverick: null },
+            "Houston South Copart/ IAAI": { zMat: null, zMav: "TX", matus: null, maverick: 200 },
+            "Longview": { zMat: null, zMav: "TX", matus: null, maverick: 275 },
+            "Lubbock*": { zMat: null, zMav: "TX", matus: null, maverick: 450 },
+            "Lufkin": { zMat: null, zMav: "TX", matus: null, maverick: 250 },
+            "McAllen*": { zMat: null, zMav: "TX", matus: null, maverick: 275 },
+            "Permian Basin*": { zMat: null, zMav: "TX", matus: null, maverick: 500 },
+            "San Antonio (Copart/ IAAI)": { zMat: "FL", zMav: "TX", matus: 500, maverick: 250 },
+            "San Antonio South (IAAI)": { zMat: "FL", zMav: "TX", matus: 500, maverick: 275 },
+            "Waco": { zMat: null, zMav: "TX", matus: null, maverick: 325 },
+
+            // UTAH
+            "Ogden (Copart)": { zMat: "CA", zMav: "CA", matus: 435, maverick: 515 },
+            "Provo (IAAI)": { zMat: "CA", zMav: "CA", matus: 525, maverick: 575 },
+            "Salt Lake City (Copart/IAAI)": { zMat: "CA", zMav: "CA", matus: 435, maverick: 520 },
+            "Tooele (Copart)*": { zMat: "CA", zMav: null, matus: 550, maverick: null },
+
+            // VERMONT
+            "Burlington (IAAI)": { zMat: "PH", zMav: "PH", matus: 725, maverick: 725 },
+            "Rutland (Copart)": { zMat: "PH", zMav: "PH", matus: 700, maverick: 750 },
+            "West Warren (Orleans Sublote)*, Vermont": { zMat: null, zMav: "PH", matus: null, maverick: 775 },
+            "West Warren (Rutland Sublote)*, Vermont": { zMat: null, zMav: "PH", matus: null, maverick: 775 },
+
+            // VIRGINIA
+            "Culpeper (IAAI)": { zMat: "PH", zMav: "PH", matus: 285, maverick: 325 },
+            "Danville (Copart)": { zMat: "PH", zMav: "PH", matus: 480, maverick: 525 },
+            "Fredericksburg (Copart)": { zMat: "PH", zMav: "PH", matus: 310, maverick: 325 },
+            "Fredericksburg South": { zMat: null, zMav: "PH", matus: null, maverick: 375 },
+            "Hampton (Copart)": { zMat: "PH", zMav: "PH", matus: 395, maverick: 425 },
+            "Northern Virginia (IAAI)": { zMat: "PH", zMav: null, matus: 275, maverick: null },
+            "Northern Virginia IAA*": { zMat: null, zMav: "PH", matus: null, maverick: 325 },
+            "Pulaski (IAAI)": { zMat: "PH", zMav: "PH", matus: 525, maverick: 525 },
+            "Richmond (Copart/ IAAI)": { zMat: "PH", zMav: "PH", matus: 295, maverick: 350 },
+            "Richmond East (Copart)": { zMat: "PH", zMav: "PH", matus: 350, maverick: 375 },
+            "Roanoke (IAAI)": { zMat: "PH", zMav: "PH", matus: 525, maverick: 550 },
+            "Suffolk (IAAI)": { zMat: "PH", zMav: "PH", matus: 470, maverick: 475 },
+            "Tidewater (IAAI)": { zMat: "PH", zMav: "PH", matus: 375, maverick: 400 },
+
+            // WASHINGTON
+            "Graham (Copart)": { zMat: "CA", zMav: "CA", matus: 695, maverick: 750 },
+            "North Seattle (Copart)": { zMat: "CA", zMav: "CA", matus: 750, maverick: 850 },
+            "North Seattle Avenue northeast (Copart)*": { zMat: "CA", zMav: "CA", matus: 850, maverick: 850 },
+            "Pasco (Copart)": { zMat: "CA", zMav: "CA", matus: 850, maverick: 895 },
+            "Puyallup (IAAI)": { zMat: "CA", zMav: "CA", matus: 695, maverick: 750 },
+            "Seattle (IAAI)": { zMat: "CA", zMav: "CA", matus: 695, maverick: 850 },
+            "Spanaway (Copart)*": { zMat: "CA", zMav: "CA", matus: 725, maverick: 725 },
+            "Spokane (Copart/ IAAI)": { zMat: "CA", zMav: "CA", matus: 850, maverick: 825 },
+            "Vancouver (IAAI)*": { zMat: "CA", zMav: "CA", matus: 650, maverick: 650 },
+
+            // WEST VIRGINIA
+            "Buckhannon (IAAI)": { zMat: "PH", zMav: "PH", matus: 550, maverick: 600 },
+            "Charleston (Copart), West Virginia": { zMat: "PH", zMav: "PH", matus: 550, maverick: 600 },
+            "Shady Spring (IAAI)": { zMat: "PH", zMav: "FL", matus: 550, maverick: 675 },
+            "Shady Spring - IAAI*": { zMat: null, zMav: "PH", matus: null, maverick: 600 },
+
+            // WISCONSIN
+            "Appleton (IAAI)": { zMat: "PH", zMav: "PH", matus: 825, maverick: 750 },
+            "Madison": { zMat: null, zMav: "PH", matus: null, maverick: 775 },
+            "Madison South (Copart)": { zMat: "PH", zMav: null, matus: 825, maverick: null },
+            "Milwaukee (IAAI)": { zMat: "PH", zMav: "PH", matus: 825, maverick: 750 },
+            "Milwaukee South (Copart)": { zMat: "PH", zMav: null, matus: 825, maverick: null },
+            "Milwaukee South Sublot Cudahy": { zMat: "PH", zMav: null, matus: 850, maverick: null },
+            "Portage (IAAI)": { zMat: "PH", zMav: "PH", matus: 825, maverick: 750 },
+        };
+var SALVAGE_FEES = { 
+            gate: 95, env: 15, title: 20, 
+            buyerFee: [
+                {max: 49.99, val: 25}, {max: 99.99, val: 45}, {max: 199.99, val: 80}, {max: 299.99, val: 130}, 
+                {max: 349.99, val: 137.5}, {max: 399.99, val: 145}, {max: 449.99, val: 175}, {max: 499.99, val: 185}, 
+                {max: 549.99, val: 205}, {max: 599.99, val: 210}, {max: 699.99, val: 240}, {max: 799.99, val: 270}, 
+                {max: 899.99, val: 295}, {max: 999.99, val: 320}, {max: 1199.99, val: 375}, {max: 1299.99, val: 395}, 
+                {max: 1399.99, val: 410}, {max: 1499.99, val: 430}, {max: 1599.99, val: 445}, {max: 1699.99, val: 465}, 
+                {max: 1799.99, val: 485}, {max: 1999.99, val: 510}, {max: 2399.99, val: 535}, {max: 2499.99, val: 570}, 
+                {max: 2999.99, val: 610}, {max: 3499.99, val: 655}, {max: 3999.99, val: 705}, {max: 4499.99, val: 725}, 
+                {max: 4999.99, val: 750}, {max: 5499.99, val: 775}, {max: 5999.99, val: 800}, {max: 6499.99, val: 825}, 
+                {max: 6999.99, val: 845}, {max: 7499.99, val: 880}, {max: 7999.99, val: 900}, {max: 8499.99, val: 925}, 
+                {max: 9999.99, val: 945}, {max: 14999.99, val: 1000}, {max: Infinity, percent: 0.075}
+            ], 
+            liveBid: [
+                {max: 99.99, val: 0}, {max: 499.99, val: 50}, {max: 999.99, val: 65}, {max: 1499.99, val: 85}, 
+                {max: 1999.99, val: 95}, {max: 3999.99, val: 110}, {max: 5999.99, val: 125}, {max: 7999.99, val: 145}, {max: Infinity, val: 160}
+            ] 
+        };
+/* ============================================================
+   MOTOR DE COSTO — copiado de la calculadora de Importaciones Yesica.
+   Si cambiás fees, grúas o navieras en tu calculadora, pegá las
+   tablas de arriba aquí también. Es el único bloque que se duplica.
+   ============================================================ */
+function getFee(a, t){ for (let f of t) if (a <= f.max) return f.percent ? a*f.percent : f.val; return 0; }
+
+// escoge la naviera más barata para una ciudad y tamaño
+function mejorFlete(cData, tIdx){
+  let best = null;
+  if (cData.zMat && cData.matus !== null){
+    const t = NAVIERAS_MAR[cData.zMat].matus[tIdx];
+    if (t > 0) best = {nav:'matus', grua:cData.matus, mar:t, total:cData.matus + t};
+  }
+  if (cData.zMav && cData.maverick !== null){
+    const t = NAVIERAS_MAR[cData.zMav].maverick[tIdx];
+    if (t > 0){ const tot = cData.maverick + t;
+      if (!best || tot < best.total) best = {nav:'maverick', grua:cData.maverick, mar:t, total:tot}; }
+  }
+  return best;
+}
+
+// costo total puesto en El Salvador, antes de ganancia
+function costoTotal(bid, op){
+  const f_buyer   = getFee(bid, SALVAGE_FEES.buyerFee);
+  const f_virtual = getFee(bid, SALVAGE_FEES.liveBid);
+  const f_service = op.subasta === 'copart' ? 95 : 105;
+  const f_title   = 35;
+  const feeSubasta = f_buyer + f_virtual + f_service + f_title;
+
+  let feePago = 0, feePagoAduana = 0;
+  if (op.pago === 'tarjeta' && op.subasta === 'copart'){ feePago = 85; feePagoAduana = 85; }
+  else if (op.pago === 'transferencia'){ feePago = (28.25 + 15) / (op.divs || 1); }
+
+  const fleteTotal = op.grua + op.maritimo;
+  const valorCompra = bid + feeSubasta;
+  const valorAduana = valorCompra + feePagoAduana;
+  const seguro = valorAduana * 0.02;
+  const cif = valorAduana + fleteTotal + seguro;
+
+  const dai = cif * op.dai;
+  const iva = (cif + dai) * 0.13;
+  const aiv = cif * 0.01;
+  const pe  = 43.00;
+  const pm  = cif * op.pm;
+  const impuestos = dai + iva + aiv + pm + pe + (113 + 18);
+
+  return valorCompra + feePago + fleteTotal + impuestos + 65
+       + (op.version === 'cesar' ? 100 : 0) + (op.dealer ? 100 : 0);
+}
+
+// inverso: hasta cuánto ofertar para que el costo no pase del objetivo
+function ofertaMaxima(objetivo, op){
+  if (costoTotal(0, op) > objetivo) return 0;   // ni regalado cabe
+  let lo = 0, hi = 200000;
+  if (costoTotal(hi, op) < objetivo) return hi;
+  for (let i = 0; i < 60; i++){
+    const mid = (lo + hi) / 2;
+    if (costoTotal(mid, op) <= objetivo) lo = mid; else hi = mid;
+  }
+  return Math.floor(lo);
+}
+
+
+/* mapea la ciudad del archivo de Copart a tu tabla de fletes */
+const CIU_IDX = (() => {
+  const m = {};
+  const nm = t => t.replace(/\(.*?\)/g,'').replace(/[^A-Za-z ]/g,' ').toUpperCase().split(/\s+/).filter(Boolean).join(' ');
+  for (const k in CIUDADES){ const n = nm(k); if (!(n in m)) m[n] = CIUDADES[k]; }
+  return {mapa:m, nm};
+})();
+const ciudadDe = c => CIU_IDX.mapa[CIU_IDX.nm(String(c||''))] || null;
+
+/* aduana automática según motor, tracción y carrocería */
+function aduanaDe(o){
+  const carro = String(o['Body Style']||'').toUpperCase();
+  if (/PICKUP|CREW CAB|EXT CAB|CLUB CAB|QUAD CAB|REG CAB/.test(carro)) return {dai:0.05, pm:0.0105, txt:'Pickup'};
+  const em = String(o['Engine']||'').match(/([\d.]+)\s*L/i);
+  const cc = em ? Math.round(parseFloat(em[1])*1000) : null;
+  const awd = /ALL WHEEL|4X4|FOUR BY/i.test(String(o['Drive']||''));
+  if (cc === null) return null;
+  if (awd) return cc <= 2000 ? {dai:0.25, pm:0.075, txt:'AWD ≤2000cc'} : {dai:0.30, pm:0.078, txt:'AWD >2000cc'};
+  if (cc <= 1300) return {dai:0.20, pm:0.048, txt:'≤1300cc'};
+  if (cc <= 2000) return {dai:0.25, pm:0.050, txt:'1301-2000cc'};
+  return {dai:0.30, pm:0.052, txt:'>2000cc'};
+}
+
+/* ---------- columnas del archivo de Copart ---------- */
+const COL = ['Lot number','Yard name','Sale Date M/D/CY','Sale time (HHMM)','Year','Make',
+'Model Group','Model Detail','Body Style','Damage Description','Secondary Damage',
+'Sale Title State','Sale Title Type','Has Keys-Yes or No','VIN','Odometer','Odometer Brand',
+'Est. Retail Value','Repair cost','Runs/Drives','High Bid =non-vix,Sealed=Vix','Buy-It-Now Price',
+'Image Thumbnail','Location state','AutoGrade','Announcements','Special Note',
+'Seller Name','Rentals','Wholesale','Sale Status','Currency Code','Location country','Vehicle Type','Fuel Type','Make-an-Offer Eligible','Trim','Drive','Transmission','Engine','Color','Location city','Offsite City'];
+
+let CRUDO = [];      // filas del archivo, solo las columnas que usamos
+let AYER  = null;    // set de números de lote del archivo anterior
+let SEL   = new Map(); // lote -> {o, y, od, alta, bin, fecha, prebid, nota}
+let VISTA = 'general'; // 'general' | 'dealer' | 'seleccion'
+let SELV = 'normal';   // hoja activa: 'normal' | 'dealer'
+let CALC = null;       // HTML de la calculadora (modo completo)
+let CALC_URL = null;   // link de la calculadora (modo respaldo)
+let CALC_LOTE = null;  // lote que se está calculando
+let RES   = [];      // resultado filtrado
+let DANOS = new Map();
+let TITS  = new Map();
+
+/* ---------- parser CSV (comillas incluidas) ---------- */
+function parseCSV(txt, onDone, onProg){
+  const idx = {}, out = [];
+  let i = 0, campo = '', fila = [], enComillas = false, header = null, leidas = 0;
+  const N = txt.length;
+
+  function cerrarFila(){
+    if (!header){
+      header = fila;
+      header.forEach((h,k)=>{ if(COL.includes(h.trim())) idx[h.trim()] = k; });
+    } else if (fila.length > 3) {
+      const o = {};
+      for (const c of COL) o[c] = idx[c] !== undefined ? (fila[idx[c]] || '') : '';
+      out.push(o);
+    }
+    fila = []; leidas++;
+  }
+
+  function trozo(){
+    const fin = Math.min(i + 4000000, N);
+    while (i < fin){
+      const ch = txt[i];
+      if (enComillas){
+        if (ch === '"'){
+          if (txt[i+1] === '"'){ campo += '"'; i += 2; continue; }
+          enComillas = false; i++; continue;
+        }
+        campo += ch; i++; continue;
+      }
+      // solo abre comillas si está al inicio del campo; si no, es literal (ej. 20" RIMS)
+      if (ch === '"' && campo === ''){ enComillas = true; i++; continue; }
+      if (ch === ','){ fila.push(campo); campo=''; i++; continue; }
+      if (ch === '\n'){ fila.push(campo); campo=''; cerrarFila(); i++; continue; }
+      if (ch === '\r'){ i++; continue; }
+      campo += ch; i++;
+    }
+    if (i < N){ onProg(i/N); setTimeout(trozo, 0); }
+    else {
+      if (campo !== '' || fila.length){ fila.push(campo); cerrarFila(); }
+      onProg(1); onDone(out);
+    }
+  }
+  trozo();
+}
+
+/* ---------- utilidades ---------- */
+const num = v => { const n = parseFloat(String(v).replace(/[^0-9.\-]/g,'')); return isNaN(n)?null:n; };
+const up  = v => String(v||'').toUpperCase().replace(/\s+/g,' ').trim();
+const mil = n => n===null||n===undefined?'—':Math.round(n).toLocaleString('en-US');
+const foto = u => { u = String(u||'').trim(); if(!u) return ''; return /^https?:\/\//i.test(u) ? u.replace(/^http:/i,'https:') : 'https://'+u.replace(/^\/\//,''); };
+const $   = s => document.querySelector(s);
+function claseVend(nombre, palabras){
+  const n = up(nombre).replace(/-LOGO\.(JPE?G|PNG|GIF)$/,'').trim();
+  if (!n) return 'sin';
+  return palabras.some(p => p && n.includes(p)) ? 'ase' : 'otro';
+}
+const limpiaVend = v => String(v||'').replace(/-LOGO\.(jpe?g|png|gif)$/i,'').trim();
+
+function fecha(v, hora){
+  const t = String(v||'').trim();
+  let d = null;
+  const c = t.replace(/[^0-9]/g,'');
+  if (/^\d{8}$/.test(c)){                       // 20260910
+    d = new Date(+c.slice(0,4), +c.slice(4,6)-1, +c.slice(6,8));
+  } else {
+    const p = t.split(/[\/\-]/);                 // 9/10/2026
+    if (p.length >= 3) d = new Date(+p[2], +p[0]-1, +p[1]);
+  }
+  if (!d || isNaN(d)) return null;
+  const h = String(hora||'').replace(/[^0-9]/g,'');
+  if (h.length === 3 || h.length === 4){
+    d.setHours(+h.slice(0, h.length-2), +h.slice(-2));
+  }
+  return d;
+}
+const DIAS = ['dom','lun','mar','mié','jue','vie','sáb'];
+function verFecha(d){
+  if (!d) return '<span style="color:var(--ink-soft)">sin fecha</span>';
+  const hoy = new Date(); hoy.setHours(0,0,0,0);
+  const dd = new Date(d); dd.setHours(0,0,0,0);
+  const dif = Math.round((dd-hoy)/86400000);
+  const txt = DIAS[d.getDay()]+' '+d.getDate()+'/'+(d.getMonth()+1);
+  const et = dif < 0 ? 'ya pasó' : dif === 0 ? 'HOY' : dif === 1 ? 'mañana' : 'en '+dif+' días';
+  const col = dif <= 1 ? 'var(--red)' : dif <= 3 ? 'var(--amber)' : 'var(--ink-soft)';
+  return txt + '<small style="display:block;color:'+col+';font-weight:'+(dif<=1?'700':'400')+'">'+et+'</small>';
+}
+const esc = v => String(v??'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* ---------- objetivos ---------- */
+function addTgt(v){
+  v = v || {};
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><input class="t-marca"  value="${v.marca||''}"  placeholder="Toyota"></td>
+    <td><input class="t-modelo" value="${v.modelo||''}" placeholder="Corolla"></td>
+    <td><input class="t-a1" type="number" value="${v.a1||''}"></td>
+    <td><input class="t-a2" type="number" value="${v.a2||''}"></td>
+    <td><input class="t-mi" type="number" value="${v.mi||''}" placeholder="general"></td>
+    <td><input class="t-of" type="number" value="${v.of||''}" placeholder="general"></td>
+    <td style="text-align:center"><input class="t-on" type="checkbox" ${v.on===false?'':'checked'}></td>
+    <td class="x"><button class="ghost" title="Quitar">×</button></td>`;
+  tr.querySelector('td.x button').onclick = () => tr.remove();
+  $('#tgtBody').appendChild(tr);
+}
+function leerTgts(){
+  return [...document.querySelectorAll('#tgtBody tr')].map(tr => ({
+    marca : up(tr.querySelector('.t-marca').value),
+    modelo: up(tr.querySelector('.t-modelo').value),
+    a1: num(tr.querySelector('.t-a1').value), a2: num(tr.querySelector('.t-a2').value),
+    mi: num(tr.querySelector('.t-mi').value), of: num(tr.querySelector('.t-of').value),
+    on: tr.querySelector('.t-on').checked
+  })).filter(t => t.marca || t.modelo);
+}
+
+/* ---------- carga ---------- */
+function cargar(f){
+  $('#fname').textContent = f.name;
+  $('#bar').classList.remove('hide');
+  const r = new FileReader();
+  r.onload = e => parseCSV(e.target.result,
+    filas => {
+      CRUDO = filas;
+      $('#bar').classList.add('hide');
+      $('#drop').innerHTML = '<strong>'+filas.length.toLocaleString('en-US')+' lotes cargados</strong><p>Clic para cambiar el archivo</p>';
+      construirDanos(); construirTits(); contarVend();
+      $('#toolbar').classList.remove('hide'); $('#cardFunnel').classList.remove('hide');
+      correr();
+    },
+    p => { $('#bar>i').style.width = (p*100)+'%'; });
+  r.readAsText(f);
+}
+
+function cargarAyer(f){
+  $('#fnameAyer').textContent = 'Leyendo ' + f.name + '…';
+  const r = new FileReader();
+  r.onload = e => parseCSV(e.target.result, filas => {
+    AYER = new Set(filas.map(o => String(o['Lot number']||'').trim()).filter(Boolean));
+    $('#fnameAyer').textContent = AYER.size.toLocaleString('en-US') + ' lotes de ayer cargados';
+    if (CRUDO.length) correr();
+  }, ()=>{});
+  r.readAsText(f);
+}
+
+function construirDanos(){
+  DANOS = new Map();
+  for (const o of CRUDO){ const d = up(o['Damage Description']) || '(vacío)'; DANOS.set(d,(DANOS.get(d)||0)+1); }
+  const pre = ['WATER/FLOOD','MECHANICAL','ROLLOVER','NORMAL WEAR'];
+  const prev = new Set([...document.querySelectorAll('#danos input:checked')].map(c=>c.value));
+  const marcar = prev.size ? prev : new Set(pre);
+  $('#danos').innerHTML = [...DANOS.entries()].sort((a,b)=>b[1]-a[1]).map(([d,n]) =>
+    `<label class="chk"><input type="checkbox" class="dn" value="${d}" ${marcar.has(d)?'checked':''}>${d}<span class="n">${n.toLocaleString('en-US')}</span></label>`
+  ).join('');
+}
+function contarVend(){
+  const pal = $('#palabras').value.split(',').map(x=>up(x)).filter(Boolean);
+  const c = {ase:0, otro:0, sin:0};
+  for (const o of CRUDO) c[claseVend(o['Seller Name'], pal)]++;
+  $('#nAse').textContent  = c.ase.toLocaleString('en-US');
+  $('#nOtro').textContent = c.otro.toLocaleString('en-US');
+  $('#nSin').textContent  = c.sin.toLocaleString('en-US');
+  $('#nUSA').textContent = CRUDO.filter(o=>up(o['Currency Code'])==='USD').length.toLocaleString('en-US');
+  $('#nFecha').textContent = CRUDO.filter(o=>fecha(o['Sale Date M/D/CY'],o['Sale time (HHMM)'])).length.toLocaleString('en-US');
+  const N = a => a.toLocaleString('en-US');
+  $('#nAutos').textContent  = N(CRUDO.filter(o=>up(o['Vehicle Type'])==='V').length);
+  $('#nElec').textContent   = N(CRUDO.filter(o=>{const c=up(o['Fuel Type']);return c.includes('ELECTRIC')||c.includes('HYBRID');}).length);
+  $('#nOferta').textContent = N(CRUDO.filter(o=>up(o['Make-an-Offer Eligible'])==='Y').length);
+  $('#nBIN').textContent    = N(CRUDO.filter(o=>(num(o['Buy-It-Now Price'])||0)>0).length);
+  const rc = {RD:0,ST:0,NV:0,SD:0};
+  for (const o of CRUDO){ const v = String(o['Runs/Drives']||'').trim();
+    rc[v==='Run & Drive Verified'?'RD':v==='Vehicle Starts'?'ST':v==='DEFAULT'?'NV':'SD']++; }
+  $('#nRD').textContent = N(rc.RD); $('#nST').textContent = N(rc.ST);
+  $('#nNV').textContent = N(rc.NV); $('#nSD').textContent = N(rc.SD);
+}
+function construirTits(){
+  TITS = new Map();
+  for (const o of CRUDO){ const t = up(o['Sale Title Type']) || '(vacío)'; TITS.set(t,(TITS.get(t)||0)+1); }
+}
+
+/* ---------- filtro ---------- */
+function correr(){
+  const anioMin = num($('#anio').value), miMax = num($('#millas').value);
+  const noCero  = $('#cero').checked;
+  const rdOk    = new Set([...document.querySelectorAll('.rd:checked')].map(c=>c.value));
+  const dnNo    = new Set([...document.querySelectorAll('.dn:checked')].map(c=>c.value));
+  const dnAmbos = $('#dondeDano').value === 'ambos';
+  const tiNo    = new Set($('#titulos').value.split(',').map(s=>up(s)).filter(Boolean));
+  const castigo = (num($('#castigo').value)||0)/100;
+  const ofBase  = num($('#ofertaBase').value);
+  const objetivo= num($('#costoObj').value);
+  const tIdx    = parseInt($('#cTam').value) || 0;
+  const opBase  = { subasta: $('#cSubasta').value, pago: $('#cPago').value,
+                    divs: parseInt($('#cDivs').value)||1, version: $('#cVersion').value,
+                    dealer: $('#cDealer').value === '1' };
+  const cacheOf = new Map();
+  const vdOk    = new Set([...document.querySelectorAll('.vd:checked')].map(c=>c.value));
+  const palabras= $('#palabras').value.split(',').map(x=>up(x)).filter(Boolean);
+  const soloNv  = $('#soloNuevos').checked && AYER !== null;
+  const soloUS  = $('#soloUSA').checked;
+  const edosD   = new Set($('#edos').value.split(',').map(x=>up(x)).filter(Boolean));
+  const conFe   = $('#conFecha').checked;
+  const dDesde  = $('#fDesde').value ? new Date($('#fDesde').value + 'T00:00:00') : null;
+  const dHasta  = $('#fHasta').value ? new Date($('#fHasta').value + 'T23:59:59') : null;
+  const sAuto   = $('#soloAutos').checked;
+  const noEl    = $('#noElec').checked;
+  const sOf     = $('#soloOferta').checked;
+  const sBIN    = $('#soloBIN').checked;
+  const tgts    = leerTgts().filter(t=>t.on);
+
+  const f = {tot:CRUDO.length, pais:0, tipo:0, anio:0, mi:0, dn:0, ti:0, rd:0, vd:0, fe:0, tg:0};
+  let descartadas = 0;
+  const out = [];
+
+  for (const o of CRUDO){
+    // fila corrupta: columnas corridas
+    if (/copart\.com|http/i.test(String(o['Currency Code']||''))) continue;
+    if (!/^\d{5,}$/.test(String(o['Lot number']||'').trim())) continue;
+
+    const moneda = up(o['Currency Code']) || 'USD';
+    if (soloUS && moneda !== 'USD') continue;
+    f.pais++;
+
+    if (sAuto && up(o['Vehicle Type']) !== 'V') continue;
+    if (noEl){ const c = up(o['Fuel Type']); if (c.includes('ELECTRIC') || c.includes('HYBRID')) continue; }
+    if (sOf  && up(o['Make-an-Offer Eligible']) !== 'Y') continue;
+    const bin = num(o['Buy-It-Now Price']) || 0;
+    if (sBIN && bin <= 0) continue;
+    f.tipo++;
+
+    const y = num(o['Year']);
+    if (anioMin !== null && (y === null || y < anioMin)) continue;
+    f.anio++;
+
+    const od = num(o['Odometer']);
+    if (noCero && (od === null || od === 0)) continue;
+    if (miMax !== null && od !== null && od > miMax) continue;
+    f.mi++;
+
+    if (dnNo.has(up(o['Damage Description']) || '(vacío)')) continue;
+    if (dnAmbos && o['Secondary Damage'] && dnNo.has(up(o['Secondary Damage']))) continue;
+    f.dn++;
+
+    if (tiNo.size && tiNo.has(up(o['Sale Title Type']))) continue;
+    f.ti++;
+
+    const rdRaw = String(o['Runs/Drives']||'').trim();
+    const rdN = rdRaw === 'Run & Drive Verified' ? 'RD'
+              : rdRaw === 'Vehicle Starts'       ? 'ST'
+              : rdRaw === 'DEFAULT'              ? 'NV' : 'SD';
+    if (!rdOk.has(rdN)) continue;
+    f.rd++;
+
+    const vc = claseVend(o['Seller Name'], palabras);
+    if (!vdOk.has(vc)) continue;
+    f.vd++;
+
+    let hit = null;
+    if (tgts.length){
+      const mk = up(o['Make']), md = up(o['Model Group'])+' '+up(o['Model Detail'])+' '+up(o['Body Style']);
+      for (const t of tgts){
+        if (t.marca  && !mk.includes(t.marca))  continue;
+        if (t.modelo && !md.includes(t.modelo)) continue;
+        if (t.a1 !== null && (y===null || y < t.a1)) continue;
+        if (t.a2 !== null && (y===null || y > t.a2)) continue;
+        if (t.mi !== null && od !== null && od > t.mi) continue;
+        hit = t; break;
+      }
+      if (!hit) continue;
+    }
+    f.tg++;
+
+    const fe = fecha(o['Sale Date M/D/CY'], o['Sale time (HHMM)']);
+    if (conFe && !fe) continue;
+    if (dDesde || dHasta){
+      if (!fe) continue;
+      if (dDesde && fe < dDesde) continue;
+      if (dHasta && fe > dHasta) continue;
+    }
+    f.fe++;
+
+    const nuevo = AYER ? !AYER.has(String(o['Lot number']||'').trim()) : null;
+    if (soloNv && nuevo === false) continue;
+
+    const tope   = (hit && hit.mi !== null) ? hit.mi : (miMax || 115000);
+    const factor = Math.max(0, 1 - castigo * ((od === null ? tope : od) / tope));
+    // --- tope por costo, usando tu calculadora ---
+    let tope$ = null, flete = null, adu = null, motivo = '';
+    if (objetivo !== null && objetivo > 0){
+      const cd = ciudadDe(o['Location city']);
+      if (!cd) motivo = 'sin tarifa de flete para ' + (o['Location city']||'?');
+      else {
+        flete = mejorFlete(cd, tIdx);
+        if (!flete) motivo = 'esa naviera no cubre ese tamaño';
+        else {
+          adu = aduanaDe(o);
+          if (!adu) motivo = 'no se pudo leer el motor';
+          else {
+            const clave = flete.grua+'|'+flete.mar+'|'+adu.dai+'|'+adu.pm;
+            if (!cacheOf.has(clave))
+              cacheOf.set(clave, ofertaMaxima(objetivo, Object.assign({}, opBase,
+                {grua: flete.grua, maritimo: flete.mar, dai: adu.dai, pm: adu.pm})));
+            tope$ = cacheOf.get(clave);
+          }
+        }
+      }
+    }
+    const base   = tope$ !== null ? tope$ : ((hit && hit.of !== null) ? hit.of : ofBase);
+    const maxOf  = base !== null ? base * factor : null;
+    const alta   = num(o['High Bid =non-vix,Sealed=Vix']) || 0;
+
+    out.push({o, y, od, rd:rdN, vc, nuevo, factor, maxOf, alta, bin, tope$, flete, adu, motivo,
+      dealer: edosD.has(up(o['Location state'])),
+      fecha: fe,
+      retail: num(o['Est. Retail Value']),
+      rep: num(o['Repair cost'])});
+  }
+
+  RES = out;
+  pintarFunnel(f, [...tiNo], [...dnNo], tgts);
+  ordenar();
+}
+
+function pintarFunnel(f, tits, danos, tgts){
+  const verTgts = (!tgts || !tgts.length)
+    ? '<span style="color:var(--ink-soft);font-weight:400"> — sin filtro, pasan todas las marcas</span>'
+    : '<span style="color:var(--ink-soft);font-weight:400"> — ' +
+      tgts.slice(0,3).map(t => (t.marca||'*') + (t.modelo ? ' ' + t.modelo : '')).join(', ') +
+      (tgts.length > 3 ? ' +' + (tgts.length-3) : '') + '</span>';
+  const dd = document.getElementById('fDesde').value, dh = document.getElementById('fHasta').value;
+  const rango = (dd || dh)
+    ? '<span style="color:var(--ink-soft);font-weight:400"> — ' + (dd||'…') + ' a ' + (dh||'…') + '</span>'
+    : '<span style="color:var(--ink-soft);font-weight:400"> — todas</span>';
+  const lista = (a, vacio) => {
+    if (!a || !a.length) return '<span style="color:var(--ink-soft);font-weight:400"> — '+vacio+'</span>';
+    const t = a.slice(0,4).join(', ') + (a.length>4 ? ' +'+(a.length-4) : '');
+    return '<span style="color:var(--ink-soft);font-weight:400"> — '+t+'</span>';
+  };
+  const L = [
+    ['Lotes en el archivo',            f.tot,  null],
+    ['Origen (país y moneda)',         f.pais, f.tot  - f.pais],
+    ['Tipo, combustible, forma venta', f.tipo, f.pais - f.tipo],
+    ['Año mínimo',                     f.anio, f.tipo - f.anio],
+    ['Millaje',                        f.mi,   f.anio - f.mi],
+    ['Daños ('+(document.getElementById('dondeDano').value==='ambos'?'principal y secundario':'solo principal')+')'+lista(danos,'ninguno marcado'), f.dn, f.mi - f.dn],
+    ['Títulos bloqueados'+lista(tits,'ninguno bloqueado'), f.ti, 0],
+    ['Condición de arranque',          f.rd,   f.ti   - f.rd],
+    ['Vendedor',                       f.vd,   f.ti   - f.rd - (f.rd - f.vd)],
+    ['Marca y modelo'+verTgts,          f.tg,   f.vd   - f.tg],
+    ['Fecha de subasta'+rango,          f.fe,   f.tg   - f.fe]
+  ];
+  L[6][2] = f.dn - f.ti;
+  L[8][2] = f.rd - f.vd;
+  $('#funnel').innerHTML = L.map(([k, q, quita], i) => {
+    const cero = quita === 0;
+    const marca = quita === null ? ''
+      : `<span style="color:${cero?'var(--line)':'var(--red)'};font-size:11px">${cero?'no quita nada':'−'+quita.toLocaleString('en-US')}</span>`;
+    return `<div${i===L.length-1?' style="font-weight:700"':''}>
+      <span>${k}</span>${marca}<span>quedan ${q.toLocaleString('en-US')}</span></div>`;
+  }).join('');
+}
+
+function ordenar(){
+  const k = $('#orden').value;
+  const cmp = {
+    fecha : (a,b)=>(a.fecha?a.fecha:9e15)-(b.fecha?b.fecha:9e15),
+    millas: (a,b)=>(a.od||0)-(b.od||0),
+    anio  : (a,b)=>(b.y||0)-(a.y||0),
+    oferta: (a,b)=>a.alta-b.alta,
+    margen: (a,b)=>((b.retail||0)-(b.rep||0)-b.alta)-((a.retail||0)-(a.rep||0)-a.alta)
+  }[k];
+  RES.sort(cmp);
+  pintar();
+}
+
+function pestanas(){
+  const nG = RES.filter(r=>!r.dealer).length, nD = RES.filter(r=>r.dealer).length;
+  $('#btnGeneral').textContent = 'General (' + nG.toLocaleString('en-US') + ')';
+  $('#btnDealer').textContent  = 'Zona dealer (' + nD.toLocaleString('en-US') + ')';
+  $('#btnVerSel').textContent  = 'Selección (' + SEL.size + ')';
+  const act = b => { b.style.background = 'var(--ink)'; b.style.color = '#fff'; };
+  const off = b => { b.style.background = '#fff'; b.style.color = 'var(--ink)'; };
+  [['general',$('#btnGeneral')],['dealer',$('#btnDealer')],['seleccion',$('#btnVerSel')]]
+    .forEach(([v,b]) => VISTA === v ? act(b) : off(b));
+}
+
+function pintar(){
+  if (VISTA !== 'dealer') VISTA = 'general';
+  pestanas();
+  const base = RES.filter(r => VISTA === 'dealer' ? r.dealer : !r.dealer);
+  if (!base.length){
+    $('#salida').innerHTML = '<div class="empty">' + (VISTA === 'dealer'
+      ? 'Ningún lote de la zona dealer pasó los filtros.'
+      : 'Ningún lote pasó los filtros. Aflojá algún criterio en el panel de la izquierda.') + '</div>';
+    return;
+  }
+  const ver = base.slice(0, 400);
+  let h = `<table class="res"><thead><tr>
+    <th class="na" style="width:26px"></th><th class="na">Foto</th><th class="na">Vehículo</th><th class="na">Lote / VIN</th>
+    <th class="na">Daño</th><th class="na">Millas</th><th class="na">Título</th>
+    <th class="na">Vendedor</th><th class="na">Yarda</th><th class="na">Subasta</th><th class="na">Venta</th><th class="na">Oferta actual</th>
+    <th class="na">Ofertar hasta</th><th class="na">Señales</th></tr></thead><tbody>`;
+
+  for (const r of ver){
+    const o = r.o;
+    const lote = o['Lot number'];
+    const luz = r.maxOf === null ? '' :
+      (r.alta <= r.maxOf*0.7 ? '<i class="lamp g"></i>' :
+       r.alta <= r.maxOf     ? '<i class="lamp a"></i>' : '<i class="lamp r"></i>');
+    const tags = [];
+    if (r.nuevo === true) tags.push('<i class="tag nv">Nuevo hoy</i>');
+    if (r.dealer) tags.push('<i class="tag dl">Cuenta dealer</i>');
+    if (r.rd === 'RD') tags.push('<i class="tag rd">Run &amp; Drive</i>');
+    if (r.rd === 'ST') tags.push('<i class="tag st">Solo enciende</i>');
+    if (r.rd === 'SD') tags.push('<i class="tag">Sin dato de arranque</i>');
+    if (up(o['Has Keys-Yes or No']) !== 'YES') tags.push('<i class="tag nk">Sin llaves</i>');
+    if (up(o['Odometer Brand']) === 'N') tags.push('<i class="tag">Not actual</i>');
+    if (o['Secondary Damage']) tags.push('<i class="tag">2º daño</i>');
+    if (up(o['Make-an-Offer Eligible']) === 'Y') tags.push('<i class="tag of">Acepta oferta</i>');
+    if (r.bin > 0) tags.push('<i class="tag bn">Buy-It-Now $'+mil(r.bin)+'</i>');
+    if (up(o['Sale Status']).includes('APPROVAL')) tags.push('<i class="tag st">Sujeto a aprobación</i>');
+    if (up(o['Rentals']) === 'Y')   tags.push('<i class="tag">Renta</i>');
+    if (up(o['Wholesale']) === 'Y') tags.push('<i class="tag">Mayoreo</i>');
+    if (o['AutoGrade']) tags.push('<i class="tag">Grade '+esc(o['AutoGrade'])+'</i>');
+
+    h += `<tr data-lote="${lote}">
+      <td><input type="checkbox" class="pick" data-lote="${lote}" ${SEL.has(lote)?'checked':''}></td>
+      <td>${o['Image Thumbnail'] ? `<img class="th" loading="lazy" referrerpolicy="no-referrer" src="${foto(o['Image Thumbnail'])}" alt="" onerror="this.style.visibility='hidden'">` : '<div class="th"></div>'}</td>
+      <td class="veh"><b>${r.y||''} ${esc(o['Make'])} ${esc(o['Model Group'])}</b>
+        <small>${esc(o['Model Detail'])} ${esc(o['Body Style'])}</small></td>
+      <td><a href="https://www.copart.com/lot/${lote}" target="_blank" rel="noopener">${lote}</a>
+        <small style="display:block;color:var(--ink-soft)">${esc(o['VIN'])}</small></td>
+      <td>${esc(o['Damage Description'])}<small style="display:block;color:var(--ink-soft)">${esc(o['Secondary Damage'])}</small></td>
+      <td class="num">${mil(r.od)}</td>
+      <td>${esc(o['Sale Title Type'])} <small style="color:var(--ink-soft)">${esc(o['Sale Title State'])}</small></td>
+      <td>${esc(limpiaVend(o['Seller Name'])) || '<span style="color:var(--ink-soft)">sin identificar</span>'}</td>
+      <td>${esc(o['Yard name'])}<small style="display:block;color:var(--ink-soft)">${esc(o['Location state'])}${o['Special Note']?' · '+esc(o['Special Note']):''}</small></td>
+      <td>${verFecha(r.fecha)}</td>
+      <td>${esc(o['Sale Status']||'')}</td>
+      <td class="num">$${mil(r.alta)}</td>
+      <td class="num oferta ${r.maxOf===null?'':(r.alta<=r.maxOf?'g':'r')}">
+        ${luz}${r.maxOf===null ? '<span style="font-weight:400;color:var(--ink-soft)">'+esc(r.motivo||'—')+'</span>' : '$'+mil(r.maxOf)}
+        ${r.flete ? '<small style="display:block;font-weight:400;color:var(--ink-soft)">flete $'+mil(r.flete.total)+' '+r.flete.nav+' · '+r.adu.txt+'</small>' : ''}</td>
+      <td>${tags.join('')}</td>
+    </tr>`;
+  }
+  h += '</tbody></table>';
+  if (base.length > 400) h += `<div class="note" style="padding:8px">Mostrando los primeros 400 de ${base.length.toLocaleString('en-US')}. Bajá la lista completa con el botón de arriba o apretá más los filtros.</div>`;
+  $('#salida').innerHTML = h;
+  document.querySelectorAll('.pick').forEach(c => c.onchange = e => togglePick(e.target.dataset.lote, e.target.checked));
+  const nv = AYER ? base.filter(r=>r.nuevo).length : null;
+  $('#hstat').innerHTML = (VISTA==='dealer' ? '<b>Zona dealer</b> · ' : '') + `<b>${base.length.toLocaleString('en-US')}</b> lotes para revisar` +
+    (nv===null ? '' : ` · <b>${nv.toLocaleString('en-US')}</b> nuevos hoy`);
+}
+
+/* ---------- selección ---------- */
+function togglePick(lote, on){
+  if (on){
+    const r = RES.find(x => String(x.o['Lot number']).trim() === lote);
+    if (r) SEL.set(lote, {r, prebid: r.maxOf === null ? '' : Math.round(r.maxOf), nota: ''});
+  } else SEL.delete(lote);
+  $('#btnVerSel').textContent = 'Ver selección (' + SEL.size + ')';
+  guardarLocal();
+  pestanas();
+  if (VISTA === 'seleccion') pintarSel();
+}
+
+function copiar(txt, btn){
+  const ok = () => { if(btn){ const t=btn.textContent; btn.textContent='copiado ✓'; setTimeout(()=>btn.textContent=t,1200); } };
+  if (navigator.clipboard && window.isSecureContext){ navigator.clipboard.writeText(txt).then(ok).catch(()=>fallback()); }
+  else fallback();
+  function fallback(){
+    const ta=document.createElement('textarea'); ta.value=txt;
+    ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta);
+    ta.select(); try{ document.execCommand('copy'); ok(); }catch(e){ alert('Copiá a mano: '+txt); }
+    document.body.removeChild(ta);
+  }
+}
+
+function grupoSel(){
+  return [...SEL.entries()]
+    .filter(([,it]) => SELV === 'dealer' ? it.r.dealer : !it.r.dealer)
+    .sort((a,b)=>(a[1].r.fecha?a[1].r.fecha:9e15)-(b[1].r.fecha?b[1].r.fecha:9e15));
+}
+
+function textoWhatsapp(){
+  const filas = grupoSel();
+  let t = 'PRE-BIDS ' + (SELV === 'dealer' ? '· CUENTA DEALER' : '· CUENTA NORMAL') + ' — ' + new Date().toLocaleDateString('es-SV') + '\n\n';
+  for (const [lote, it] of filas){
+    const o = it.r.o;
+    t += 'Lote ' + lote + '\n';
+    t += (it.r.y||'') + ' ' + (o['Make']||'') + ' ' + (o['Model Group']||'') + ' ' + (o['Model Detail']||'') + '\n';
+    t += mil(it.r.od) + ' mi · ' + (o['Damage Description']||'') + ' · ' + (o['Sale Title Type']||'') + '\n';
+    t += (o['Yard name']||'') + ' · ' + (it.r.fecha ? it.r.fecha.toLocaleDateString('es-SV') : 'sin fecha') + '\n';
+    t += 'OFERTAR HASTA: $' + (it.prebid || '—') + '\n';
+    if (it.nota) t += 'Nota: ' + it.nota + '\n';
+    t += '\n';
+  }
+  return t.trim();
+}
+
+function pintarSel(){
+  VISTA = 'seleccion';
+  pestanas();
+  if (!SEL.size){ $('#salida').innerHTML = '<div class="empty">Todavía no has seleccionado ningún lote. Volvé a la lista y marcá los que te sirven.</div>'; return; }
+
+  const nNor = [...SEL.values()].filter(it=>!it.r.dealer).length;
+  const nDea = [...SEL.values()].filter(it=> it.r.dealer).length;
+  const filas = grupoSel();
+  const suma = filas.reduce((a,[,it]) => a + (parseFloat(it.prebid)||0), 0);
+  const lotes = filas.map(([l])=>l).join('\n');
+
+  let h = `<div class="toolbar noprint" style="margin-bottom:10px">
+      <button class="ghost" id="tabNor">Cuenta normal (${nNor})</button>
+      <button class="ghost" id="tabDea">Cuenta dealer (${nDea})</button>
+      <div class="sp"></div>
+      <span class="note" style="margin:0">Son dos documentos aparte</span>
+    </div>
+    <div id="hoja">
+    <div class="hoja-top">
+      <div>
+        <h2 style="font-size:17px;color:var(--ink);margin:0">Hoja de pre-bids · ${SELV === 'dealer' ? 'cuenta dealer' : 'cuenta normal'}</h2>
+        <div class="note" style="margin:2px 0 0">${filas.length} lotes · ${new Date().toLocaleDateString('es-SV',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</div>
+      </div>
+      <div style="flex:1"></div>
+      <small id="avisoGuardado" class="note noprint" style="margin:0 10px 0 0"></small>
+      <div class="hoja-sum">
+        <small>Si se ganan todos</small>
+        <b>$${mil(suma)}</b>
+      </div>
+    </div>
+    <div class="toolbar noprint" style="margin:10px 0">
+      <button class="ghost" id="btnCopLotes">Copiar los ${filas.length} lotes</button>
+      <button class="ghost" id="btnCopWa">Copiar para WhatsApp</button>
+      <button class="ghost" id="btnImprimir">Imprimir / PDF</button>
+      <button class="ghost" id="btnSelCsv">Bajar CSV</button>
+      <button id="btnSelEnv" style="background:var(--blue);border-color:var(--blue)">Enviar selección</button>
+      <div class="sp"></div>
+      <button class="ghost" id="btnVaciar">Vaciar</button>
+    </div>`;
+
+  let ultima = '\u0000';
+  for (const [lote, it] of filas){
+    const o = it.r.o;
+    const dia = it.r.fecha ? it.r.fecha.toLocaleDateString('es-SV',{weekday:'long', day:'numeric', month:'long'}) : 'Sin fecha de subasta';
+    if (dia !== ultima){ h += `<div class="dia">${dia}</div>`; ultima = dia; }
+
+    const dato = (k,v) => v ? `<div><small>${k}</small><span>${v}</span></div>` : '';
+    h += `<div class="lote">
+      <div class="lote-foto">
+        ${o['Image Thumbnail'] ? `<img loading="lazy" referrerpolicy="no-referrer" src="${foto(o['Image Thumbnail'])}" alt="" onerror="this.style.visibility='hidden'">` : ''}
+      </div>
+      <div class="lote-cuerpo">
+        <div class="lote-cab">
+          <b>${it.r.y||''} ${esc(o['Make'])} ${esc(o['Model Group'])} ${esc(o['Model Detail'])} ${esc(o['Trim'])}</b>
+          <div class="lote-id">
+            <span class="lotenum">${lote}</span>
+            <button class="ghost mini noprint" data-cop="${lote}">copiar</button>
+            <a href="https://www.copart.com/lot/${lote}" target="_blank" rel="noopener" class="noprint">abrir en Copart ↗</a>
+          </div>
+        </div>
+        <div class="lote-datos">
+          ${dato('VIN', esc(o['VIN']))}
+          ${dato('Millas', mil(it.r.od) + (up(o['Odometer Brand'])==='N' ? ' (not actual)' : ''))}
+          ${dato('Daño', esc(o['Damage Description']) + (o['Secondary Damage'] ? ' + ' + esc(o['Secondary Damage']) : ''))}
+          ${dato('Título', esc(o['Sale Title Type']) + ' ' + esc(o['Sale Title State']))}
+          ${dato('Arranque', {RD:'Run & Drive', ST:'Solo enciende', NV:'No verificado', SD:'Sin dato'}[it.r.rd])}
+          ${dato('Llaves', up(o['Has Keys-Yes or No'])==='YES' ? 'Sí' : 'No')}
+          ${dato('Motor', esc(o['Engine']) + ' ' + esc(o['Drive']))}
+          ${dato('Yarda', esc(o['Yard name']) + ' — ' + esc(o['Location city']) + ' ' + esc(o['Location state']))}
+          ${dato('Subasta', (it.r.fecha ? it.r.fecha.toLocaleString('es-SV',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'}) : 'sin fecha') + ' · ' + esc(o['Sale Status']))}
+          ${dato('Oferta actual', '$' + mil(it.r.alta))}
+          ${it.r.bin > 0 ? dato('Buy-It-Now', '$' + mil(it.r.bin)) : ''}
+          ${it.r.flete ? dato('Flete', '$' + mil(it.r.flete.total) + ' vía ' + it.r.flete.nav) : ''}
+          ${it.r.adu ? dato('Aduana', it.r.adu.txt + ' — DAI ' + (it.r.adu.dai*100).toFixed(0) + '%') : ''}
+        </div>
+      </div>
+      <div class="lote-bid">
+        <small>OFERTAR HASTA</small>
+        <div class="bidrow">
+          <span class="sig">$</span><input class="pb" data-lote="${lote}" type="number" value="${it.prebid}" placeholder="—">
+        </div>
+        <button class="ghost mini noprint" data-calc="${lote}">calculadora</button>
+        <input class="nt noprint" data-lote="${lote}" type="text" value="${esc(it.nota)}" placeholder="nota">
+        ${it.nota ? `<div class="solo-print">${esc(it.nota)}</div>` : ''}
+        <button class="ghost mini noprint" data-quitar="${lote}">quitar</button>
+      </div>
+    </div>`;
+  }
+  h += '</div>';
+  if (!filas.length) h = h.replace(/<div class="dia">[\s\S]*?(?=<\/div>$)/, '') +
+    '<div class="empty" style="margin-top:10px">No hay lotes seleccionados en esta cuenta.</div>';
+  $('#salida').innerHTML = h;
+
+  const act = b => { b.style.background='var(--ink)'; b.style.color='#fff'; };
+  if ($('#tabNor')){
+    (SELV==='normal' ? act($('#tabNor')) : act($('#tabDea')));
+    $('#tabNor').onclick = () => { SELV='normal'; pintarSel(); };
+    $('#tabDea').onclick = () => { SELV='dealer'; pintarSel(); };
+  }
+
+  document.querySelectorAll('.pb').forEach(i => i.onchange = e => { const it = SEL.get(e.target.dataset.lote); if(it){ it.prebid = e.target.value; guardarLocal(); pintarSel(); } });
+  document.querySelectorAll('.nt').forEach(i => i.onchange = e => { const it = SEL.get(e.target.dataset.lote); if(it){ it.nota = e.target.value; guardarLocal(); } });
+  document.querySelectorAll('[data-quitar]').forEach(b => b.onclick = e => togglePick(e.target.dataset.quitar, false));
+  document.querySelectorAll('[data-calc]').forEach(b => b.onclick = e => abrirCalc(e.target.dataset.calc));
+  document.querySelectorAll('[data-cop]').forEach(b => b.onclick = e => copiar(e.target.dataset.cop, e.target));
+  $('#btnCopLotes').onclick = e => copiar(lotes, e.target);
+  $('#btnCopWa').onclick    = e => copiar(textoWhatsapp(), e.target);
+  $('#btnImprimir').onclick = () => window.print();
+  $('#btnVaciar').onclick   = () => { if(confirm('¿Vaciar toda la selección?')){ SEL.clear(); guardarLocal(); togglePick('',false); pintarSel(); } };
+  $('#btnSelCsv').onclick   = bajarSelCsv;
+  $('#btnSelEnv').onclick   = enviarSeleccion;
+}
+
+/* ---------- guardado automático en esta compu ---------- */
+const LLAVE = 'filtroInventario.v1';
+let hayGuardado = false;
+
+function serializarSel(){
+  return [...SEL.entries()].map(([lote, it]) => ({
+    lote, prebid: it.prebid, nota: it.nota,
+    o: it.r.o, y: it.r.y, od: it.r.od, rd: it.r.rd, vc: it.r.vc,
+    alta: it.r.alta, bin: it.r.bin, dealer: it.r.dealer, maxOf: it.r.maxOf,
+    flete: it.r.flete, adu: it.r.adu,
+    fecha: it.r.fecha ? it.r.fecha.toISOString() : null
+  }));
+}
+
+function cargarSel(lotes){
+  SEL = new Map();
+  for (const x of lotes){
+    SEL.set(x.lote, {
+      prebid: x.prebid || '', nota: x.nota || '',
+      r: { o:x.o, y:x.y, od:x.od, rd:x.rd, vc:x.vc, alta:x.alta, bin:x.bin,
+           dealer:x.dealer, maxOf:x.maxOf, flete:x.flete, adu:x.adu,
+           fecha: x.fecha ? new Date(x.fecha) : null, nuevo:null, motivo:'' }
+    });
+  }
+}
+
+function guardarLocal(){
+  try {
+    localStorage.setItem(LLAVE, JSON.stringify({
+      guardado: new Date().toISOString(),
+      lotes: serializarSel(),
+      cfg: cfgActual()
+    }));
+    hayGuardado = true;
+    marcaGuardado();
+  } catch(e){ /* el navegador no deja guardar: se sigue usando igual */ }
+}
+
+function marcaGuardado(){
+  const el = $('#avisoGuardado');
+  if (el) el.textContent = SEL.size ? 'guardado ' + new Date().toLocaleTimeString('es-SV',{hour:'numeric',minute:'2-digit'}) : '';
+}
+
+function restaurarLocal(){
+  let d;
+  try { const t = localStorage.getItem(LLAVE); if (!t) return; d = JSON.parse(t); }
+  catch(e){ return; }
+  if (!d) return;
+  if (d.cfg) aplicarCfg(d.cfg);
+  if (d.lotes && d.lotes.length){
+    cargarSel(d.lotes);
+    hayGuardado = true;
+    $('#toolbar').classList.remove('hide');
+    $('#avisoRestaurado').innerHTML =
+      'Se recuperó tu selección de ' + new Date(d.guardado).toLocaleString('es-SV',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'}) +
+      ' — <b>' + SEL.size + ' lotes</b>. <button class="ghost mini" id="btnVerRec">ver</button> ' +
+      '<button class="ghost mini" id="btnBorrarRec">borrar</button>';
+    $('#avisoRestaurado').classList.remove('hide');
+    $('#btnVerRec').onclick = () => { VISTA='seleccion'; pintarSel(); };
+    $('#btnBorrarRec').onclick = () => {
+      if (!confirm('¿Borrar la selección guardada? No se puede deshacer.')) return;
+      try { localStorage.removeItem(LLAVE); } catch(e){}
+      SEL = new Map(); hayGuardado = false;
+      $('#avisoRestaurado').classList.add('hide');
+      VISTA = 'general'; RES.length ? pintar() : ($('#salida').innerHTML = '<div class="empty">Cargá el archivo del día para empezar.</div>');
+    };
+    marcaGuardado();
+  }
+}
+
+function enviarSeleccion(){
+  bajar(JSON.stringify({version:1, creado:new Date().toISOString(), lotes:serializarSel()}, null, 1),
+        'seleccion-' + new Date().toISOString().slice(0,10) + '.json', 'application/json');
+}
+
+function recibirSeleccion(txt){
+  let d; try { d = JSON.parse(txt); } catch(e){ alert('Ese archivo de selección no se pudo leer.'); return; }
+  if (!d.lotes || !d.lotes.length){ alert('Ese archivo no trae ninguna selección.'); return; }
+  cargarSel(d.lotes);
+  guardarLocal();
+  $('#toolbar').classList.remove('hide');
+  VISTA = 'seleccion';
+  const nDea = [...SEL.values()].filter(it=>it.r.dealer).length;
+  SELV = nDea === SEL.size ? 'dealer' : 'normal';
+  pintarSel();
+  $('#hstat').innerHTML = '<b>' + SEL.size + '</b> lotes recibidos · ' +
+    new Date(d.creado).toLocaleDateString('es-SV');
+}
+
+function bajarSelCsv(){
+  const cab = ['Lote','VIN','Año','Marca','Modelo','Detalle','Daño','Millas','Título','Yarda','Ciudad','Estado','Cuenta','Subasta','Oferta actual','PRE-BID','Nota','Link'];
+  const q = v => '"'+String(v??'').replace(/"/g,'""')+'"';
+  const fil = grupoSel().map(([lote,it])=>{const o=it.r.o;return [lote,o['VIN'],it.r.y,o['Make'],o['Model Group'],
+    o['Model Detail'],o['Damage Description'],it.r.od,o['Sale Title Type'],o['Yard name'],o['Location city'],o['Location state'],it.r.dealer?'DEALER':'normal',
+    it.r.fecha?it.r.fecha.toISOString().slice(0,10):'',it.r.alta,it.prebid,it.nota,
+    'https://www.copart.com/lot/'+lote].map(q).join(',');});
+  bajar('\uFEFF'+[cab.map(q).join(','),...fil].join('\n'),'prebids-'+(SELV==='dealer'?'dealer-':'')+new Date().toISOString().slice(0,10)+'.csv','text/csv');
+}
+
+/* ---------- calculadora del usuario ---------- */
+function usarTablasDe(txt){
+  let n = 0;
+  for (const re of [/const NAVIERAS_MAR = \{[\s\S]*?\n        \};/,
+                    /const CIUDADES = \{[\s\S]*?\n        \};/,
+                    /const SALVAGE_FEES = \{[\s\S]*?\n        \};/]){
+    const m = txt.match(re);
+    if (m){ try { (0,eval)(m[0].replace('const ','var ')); n++; } catch(err){} }
+  }
+  return n;
+}
+
+async function conectarCalc(){
+  const url = $('#calcUrl').value.trim();
+  if (!url){ alert('Poné la dirección de tu calculadora.'); return; }
+  $('#btnCalc').textContent = 'conectando…';
+  try {
+    const r = await fetch(url, {mode:'cors'});
+    if (!r.ok) throw new Error(r.status);
+    const txt = await r.text();
+    CALC = txt; CALC_URL = url;
+    const n = usarTablasDe(txt);
+    $('#btnCalc').textContent = n === 3 ? 'Conectada ✓' : 'Conectada (tablas ' + n + '/3)';
+    $('#btnCalc').title = 'Modo completo: el Enter devuelve la oferta';
+  } catch (err) {
+    // el navegador no dejó leerla: se usa igual, pero sin devolver la oferta sola
+    CALC = null; CALC_URL = url;
+    $('#btnCalc').textContent = 'Conectada (modo básico)';
+    $('#btnCalc').title = 'Se abre la calculadora pero la oferta se copia a mano';
+  }
+  if (CRUDO.length) correr();
+}
+
+function cargarCalc(f){
+  const r = new FileReader();
+  r.onload = e => {
+    CALC = e.target.result; CALC_URL = null;
+    const n = usarTablasDe(CALC);
+    $('#btnCalc').textContent = 'Archivo cargado' + (n===3 ? ' ✓' : ' (tablas ' + n + '/3)');
+    if (CRUDO.length) correr();
+  };
+  r.readAsText(f);
+}
+
+function abrirCalc(lote){
+  if (!CALC && !CALC_URL){ alert('Primero conectá tu calculadora con el botón de arriba.'); return; }
+  const it = SEL.get(lote); if (!it) return;
+  CALC_LOTE = lote;
+  const o = it.r.o;
+  $('#modalVeh').textContent  = (it.r.y||'') + ' ' + (o['Make']||'') + ' ' + (o['Model Group']||'');
+  $('#modalLote').textContent = 'Lote ' + lote + ' · ' + (o['Location city']||'') + ' ' + (o['Location state']||'') + ' · oferta actual $' + mil(it.r.alta);
+  $('#modal').classList.remove('hide');
+
+  const fr = $('#calcFrame');
+  $('#btnUsar').style.display = CALC ? '' : 'none';
+  $('#modalAviso').textContent = CALC ? '' : 'Modo básico: copiá la oferta a mano.';
+  fr.onload = () => {
+    try {
+      const d = fr.contentDocument;
+      const set = (id, v) => { const el = d.getElementById(id); if (el){ el.value = v; el.dispatchEvent(new Event('input',{bubbles:true})); } };
+      set('infoVehiculo', (it.r.y||'') + ' ' + (o['Make']||'') + ' ' + (o['Model Group']||'') + ' ' + (o['Model Detail']||''));
+      set('infoLote', lote);
+      set('searchCiudad', (o['Location city']||''));
+      if (d.defaultView.actualizar) d.defaultView.actualizar();
+      if (it.prebid) { set('inputBid', it.prebid); if (d.defaultView.calcular) d.defaultView.calcular(); }
+      // Enter dentro de la calculadora = usar esa oferta
+      d.addEventListener('keydown', ev => { if (ev.key === 'Enter'){ ev.preventDefault(); usarOferta(); } });
+    } catch(err){ console.warn('no se pudo prellenar', err); }
+  };
+  if (CALC){ fr.removeAttribute('src'); fr.srcdoc = CALC; }
+  else { fr.removeAttribute('srcdoc'); fr.src = CALC_URL; }
+}
+
+function usarOferta(){
+  const fr = $('#calcFrame');
+  let v = null;
+  try {
+    const d = fr.contentDocument;
+    const el = d.getElementById('inputBid');
+    if (el && parseFloat(el.value) > 0) v = Math.round(parseFloat(el.value));
+  } catch(err){}
+  if (v === null){ alert('Poné una oferta en el campo de la calculadora antes de usarla.'); return; }
+  const it = SEL.get(CALC_LOTE);
+  if (it){ it.prebid = v; it.nota = (it.nota ? it.nota + ' · ' : '') + 'calculado'; guardarLocal(); }
+  cerrarCalc();
+  pintarSel();
+}
+
+function cerrarCalc(){ $('#modal').classList.add('hide'); const fr=$('#calcFrame'); fr.removeAttribute('src'); fr.srcdoc=''; CALC_LOTE = null; }
+
+/* ---------- exportar ---------- */
+function bajarCSV(){
+  const cab = ['Lote','VIN','Año','Marca','Modelo','Detalle','Daño','Daño 2','Millas','Odómetro','Título','Estado título','Nuevo','Arranque','Llaves','Vendedor','Yarda','Estado','Subasta','Cuenta','Estado venta','Moneda','Oferta actual','Ofertar hasta','Retail est.','Reparación est.','Link'];
+  const esc = v => '"'+String(v??'').replace(/"/g,'""')+'"';
+  const fil = RES.map(r=>{const o=r.o;return [o['Lot number'],o['VIN'],r.y,o['Make'],o['Model Group'],o['Model Detail'],
+    o['Damage Description'],o['Secondary Damage'],r.od,o['Odometer Brand'],o['Sale Title Type'],o['Sale Title State'],
+    r.nuevo===null?'':(r.nuevo?'SI':'no'),r.rd,o['Has Keys-Yes or No'],limpiaVend(o['Seller Name']),o['Yard name'],o['Location state'],r.fecha?r.fecha.toISOString().slice(0,10):'',r.dealer?'DEALER':'normal',o['Sale Status'],o['Currency Code'],r.alta,
+    r.maxOf===null?'':Math.round(r.maxOf),r.retail,r.rep,'https://www.copart.com/lot/'+o['Lot number']].map(esc).join(',');});
+  bajar('\uFEFF'+[cab.map(esc).join(','),...fil].join('\n'), 'lista-'+new Date().toISOString().slice(0,10)+'.csv','text/csv');
+}
+function bajar(txt,nombre,tipo){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([txt],{type:tipo+';charset=utf-8'}));
+  a.download=nombre; a.click(); URL.revokeObjectURL(a.href);
+}
+
+/* ---------- ajustes ---------- */
+function cfgActual(){
+  return {
+    anio:$('#anio').value, millas:$('#millas').value, cero:$('#cero').checked,
+    castigo:$('#castigo').value, ofertaBase:$('#ofertaBase').value, costoObj:$('#costoObj').value,
+    cSubasta:$('#cSubasta').value, cTam:$('#cTam').value, cPago:$('#cPago').value, cDivs:$('#cDivs').value, cVersion:$('#cVersion').value, cDealer:$('#cDealer').value, titulos:$('#titulos').value,
+    rd:[...document.querySelectorAll('.rd:checked')].map(c=>c.value),
+    vd:[...document.querySelectorAll('.vd:checked')].map(c=>c.value), palabras:$('#palabras').value, soloUSA:$('#soloUSA').checked, edos:$('#edos').value, calcUrl:$('#calcUrl').value, fDesde:$('#fDesde').value, fHasta:$('#fHasta').value, conFecha:$('#conFecha').checked, soloAutos:$('#soloAutos').checked, noElec:$('#noElec').checked, soloOferta:$('#soloOferta').checked, soloBIN:$('#soloBIN').checked,
+    dn:[...document.querySelectorAll('.dn:checked')].map(c=>c.value), dondeDano:$('#dondeDano').value,
+    tgts:[...document.querySelectorAll('#tgtBody tr')].map(tr=>({
+      marca:tr.querySelector('.t-marca').value, modelo:tr.querySelector('.t-modelo').value,
+      a1:tr.querySelector('.t-a1').value, a2:tr.querySelector('.t-a2').value,
+      mi:tr.querySelector('.t-mi').value, of:tr.querySelector('.t-of').value,
+      on:tr.querySelector('.t-on').checked}))
+  };
+}
+function guardarCfg(){ bajar(JSON.stringify(cfgActual(),null,2),'ajustes-filtro.json','application/json'); }
+function aplicarCfg(c){
+  $('#anio').value=c.anio??2018; $('#millas').value=c.millas??115000;
+  $('#cero').checked=c.cero!==false; $('#castigo').value=c.castigo??20;
+  $('#ofertaBase').value=c.ofertaBase??'';
+  ['costoObj','cSubasta','cTam','cPago','cDivs','cVersion','cDealer'].forEach(k=>{ if(c[k]!==undefined) $('#'+k).value=c[k]; }); $('#titulos').value=c.titulos??'';
+  if(c.rd) document.querySelectorAll('.rd').forEach(x=>x.checked=c.rd.includes(x.value));
+  if(c.vd) document.querySelectorAll('.vd').forEach(x=>x.checked=c.vd.includes(x.value));
+  if(c.palabras) $('#palabras').value=c.palabras;
+  if(c.soloUSA!==undefined) $('#soloUSA').checked=c.soloUSA;
+  if(c.edos!==undefined) $('#edos').value=c.edos;
+  if(c.calcUrl) $('#calcUrl').value=c.calcUrl;
+  if(c.fDesde!==undefined) $('#fDesde').value=c.fDesde;
+  if(c.fHasta!==undefined) $('#fHasta').value=c.fHasta;
+  if(c.conFecha!==undefined) $('#conFecha').checked=c.conFecha;
+  ['soloAutos','noElec','soloOferta','soloBIN'].forEach(k=>{ if(c[k]!==undefined) $('#'+k).checked=c[k]; });
+  if(c.dn) document.querySelectorAll('.dn').forEach(x=>x.checked=c.dn.includes(x.value));
+  if(c.dondeDano) $('#dondeDano').value=c.dondeDano;
+  $('#tgtBody').innerHTML=''; (c.tgts||[]).forEach(addTgt); if(!(c.tgts||[]).length) addTgt();
+  if(CRUDO.length) correr();
+}
+
+/* ============================================================
+   SINCRONIZACIÓN CON EL EQUIPO (Supabase)
+   ============================================================ */
+let SB = null;   // {url, key, token, quien}
+let sbTimer = null;
+
+function sbLuz(txt, color){
+  const el = $('#syncLuz'); el.textContent = txt; el.style.color = color || 'var(--ink-soft)';
+}
+
+async function sbFetch(ruta, opciones){
+  const o = opciones || {};
+  const r = await fetch(SB.url + '/rest/v1/' + ruta, Object.assign({}, o, {
+    headers: Object.assign({
+      'apikey': SB.key,
+      'Authorization': 'Bearer ' + SB.token,
+      'Content-Type': 'application/json'
+    }, o.headers || {})
+  }));
+  if (!r.ok) throw new Error(await r.text());
+  const t = await r.text();
+  return t ? JSON.parse(t) : null;
+}
+
+async function entrarEquipo(){
+  const url = $('#sbUrl').value.trim().replace(/\/$/,'');
+  const key = $('#sbKey').value.trim();
+  const mail = $('#sbMail').value.trim(), pass = $('#sbPass').value;
+  if (!url || !key || !mail || !pass){ $('#syncMsg').textContent = 'Faltan datos.'; return; }
+  $('#btnEntrar').textContent = 'entrando…';
+  try {
+    const r = await fetch(url + '/auth/v1/token?grant_type=password', {
+      method:'POST', headers:{'apikey':key,'Content-Type':'application/json'},
+      body: JSON.stringify({email:mail, password:pass})
+    });
+    const d = await r.json();
+    if (!r.ok || !d.access_token) throw new Error(d.error_description || d.msg || 'no entró');
+    SB = {url, key, token: d.access_token, quien: mail};
+    try { localStorage.setItem('filtroSync', JSON.stringify({url, key, mail})); } catch(e){}
+    $('#syncOff').classList.add('hide'); $('#syncOn').classList.remove('hide');
+    $('#syncQuien').textContent = 'Conectado como ' + mail;
+    sbLuz('conectado', 'var(--green)');
+    await bajarEquipo();
+    if ($('#sbAuto').checked) prenderAuto();
+  } catch (err) {
+    $('#syncMsg').textContent = 'No se pudo entrar: ' + err.message;
+    $('#btnEntrar').textContent = 'Entrar';
+  }
+}
+
+async function subirEquipo(){
+  if (!SB) return;
+  sbLuz('subiendo…');
+  try {
+    const filas = [...SEL.entries()].map(([lote, it]) => ({
+      lote, dia: new Date().toISOString().slice(0,10),
+      datos: serializarSel().find(x => x.lote === lote),
+      prebid: it.prebid === '' ? null : Number(it.prebid),
+      nota: it.nota || null, dealer: !!it.r.dealer, marcado_por: SB.quien,
+      actualizado: new Date().toISOString()
+    }));
+    if (filas.length)
+      await sbFetch('seleccion', {method:'POST', headers:{'Prefer':'resolution=merge-duplicates'}, body: JSON.stringify(filas)});
+    sbLuz('subido ' + new Date().toLocaleTimeString('es-SV',{hour:'numeric',minute:'2-digit'}), 'var(--green)');
+  } catch (err) { sbLuz('error al subir', 'var(--red)'); console.warn(err); }
+}
+
+async function bajarEquipo(){
+  if (!SB) return;
+  sbLuz('bajando…');
+  try {
+    const hoy = new Date().toISOString().slice(0,10);
+    const filas = await sbFetch('seleccion?dia=eq.' + hoy + '&select=*');
+    if (filas && filas.length){
+      cargarSel(filas.map(f => Object.assign({}, f.datos, {
+        lote: f.lote, prebid: f.prebid ?? '', nota: f.nota || ''
+      })));
+      guardarLocal();
+      $('#toolbar').classList.remove('hide');
+      pestanas();
+      if (VISTA === 'seleccion') pintarSel();
+    }
+    sbLuz('al día ' + new Date().toLocaleTimeString('es-SV',{hour:'numeric',minute:'2-digit'}), 'var(--green)');
+  } catch (err) { sbLuz('error al bajar', 'var(--red)'); console.warn(err); }
+}
+
+function prenderAuto(){
+  if (sbTimer) clearInterval(sbTimer);
+  sbTimer = setInterval(async () => { await subirEquipo(); await bajarEquipo(); }, 30000);
+}
+function apagarAuto(){ if (sbTimer){ clearInterval(sbTimer); sbTimer = null; } }
+
+function salirEquipo(){
+  apagarAuto(); SB = null;
+  $('#syncOn').classList.add('hide'); $('#syncOff').classList.remove('hide');
+  $('#btnEntrar').textContent = 'Entrar';
+  sbLuz('sin conectar');
+}
+
+/* ---------- eventos ---------- */
+$('#drop').onclick = () => $('#file').click();
+$('#drop').ondragover = e => { e.preventDefault(); $('#drop').classList.add('over'); };
+$('#drop').ondragleave = () => $('#drop').classList.remove('over');
+$('#drop').ondrop = e => { e.preventDefault(); $('#drop').classList.remove('over'); if(e.dataTransfer.files[0]) cargar(e.dataTransfer.files[0]); };
+$('#file').onchange = e => { if(e.target.files[0]) cargar(e.target.files[0]); };
+$('#btnAyer').onclick = () => $('#fileAyer').click();
+$('#fileAyer').onchange = e => { if(e.target.files[0]) cargarAyer(e.target.files[0]); };
+$('#soloNuevos').onchange = () => { if(CRUDO.length) correr(); };
+$('#soloUSA').onchange = () => { if(CRUDO.length) correr(); };
+$('#conFecha').onchange = () => { if(CRUDO.length) correr(); };
+$('#castigo').onchange = () => { if(CRUDO.length) correr(); };
+$('#cDealer').onchange = () => { if(CRUDO.length) correr(); };
+$('#cVersion').onchange = () => { if(CRUDO.length) correr(); };
+$('#cDivs').onchange = () => { if(CRUDO.length) correr(); };
+$('#cPago').onchange = () => { if(CRUDO.length) correr(); };
+$('#cTam').onchange = () => { if(CRUDO.length) correr(); };
+$('#cSubasta').onchange = () => { if(CRUDO.length) correr(); };
+$('#costoObj').onchange = () => { if(CRUDO.length) correr(); };
+$('#soloBIN').onchange = () => { if(CRUDO.length) correr(); };
+$('#soloOferta').onchange = () => { if(CRUDO.length) correr(); };
+$('#noElec').onchange = () => { if(CRUDO.length) correr(); };
+$('#soloAutos').onchange = () => { if(CRUDO.length) correr(); };
+$('#btnAdd').onclick = () => addTgt();
+$('#titulos').oninput = () => {
+  const a = $('#titulos').value.split(',').map(x=>up(x)).filter(Boolean);
+  $('#titAviso').innerHTML = a.length
+    ? 'Bloqueando <b>'+a.length+'</b>: '+a.join(', ')
+    : 'Vacío: <b>ningún título está bloqueado</b>, pasan los 198 códigos. Escribí acá los que el aduanero te diga que no entran.';
+};
+$('#titulos').onchange = () => { if(CRUDO.length) correr(); };
+$('#btnCorrer').onclick = () => { if(CRUDO.length) contarVend(); correr(); };
+$('#btnCsv').onclick = bajarCSV;
+$('#btnGeneral').onclick = () => { if(!RES.length && SEL.size){ alert('Esta selección se recibió sin el archivo del día. Cargá el CSV si querés ver la lista completa.'); return; } VISTA='general'; pintar(); };
+$('#btnDealer').onclick  = () => { if(!RES.length && SEL.size){ alert('Esta selección se recibió sin el archivo del día. Cargá el CSV si querés ver la lista completa.'); return; } VISTA='dealer'; pintar(); };
+$('#btnVerSel').onclick  = () => { VISTA='seleccion'; pintarSel(); };
+$('#edos').onchange = () => { if(CRUDO.length) correr(); };
+$('#dondeDano').onchange = () => { if(CRUDO.length) correr(); };
+
+function iso(d){ return new Date(d.getTime() - d.getTimezoneOffset()*60000).toISOString().slice(0,10); }
+function avisoFecha(){
+  const dd = $('#fDesde').value, dh = $('#fHasta').value;
+  $('#fAviso').textContent = (dd || dh)
+    ? 'Mostrando subastas ' + (dd ? 'desde ' + dd : '') + (dd && dh ? ' ' : '') + (dh ? 'hasta ' + dh : '') + '.'
+    : 'Sin fechas puestas: se muestran todas.';
+}
+document.querySelectorAll('.atajos button').forEach(b => b.onclick = () => {
+  const n = parseInt(b.dataset.dia);
+  document.querySelectorAll('.atajos button').forEach(x => x.classList.remove('on'));
+  if (n === -1){ $('#fDesde').value = ''; $('#fHasta').value = ''; }
+  else {
+    const hoy = new Date(); hoy.setHours(0,0,0,0);
+    if (n === 7){ const fin = new Date(hoy); fin.setDate(fin.getDate()+6);
+      $('#fDesde').value = iso(hoy); $('#fHasta').value = iso(fin); }
+    else { const d = new Date(hoy); d.setDate(d.getDate()+n);
+      $('#fDesde').value = iso(d); $('#fHasta').value = iso(d); }
+  }
+  b.classList.add('on');
+  avisoFecha();
+  if (CRUDO.length) correr();
+});
+['fDesde','fHasta'].forEach(k => $('#'+k).onchange = () => {
+  document.querySelectorAll('.atajos button').forEach(x => x.classList.remove('on'));
+  avisoFecha(); if (CRUDO.length) correr();
+});
+$('#orden').onchange = ordenar;
+$('#btnTit').onclick = () => {
+  if(!TITS.size){ alert('Cargá primero el archivo.'); return; }
+  const t = [...TITS.entries()].sort((a,b)=>b[1]-a[1])
+    .map(([c,n])=>c+'\t'+n).join('\n');
+  bajar('Código\tLotes\n'+t, 'codigos-de-titulo.tsv','text/tab-separated-values');
+};
+$('#btnCalc').onclick = conectarCalc;
+$('#btnCalcFile').onclick = () => $('#calcFile').click();
+$('#calcFile').onchange = e => { if(e.target.files[0]) cargarCalc(e.target.files[0]); };
+$('#btnUsar').onclick = usarOferta;
+$('#btnCerrar').onclick = cerrarCalc;
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#modal').classList.contains('hide')) cerrarCalc(); });
+$('#btnRecibir').onclick = () => $('#selFile').click();
+$('#selFile').onchange = e => { const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader(); r.onload=ev=>recibirSeleccion(ev.target.result); r.readAsText(f); };
+$('#btnEntrar').onclick = entrarEquipo;
+$('#btnSubir').onclick  = subirEquipo;
+$('#btnBajar').onclick  = bajarEquipo;
+$('#btnSalir').onclick  = salirEquipo;
+$('#sbAuto').onchange   = e => e.target.checked ? prenderAuto() : apagarAuto();
+try { const g = JSON.parse(localStorage.getItem('filtroSync')||'null');
+      if (g){ $('#sbUrl').value=g.url; $('#sbKey').value=g.key; $('#sbMail').value=g.mail; } } catch(e){}
+$('#btnCfgSave').onclick = guardarCfg;
+$('#btnCfgLoad').onclick = () => $('#cfgFile').click();
+$('#cfgFile').onchange = e => { const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader(); r.onload=ev=>{ try{ aplicarCfg(JSON.parse(ev.target.result)); }catch(err){ alert('Ese archivo de ajustes no se pudo leer.'); } }; r.readAsText(f); };
+
+$('#anio').value = new Date().getFullYear() - 8;
+addTgt();
+restaurarLocal();
+</script>
+</body>
+</html>
