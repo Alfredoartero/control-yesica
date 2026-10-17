@@ -26,7 +26,7 @@
 <link rel="manifest" href="manifest.json">
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{
   /* Marca */
@@ -37,13 +37,13 @@
   --danger:#FF453A;--danger-dim:rgba(255,69,58,.12);
 
   /* Superficies */
-  --bg:#09090B;
-  --s1:#131316;  --s2:#1A1A1E;  --s3:#232328;
+  --bg:#0E0F12;
+  --s1:#15171B;  --s2:#1B1D22;  --s3:#25282E;
   --line:rgba(var(--fg),.07);
   --line-2:rgba(var(--fg),.13);
 
   /* Texto */
-  --t1:#F7F7F8; --t2:#A0A0A8; --t3:#6B6B73;
+  --t1:#F2F3F5; --t2:#A3A7AF; --t3:#6E727B;
 
   /* Radios y sombras */
   --r1:10px; --r2:14px; --r3:18px; --r4:24px;
@@ -51,9 +51,10 @@
   --sh2:0 8px 24px -8px rgba(0,0,0,.55);
   --sh3:0 24px 60px -20px rgba(0,0,0,.8);
 
+  --font:'Archivo','Inter',-apple-system,BlinkMacSystemFont,sans-serif;
   --fg:255,255,255;                 /* base de los blancos translúcidos */
-  --bar-bg:rgba(9,9,11,.76);
-  --rail-bg:rgba(19,19,22,.92);
+  --bar-bg:rgba(14,15,18,.8);
+  --rail-bg:#121418;
   --scrim:rgba(0,0,0,.62);
   --hero-tint:rgba(255,46,136,.07);
   color-scheme:dark;
@@ -70,25 +71,25 @@
   --warn:#B45309;  --warn-dim:rgba(180,83,9,.10);
   --danger:#D70015;--danger-dim:rgba(215,0,21,.08);
 
-  --bg:#F2F2F5;
-  --s1:#FFFFFF; --s2:#F7F7F9; --s3:#ECECF0;
+  --bg:#F4F5F7;
+  --s1:#FFFFFF; --s2:#F7F8FA; --s3:#EBEDF0;
   --line:rgba(0,0,0,.075);
   --line-2:rgba(0,0,0,.14);
-  --t1:#1D1D1F; --t2:#515158; --t3:#86868B;
+  --t1:#16181D; --t2:#4E535C; --t3:#858A93;
 
   --sh1:0 1px 2px rgba(16,16,24,.05),0 2px 8px rgba(16,16,24,.04);
   --sh2:0 10px 30px -10px rgba(16,16,24,.18);
   --sh3:0 30px 70px -20px rgba(16,16,24,.28);
 
   --fg:0,0,0;
-  --bar-bg:rgba(242,242,245,.8);
-  --rail-bg:rgba(255,255,255,.92);
+  --bar-bg:rgba(244,245,247,.85);
+  --rail-bg:#FFFFFF;
   --scrim:rgba(20,20,28,.32);
   --hero-tint:rgba(224,24,111,.06);
   color-scheme:light;
 }
 :root[data-theme="light"] .deep{background:var(--s2)}
-:root[data-theme="light"] .hero-sig{border-color:rgba(224,24,111,.22)}
+
 :root[data-theme="light"] .tbox.on,:root[data-theme="light"] .task-check.on{color:#fff}
 :root[data-theme="light"] .perm.on .perm-box{color:#fff}
 :root[data-theme="light"] .fase-lista .fase-dot,:root[data-theme="light"] .hero-ok .hero-ico{color:#fff}
@@ -97,7 +98,7 @@
 *{box-sizing:border-box}
 html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
 body{
-  font-family:'Inter',-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;
+  font-family:var(--font);
   background:var(--bg);color:var(--t1);margin:0;
   letter-spacing:-0.011em;font-size:14px;line-height:1.5;
 }
@@ -117,9 +118,9 @@ h1,h2,h3,h4{margin:0;letter-spacing:-0.022em;font-weight:600}
 .t-lbl{font-size:11px;font-weight:550;color:var(--t3);letter-spacing:.01em}
 .num{font-variant-numeric:tabular-nums;letter-spacing:-0.022em}
 .mono{font-family:'JetBrains Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums;font-size:12px}
-.font-mono{font-family:'Inter',sans-serif}
-.font-display{font-family:'Inter',sans-serif}
-.brand-logo{font-family:'Inter',sans-serif;letter-spacing:-0.032em;font-weight:700}
+.font-mono{font-family:var(--font)}
+.font-display{font-family:var(--font)}
+.brand-logo{font-family:var(--font);letter-spacing:-0.032em;font-weight:700}
 
 /* ── Superficies ── */
 .glass,.card-s{background:var(--s1);border:1px solid var(--line);border-radius:var(--r3);box-shadow:var(--sh1)}
@@ -133,28 +134,30 @@ h1,h2,h3,h4{margin:0;letter-spacing:-0.022em;font-weight:600}
 
 /* ── Riel lateral ── */
 .rail{
-  position:fixed;left:0;top:0;bottom:0;width:76px;z-index:60;
-  background:var(--s1);border-right:1px solid var(--line);
-  display:flex;flex-direction:column;align-items:center;padding:20px 0 16px;gap:3px;
+  position:fixed;left:0;top:0;bottom:0;width:236px;z-index:60;
+  background:var(--rail-bg);border-right:1px solid var(--line);
+  display:flex;flex-direction:column;padding:18px 12px;gap:2px;
 }
-.rail-logo{
-  width:38px;height:38px;border-radius:11px;margin-bottom:18px;flex-shrink:0;
-  display:flex;align-items:center;justify-content:center;
-  background:var(--brand);color:#fff;font-weight:700;font-size:16px;letter-spacing:-0.03em;
-}
+.rail-brand{display:flex;align-items:center;gap:11px;padding:2px 8px 18px}
+.rail-logo{width:32px;height:32px;border-radius:9px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  background:var(--brand);color:#fff;font-weight:700;font-size:15px;font-stretch:110%}
+.rail-brand-t{display:flex;flex-direction:column;line-height:1.2;min-width:0}
+.rail-brand-t b{font-size:14px;font-weight:650;letter-spacing:-0.015em;font-stretch:104%;white-space:nowrap}
+.rail-brand-t span{font-size:12px;color:var(--t3)}
+.rail-grupo{font-size:11.5px;color:var(--t3);padding:14px 10px 6px;font-weight:500}
 .rail-btn{
-  width:52px;height:50px;border-radius:var(--r2);display:flex;flex-direction:column;align-items:center;
-  justify-content:center;gap:4px;cursor:pointer;border:0;background:transparent;color:var(--t3);
-  transition:color .18s,background .18s;position:relative;
+  width:100%;height:38px;border-radius:9px;display:flex;align-items:center;gap:11px;padding:0 10px;
+  cursor:pointer;border:0;background:transparent;color:var(--t2);font-family:inherit;text-align:left;
+  transition:background .15s,color .15s;position:relative
 }
-.rail-btn small{font-size:9.5px;font-weight:550;letter-spacing:-0.005em;line-height:1}
-.rail-btn:hover{color:var(--t2);background:rgba(var(--fg),.04)}
-.rail-btn.on{color:var(--t1);background:rgba(var(--fg),.07)}
-.rail-btn.on::after{content:"";position:absolute;left:-9px;top:50%;transform:translateY(-50%);
-  width:3px;height:22px;border-radius:0 3px 3px 0;background:var(--brand)}
-.rail-badge{position:absolute;top:0px;right:0px;min-width:16px;height:16px;padding:0 4px;border-radius:99px;
-  background:var(--brand);color:#fff;font-size:9.5px;font-weight:600;display:flex;align-items:center;
-  justify-content:center;letter-spacing:-0.01em;box-shadow:0 0 0 2px var(--s1)}
+.rail-btn small{font-size:14px;font-weight:500;letter-spacing:-0.012em;flex:1}
+.rail-btn small i{font-style:normal}
+.rail-btn small .m{display:none}
+.rail-btn:hover{background:rgba(var(--fg),.04);color:var(--t1)}
+.rail-btn.on{background:rgba(var(--fg),.065);color:var(--t1)}
+.rail-btn.on>span:first-child{color:var(--brand)}
+.rail-badge{min-width:20px;height:20px;padding:0 6px;border-radius:99px;background:var(--brand);color:#fff;
+  font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;font-variant-numeric:tabular-nums}
 .rail-badge.cero{display:none}
 
 /* avisos y formularios */
@@ -177,19 +180,22 @@ details>summary::-webkit-details-marker{display:none}
 details>summary::before{content:"›";display:inline-block;margin-right:7px;transition:transform .2s;color:var(--t3)}
 details[open]>summary::before{transform:rotate(90deg)}
 
-.shell{margin-left:76px;min-height:100vh}
+.shell{margin-left:236px;min-height:100vh}
 .topbar{position:sticky;top:0;z-index:50;padding:18px 30px;
   background:var(--bar-bg);backdrop-filter:saturate(180%) blur(22px);
   -webkit-backdrop-filter:saturate(180%) blur(22px);border-bottom:1px solid var(--line)}
 
 @media(max-width:1023px){
-  .rail{top:auto;right:0;bottom:0;width:100%;height:62px;flex-direction:row;justify-content:space-around;
-    padding:0 8px;border-right:0;border-top:1px solid var(--line);
-    background:var(--rail-bg);backdrop-filter:blur(22px)}
-  .rail-logo{display:none}
-  .rail-btn{width:auto;flex:1;height:50px;max-width:76px}
-  .rail-btn.on::after{left:50%;top:-1px;transform:translateX(-50%);width:22px;height:3px;border-radius:0 0 3px 3px}
-  .shell{margin-left:0;padding-bottom:68px}
+  .rail{top:auto;right:0;bottom:0;width:100%;height:64px;flex-direction:row;justify-content:space-around;align-items:center;
+    padding:0 6px env(safe-area-inset-bottom);border-right:0;border-top:1px solid var(--line);
+    background:var(--bar-bg);backdrop-filter:saturate(180%) blur(22px);-webkit-backdrop-filter:saturate(180%) blur(22px)}
+  .rail-brand,.rail-grupo{display:none}
+  .rail-btn{flex-direction:column;justify-content:center;gap:3px;height:52px;width:auto;flex:1;max-width:84px;padding:0;color:var(--t3)}
+  .rail-btn small{font-size:10.5px;flex:none;text-align:center}
+  .rail-btn small .d{display:none} .rail-btn small .m{display:inline}
+  .rail-btn.on{background:transparent;color:var(--t1)}
+  .rail-badge{position:absolute;top:2px;left:calc(50% + 4px);min-width:17px;height:17px;font-size:10px;padding:0 4px;box-shadow:0 0 0 2px var(--s1)}
+  .shell{margin-left:0;padding-bottom:72px}
   .topbar{padding:14px 18px}
 }
 
@@ -316,11 +322,11 @@ select.inp option{background:var(--s2);color:var(--t1)}
 .perm.on .perm-ico{opacity:1;color:var(--cyan)}
 .perm-n{font-weight:450;letter-spacing:-0.01em}
 /* siguiente paso */
-.hero-sig{padding:20px;border-radius:var(--r3);background:linear-gradient(180deg,var(--hero-tint),transparent 70%),var(--s2);
-  border:1px solid rgba(255,46,136,.2)}
+.hero-sig{padding:22px;border-radius:var(--r3);background:var(--s1);border:1px solid var(--line);box-shadow:var(--sh1)}
 .hero-ok{display:flex;align-items:center;gap:14px;background:linear-gradient(180deg,rgba(48,209,88,.08),transparent 70%),var(--s2);border-color:rgba(48,209,88,.22)}
 .hero-ico{width:42px;height:42px;border-radius:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .hero-t{font-size:20px;font-weight:600;letter-spacing:-0.024em;line-height:1.25;color:var(--t1)}
+.hero-div{height:1px;background:var(--line);margin:20px -22px 18px}
 .hero-bar{height:5px;border-radius:99px;background:rgba(var(--fg),.07);overflow:hidden}
 .hero-bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--brand),var(--brand-2));transition:width .5s}
 .btn-lg{padding:12px 18px!important;font-size:14px!important;display:inline-flex;align-items:center;gap:8px;border-radius:12px}
@@ -362,6 +368,64 @@ details[open]>summary .fase-chev{transform:rotate(90deg)}
   background:transparent;border:1px solid var(--line);color:var(--t2);transition:all .15s}
 .ico-btn:hover{background:rgba(var(--fg),.05);color:var(--t1);border-color:var(--line-2)}
 .stat{padding:16px 18px!important}
+.resumen{display:grid;grid-template-columns:repeat(4,1fr);background:var(--s1);border:1px solid var(--line);border-radius:var(--r3);overflow:hidden}
+.resumen>div{padding:16px 20px;border-left:1px solid var(--line)}
+.resumen>div:first-child{border-left:0}
+.res-n{font-size:26px;font-weight:600;letter-spacing:-0.025em;font-variant-numeric:tabular-nums;font-stretch:104%;color:var(--t1);margin:4px 0 2px!important;line-height:1.15}
+.seg-f{display:flex;gap:2px;padding:3px;border-radius:11px;background:var(--s1);border:1px solid var(--line)}
+.seg-f .tab{padding:6px 12px;border-radius:8px}
+@media(max-width:900px){ .resumen{grid-template-columns:1fr 1fr} .resumen>div:nth-child(3){border-left:0} .resumen>div:nth-child(n+3){border-top:1px solid var(--line)} .resumen>div{padding:14px 16px} .res-n{font-size:22px} }
+.lista .task-card{border:0;border-radius:0;border-top:1px solid var(--line);background:transparent;padding:13px 16px}
+.lista .task-card:first-child{border-top:0}
+.lista .task-card:hover{background:rgba(var(--fg),.025)}
+.lista .ver-mas{border:0;border-top:1px solid var(--line);border-radius:0;margin:0;padding:11px;color:var(--t2)}
+.lista .ver-mas:hover{background:rgba(var(--fg),.025)}
+.group-head{margin:26px 0 10px!important}
+.resumen.hidden,.rail-btn.hidden,.fila.hidden,.lista.hidden,.seg.hidden,.seg-f.hidden{display:none}
+/* ── listas: una superficie, filas con línea fina ── */
+.lista{background:var(--s1);border:1px solid var(--line);border-radius:var(--r3);overflow:hidden}
+.fila{display:grid;grid-template-columns:38px minmax(0,1.35fr) minmax(0,1.25fr) 112px 64px 16px;gap:18px;align-items:center;
+  padding:14px 18px;border-top:1px solid var(--line);cursor:pointer;transition:background .12s}
+.fila:first-child{border-top:0}
+.fila:hover{background:rgba(var(--fg),.025)}
+.fila-head{cursor:default;padding:10px 18px;font-size:12px;color:var(--t3);background:var(--s2)}
+.fila-head:hover{background:var(--s2)}
+.fila-t{font-size:15px;font-weight:600;letter-spacing:-0.016em;font-stretch:103%;color:var(--t1)}
+.fila-c{color:var(--t3);display:flex}
+.meta{display:flex;flex-wrap:wrap;column-gap:14px;row-gap:2px;font-size:12.5px;color:var(--t3);min-width:0}
+.meta span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.sep{display:inline-block;width:14px}
+.tag{font-size:11px;font-weight:550;padding:2px 7px;border-radius:6px;flex-shrink:0;line-height:1.35}
+.tag-enc{color:var(--cyan);background:var(--cyan-dim)}
+.tag-stk{color:var(--ok);background:var(--ok-dim)}
+.cuenta{display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:24px;padding:0 8px;border-radius:99px;
+  background:var(--brand-dim);color:var(--brand);font-size:12.5px;font-weight:600;font-variant-numeric:tabular-nums}
+.vacio{padding:56px 20px;text-align:center;display:flex;flex-direction:column;align-items:center}
+/* ruta */
+.ruta{display:flex;align-items:center;flex:1;min-width:0}
+.ruta-p{width:12px;height:12px;border-radius:50%;flex-shrink:0;background:var(--s3);border:2px solid var(--s3);
+  display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:600}
+.ruta-p.ok{background:var(--cyan);border-color:var(--cyan)}
+.ruta-p.cur{background:var(--s1);border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-dim)}
+.ruta-l{flex:1;height:2px;background:var(--s3);margin:0 3px;border-radius:2px;overflow:hidden;min-width:10px}
+.ruta-l i{display:block;height:100%;background:var(--cyan)}
+.ruta.grande .ruta-p{width:26px;height:26px;color:var(--t3)}
+.ruta.grande .ruta-p.ok{color:#fff}
+.ruta.grande .ruta-p.cur{color:var(--brand)}
+.ruta.grande .ruta-l{height:3px;margin:0 6px}
+.ruta-n{display:grid;margin-top:10px;gap:10px}
+.ruta-n span{font-size:12.5px;color:var(--t3);line-height:1.3;text-align:center}
+.ruta-n span:first-child{text-align:left} .ruta-n span:last-child{text-align:right}
+.ruta-n span.cur{color:var(--t1);font-weight:550}
+.ruta-n span.ok{color:var(--t2)}
+.ruta-n em{display:block;font-style:normal;font-size:11.5px;color:var(--t3);font-weight:400;margin-top:2px;font-variant-numeric:tabular-nums}
+@media(max-width:900px){
+  .fila{grid-template-columns:38px minmax(0,1fr) auto;grid-template-areas:"i a b" "r r r" "m m m";row-gap:10px;column-gap:12px;padding:14px 16px}
+  .fila-head{display:none}
+  .fila>.veh-ico{grid-area:i} .fila-a{grid-area:a} .fila-b{grid-area:b} .fila-r{grid-area:r} .fila-c{display:none}
+  .fila-m{grid-area:m;display:flex;gap:6px;align-items:baseline;text-align:left!important}
+  .fila .lista:first-child{border-top:0}
+}
 .ver-mas{display:block;width:100%;padding:9px;margin-top:2px;border-radius:var(--r2);background:transparent;border:1px dashed var(--line-2);
   color:var(--t3);font-size:12.5px;cursor:pointer}
 .ver-mas:hover{color:var(--t1);border-color:var(--t3)}
@@ -377,7 +441,7 @@ details[open]>summary .fase-chev{transform:rotate(90deg)}
   font-size:11px;font-weight:600;color:#fff;border:2px solid var(--s1);flex-shrink:0;letter-spacing:-0.01em}
 .avatar-stack{display:flex}
 .avatar-stack .avatar:not(:first-child){margin-left:-8px}
-.fade-up{animation:fadeUp .4s cubic-bezier(.3,.8,.4,1) both}
+.fade-up{}
 @keyframes fadeUp{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
 .glow,.glow-txt{animation:none;box-shadow:none;text-shadow:none}
 
@@ -438,16 +502,21 @@ tbody tr:last-child{border-bottom:0}
 <!-- ══════════ APP ══════════ -->
 <div id="app" class="hidden">
 
-<!-- ═══ RIEL ═══ -->
+<!-- ═══ BARRA LATERAL ═══ -->
 <aside class="rail">
-  <div class="rail-logo">Y</div>
-  <button onclick="ir('flota')"    id="tbFlota" class="rail-btn on" title="Flota"><span id="icFlota"></span><small>Flota</small></button>
-  <button onclick="ir('mias')"     id="tbMias"  class="rail-btn" title="Mis tareas"><span id="icTareas"></span><small>Tareas</small>
+  <div class="rail-brand">
+    <div class="rail-logo">Y</div>
+    <div class="rail-brand-t"><b>Importaciones Yesica</b><span>Centro de control</span></div>
+  </div>
+  <p class="rail-grupo">Trabajo</p>
+  <button onclick="ir('flota')"    id="tbFlota" class="rail-btn on"><span id="icFlota"></span><small>Flota</small></button>
+  <button onclick="ir('mias')"     id="tbMias"  class="rail-btn"><span id="icTareas"></span><small><i class="d">Mis tareas</i><i class="m">Tareas</i></small>
     <span id="badgeMias" class="rail-badge cero">0</span></button>
-  <button onclick="ir('nuevo')"    id="tbNuevo" class="rail-btn" title="Nueva unidad"><span id="icNueva"></span><small>Nueva</small></button>
-  <button onclick="ir('finanzas')" id="tbFin"   class="rail-btn" title="Finanzas"><span id="icFin"></span><small>Finanzas</small></button>
-  <button onclick="ir('archivo')"  id="tbArch"  class="rail-btn" title="Archivo"><span id="icArch"></span><small>Archivo</small></button>
-  <button onclick="ir('usuarios')" id="tbUsers" class="rail-btn hidden" title="Equipo"><span id="icEquipo"></span><small>Equipo</small></button>
+  <button onclick="ir('nuevo')"    id="tbNuevo" class="rail-btn"><span id="icNueva"></span><small><i class="d">Nueva unidad</i><i class="m">Nueva</i></small></button>
+  <p class="rail-grupo">Gestión</p>
+  <button onclick="ir('finanzas')" id="tbFin"   class="rail-btn"><span id="icFin"></span><small>Finanzas</small></button>
+  <button onclick="ir('archivo')"  id="tbArch"  class="rail-btn"><span id="icArch"></span><small>Archivo</small></button>
+  <button onclick="ir('usuarios')" id="tbUsers" class="rail-btn hidden"><span id="icEquipo"></span><small>Equipo</small></button>
 </aside>
 
 <div class="shell">
@@ -476,43 +545,27 @@ tbody tr:last-child{border-bottom:0}
   <main class="max-w-[1500px] mx-auto px-4 lg:px-7 py-7 space-y-6">
 
   <!-- ═══ RESUMEN ═══ -->
-  <div id="statsRow" class="grid grid-cols-2 lg:grid-cols-4 gap-4 fade-up">
-    <div class="stat lift">
-      <div class="flex items-center justify-between"><p class="t-lbl">Unidades activas</p><div class="ico-box" id="kiUnidades"></div></div>
-      <p id="sTot" class="num text-[28px] font-semibold mt-2.5">0</p>
-      <p id="sMix" class="t-xs mt-1.5">&mdash;</p>
-    </div>
-    <div class="stat lift">
-      <div class="flex items-center justify-between"><p class="t-lbl">Avance promedio</p><div class="ico-box" id="kiAvance"></div></div>
-      <p id="sPro" class="num text-[28px] font-semibold mt-2.5" style="color:var(--cyan)">0%</p>
-      <div class="bar mt-2.5"><i id="sProBar" style="width:0%;background:var(--cyan)"></i></div>
-    </div>
-    <div class="stat lift">
-      <div class="flex items-center justify-between"><p class="t-lbl">Por cobrar</p><div class="ico-box" id="kiCobrar"></div></div>
-      <p id="sSal" class="num text-[28px] font-semibold mt-2.5" style="color:var(--warn)">$0</p>
-      <p id="sCobrado" class="t-xs mt-1.5">&mdash;</p>
-    </div>
-    <div class="stat lift">
-      <div class="flex items-center justify-between"><p class="t-lbl">Tus pendientes</p><div class="ico-box" id="kiMias"></div></div>
-      <p id="sMias" class="num text-[28px] font-semibold mt-2.5" style="color:var(--brand)">0</p>
-      <p class="t-xs mt-1.5">tareas asignadas a ti</p>
-    </div>
+  <div id="statsRow" class="resumen">
+    <div><p class="t-sm">Unidades activas</p><p id="sTot" class="res-n">0</p><p id="sMix" class="t-xs">&mdash;</p></div>
+    <div><p class="t-sm">Avance promedio</p><p id="sPro" class="res-n">0%</p><div class="bar mt-2"><i id="sProBar" style="width:0%;background:var(--cyan)"></i></div></div>
+    <div><p class="t-sm">Por cobrar</p><p id="sSal" class="res-n">$0</p><p id="sCobrado" class="t-xs">&mdash;</p></div>
+    <div><p class="t-sm">Tus pendientes</p><p id="sMias" class="res-n" style="color:var(--brand)">0</p><p class="t-xs">en todas las unidades</p></div>
   </div>
 
   <div class="hidden"><span id="sEnc">0</span><span id="sStk">0</span></div>
 
   <!-- ══ FLOTA ══ -->
   <section id="pgFlota" class="space-y-4">
-    <div class="glass rounded-2xl p-3.5 flex flex-wrap items-center gap-2.5">
-      <input id="buscar" oninput="pintarFlota()" placeholder="Buscar vehículo, cliente, VIN…" class="inp flex-1 min-w-[200px] px-4 py-2.5">
-      <div class="filtros flex gap-1.5">
+    <div class="flex flex-wrap items-center gap-3">
+      <input id="buscar" oninput="pintarFlota()" placeholder="Buscar vehículo, cliente, VIN…" class="inp flex-1 min-w-[200px] px-4 py-2.5" style="background:var(--s1)">
+      <div class="filtros seg-f">
         <button onclick="setF('todos')"   id="fTodos" class="tab on">Todos</button>
         <button onclick="setF('Encargo')" id="fEnc"   class="tab">Encargo</button>
         <button onclick="setF('Stock')"   id="fStk"   class="tab">Stock</button>
         <button onclick="setF('mios')"    id="fMios"  class="tab">Con tarea mía</button>
       </div>
     </div>
-    <div id="flota" class="grid grid-cols-1 xl:grid-cols-2 gap-4"></div>
+    <div id="flota" class="lista"></div>
   </section>
 
   <!-- ══ MIS TAREAS ══ -->
@@ -523,7 +576,6 @@ tbody tr:last-child{border-bottom:0}
         <div class="px-1 pt-1 pb-2 fade-up">
           <div class="flex items-center justify-between gap-4">
             <div>
-              <p class="t-lbl">Tu jornada</p>
               <h2 id="miasTitulo" class="t-xl mt-1.5">Todo listo</h2>
               <p id="miasSub" class="t-sm mt-1">Solo lo que te toca a ti.</p>
             </div>
@@ -619,27 +671,25 @@ tbody tr:last-child{border-bottom:0}
     <div class="grid grid-cols-1 xl:grid-cols-3 gap-5">
       <div class="glass rounded-3xl p-6 xl:col-span-2 relative" >
         
-        <div class="flex items-center gap-3 mb-5">
-          <div class="icon-badge"><span id="icFinH"></span></div>
+        <div class="mb-5">
           <div>
             <h2 class="t-md">Resumen financiero</h2>
             <p class="t-sm mt-0.5">Solo unidades activas</p>
           </div>
         </div>
-        <div id="finCifras" class="grid grid-cols-2 lg:grid-cols-4 gap-3"></div>
+        <div id="finCifras" class="resumen"></div>
         <div id="finBarras" class="mt-5 space-y-3"></div>
       </div>
 
       <div class="glass rounded-3xl p-6 flex flex-col items-center justify-center gap-4" >
-        <p class="t-lbl" style="color:var(--t3)">Cobrado del total</p>
+        <p class="t-sm">Cobrado del total</p>
         <div id="finAnillo"></div>
         <div id="finAnilloDet" class="text-center"></div>
       </div>
     </div>
 
     <div class="glass rounded-3xl overflow-hidden" >
-      <div class="px-6 py-4 border-b flex items-center gap-3" style="background:var(--deep);border-color:var(--line)">
-        <div class="icon-badge"><span id="icDirH"></span></div>
+      <div class="px-6 py-4 border-b" style="border-color:var(--line)">
         <div>
           <h2 class="t-md">Detalle por unidad</h2>
           <p class="t-sm mt-0.5">Costo, venta, cobrado y saldo</p>
@@ -867,7 +917,7 @@ function anillo(pct, size=120, grosor=9, etiqueta=""){
       <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="rgba(var(--fg),.06)" stroke-width="${grosor}"/>
       <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="var(--cyan)" stroke-width="${grosor}"
         stroke-linecap="round" stroke-dasharray="${circ}" stroke-dashoffset="${off}"
-        style="filter:drop-shadow(0 0 6px rgba(34,226,226,.8));transition:stroke-dashoffset .6s ease"/>
+        style="transition:stroke-dashoffset .6s ease"/>
     </svg>
     <div class="ring-txt">
       <div class="ring-num" style="font-size:${Math.round(size*0.21)}px;text-shadow:0 0 18px rgba(34,226,226,.6)">${pct}%</div>
@@ -1118,8 +1168,8 @@ function sparkline(vals, w=560, h=64){
     </defs>
     <path d="${area}" fill="url(#spGrad)"/>
     <path d="${linea}" fill="none" stroke="url(#spLine)" stroke-width="2.5" stroke-linecap="round"
-      style="filter:drop-shadow(0 0 6px rgba(255,46,136,.5))"/>
-    <circle cx="${ult[0]}" cy="${ult[1]}" r="4.5" fill="var(--brand)" style="filter:drop-shadow(0 0 8px var(--brand))"/>
+      />
+    <circle cx="${ult[0]}" cy="${ult[1]}" r="4.5" fill="var(--brand)" />
   </svg>`;
 }
 
@@ -1149,6 +1199,25 @@ function pintarStats(){
   document.getElementById('sMias').innerText = yo ? contarMias() : 0;
 }
 
+/* La ruta del carro: un punto por fase, la línea se llena con el avance real */
+function etapas(v){
+  const ls = tareasDe(v), fa = faseActual(v);
+  return defF(v).map((fn,fi)=>{
+    const ts = ls.filter(t=>t.f===fi), h = ts.filter(t=>tareaOk(v,t)).length;
+    const done = ts.length>0 && h===ts.length;
+    return { n: fn.replace(/^\d+\s*·\s*/,''), done, cur: !done && fi===fa, pct: ts.length ? h/ts.length : 0, h, tot: ts.length };
+  });
+}
+function ruta(v, grande=false){
+  const e = etapas(v);
+  const puntos = e.map((x,i)=>`
+    <span class="ruta-p ${x.done?'ok':x.cur?'cur':''}" title="${esc(x.n)}">${x.done?ico('ok',grande?12:9,3):(grande?(i+1):'')}</span>
+    ${i<e.length-1?`<span class="ruta-l"><i style="width:${x.done?100:x.cur?Math.round(x.pct*100):0}%"></i></span>`:''}`).join('');
+  const nombres = grande ? `<div class="ruta-n" style="grid-template-columns:repeat(${e.length},1fr)">${e.map(x=>
+      `<span class="${x.done?'ok':x.cur?'cur':''}">${esc(x.n)}<em>${x.h} de ${x.tot}</em></span>`).join('')}</div>` : '';
+  return `<div class="ruta ${grande?'grande':''}">${puntos}</div>${nombres}`;
+}
+
 function pintarFlota(){
   const cont = document.getElementById('flota');
   const q = (document.getElementById('buscar').value||"").toLowerCase().trim();
@@ -1159,62 +1228,49 @@ function pintarFlota(){
   if(q) ls = ls.filter(a => [a.vehiculo,a.nombreCliente,a.vin,a.plataforma,a.deseoCliente,a.telefonoCliente].join(" ").toLowerCase().includes(q));
 
   if(!ls.length){
-    cont.innerHTML = `<div class="glass rounded-3xl p-14 text-center xl:col-span-2">
-      <div class="flex justify-center mb-3" style="color:var(--t3)">${ico("flota",34,1.3)}</div>
-      <p class="t-md" style="color:var(--t3)">No hay unidades que coincidan.</p>
-      <p class="text-[11px] mt-1" style="color:var(--t3)">Registra una en “Nueva Unidad” o cambia el filtro.</p></div>`;
+    cont.innerHTML = `<div class="vacio">
+      <div style="color:var(--t3)">${ico("flota",30,1.3)}</div>
+      <p class="t-md mt-3">${q||filtro!=="todos" ? "Ninguna unidad coincide" : "Todavía no hay unidades"}</p>
+      <p class="t-sm mt-1">${q||filtro!=="todos" ? "Prueba con otro nombre o cambia el filtro." : "Registra la primera en Nueva unidad."}</p></div>`;
     return;
   }
 
-  cont.innerHTML = ls.map((v,idx)=>{
-    const p = progreso(v), mias = pendientesMias(v).length, fa = faseActual(v);
+  cont.innerHTML = `<div class="fila fila-head">
+      <span></span><span>Unidad</span><span>Avance</span><span class="text-right">Cobrado</span><span class="text-right">Tuyas</span><span></span>
+    </div>` + ls.map(v=>{
+    const p = progreso(v), mias = pendientesMias(v).length;
     const enc = v.tipoProceso==="Encargo";
-    const sig = defT(v).filter(t=>!t.opc).find(t=> !tareaOk(v,t));
-    const equipoTarea = sig ? respons(sig.a).slice(0,4) : [];
+    const e = etapas(v), cur = e.find(x=>x.cur) || e[e.length-1];
+    const sig = tareasDe(v).find(t=> !tareaOk(v,t));
     const cob = pagado(v), vta = Number(v.precio_venta||0);
-    return `<div class="glass lift fade-up p-5 cursor-pointer" onclick="abrirDetalle('${v.id}')"
-      style="animation-delay:${Math.min(idx,8)*35}ms">
-
-      <div class="flex items-start gap-3 mb-4">
-        <div class="veh-ico ${enc?'enc':'stk'}">${ico(enc?'apreton':'caja',18,1.6)}</div>
-        <div class="min-w-0 flex-1">
-          <div class="flex items-center gap-2">
-            <h3 class="t-md truncate" style="color:${v.vehiculo?'var(--t1)':'var(--warn)'}">${esc(v.vehiculo) || "Carro por asignar"}</h3>
-            <span class="chip ${enc?'chip-cy':'chip-ok'} flex-shrink-0 ml-auto">${enc?'Encargo':'Stock'}</span>
-          </div>
-          <p class="t-xs mt-0.5 truncate">${[
-              v.nombreCliente ? esc(v.nombreCliente) : (enc ? "" : "Sin cliente"),
-              v.vehiculo ? esc(v.plataforma) : (v.deseoCliente ? "Busca: "+esc(v.deseoCliente) : "Sin vehículo todavía"),
-              v.vehiculo && v.vin ? esc(v.vin) : ""
-            ].filter(Boolean).join(" · ")}</p>
+    const meta = [
+      v.nombreCliente ? `<span>${esc(v.nombreCliente)}</span>` : (!enc ? `<span style="color:var(--warn)">Sin cliente</span>` : ""),
+      v.vehiculo ? `<span>${esc(v.plataforma)}</span>` : `<span>${v.deseoCliente ? "Busca "+esc(v.deseoCliente) : "Sin vehículo"}</span>`,
+      v.vehiculo && v.vin ? `<span class="mono" style="font-size:11.5px">${esc(v.vin)}</span>` : ""
+    ].join("");
+    return `<div class="fila" onclick="abrirDetalle('${v.id}')">
+      <div class="veh-ico ${enc?'enc':'stk'}" title="${enc?'Por encargo':'Stock'}">${ico(enc?'apreton':'caja',17,1.6)}</div>
+      <div class="min-w-0 fila-a">
+        <div class="flex items-center gap-2 min-w-0">
+          <p class="fila-t truncate" style="${v.vehiculo?'':'color:var(--warn)'}">${esc(v.vehiculo) || "Carro por asignar"}</p>
+          <span class="tag ${enc?'tag-enc':'tag-stk'}">${enc?'Encargo':'Stock'}</span>
         </div>
+        <div class="meta mt-1">${meta}</div>
       </div>
-
-      <div class="mb-3.5">
-        <div class="flex justify-between items-baseline mb-1.5">
-          <span class="t-xs truncate">${esc(defF(v)[fa].replace(/^\d+\s*·\s*/,''))}</span>
-          <span class="num text-[13px] font-semibold flex-shrink-0" style="color:var(--cyan)">${p}%</span>
-        </div>
-        <div class="bar"><i style="width:${p}%;background:var(--cyan)"></i></div>
+      <div class="min-w-0 fila-r">
+        <div class="flex items-center gap-3">${ruta(v)}<span class="num t-sm flex-shrink-0" style="color:var(--t1);min-width:34px;text-align:right">${p}%</span></div>
+        <p class="t-xs mt-1.5 truncate">${sig ? `<span style="color:var(--t2)">${esc(cur.n)}</span><span class="sep"></span>Sigue: ${esc(sig.t)}` : `<span style="color:var(--ok)">Proceso completo</span>`}</p>
       </div>
-
-      ${sig ? `<div class="sig-row mb-3.5">
-        <span class="t-lbl flex-shrink-0">Sigue</span>
-        <span class="flex-shrink-0" style="color:var(--t3)">${areaI(sig.a,14)}</span>
-        <p class="text-[13px] truncate flex-1" style="letter-spacing:-0.01em">${esc(sig.t)}</p>
-      </div>`
-      : `<div class="mb-4"><span class="chip chip-ok"><span class="dot"></span>Proceso completo</span></div>`}
-
-      <div class="flex justify-between items-center pt-3 gap-2" style="border-top:1px solid var(--line)">
-        <span class="t-xs truncate">
-          <b class="num" style="color:var(--ok)">${money(cob)}</b> de <span class="num">${money(vta)}</span>
-        </span>
-        ${mias ? `<span class="chip chip-pk flex-shrink-0"><span class="dot"></span>${mias} para ti</span>`
-               : (equipoTarea.length ? `<div class="avatar-stack flex-shrink-0">${equipoTarea.slice(0,3).map((u,i)=>avatarDe(u,i)).join("")}</div>` : "")}
+      <div class="fila-m text-right">
+        <p class="num t-sm" style="color:var(--t1);font-weight:550">${money(cob)}</p>
+        <p class="t-xs num">de ${money(vta)}</p>
       </div>
+      <div class="fila-b text-right">${mias ? `<span class="cuenta">${mias}</span>` : `<span class="t-xs">—</span>`}</div>
+      <span class="fila-c">${ico("flecha",15,1.7)}</span>
     </div>`;
   }).join("");
 }
+window.pintarFlota = pintarFlota;   // el buscador lo llama desde el HTML
 
 function pintarMias(){
   const cont = document.getElementById('mias'); if(!yo || !cont) return;
@@ -1292,8 +1348,8 @@ function pintarMias(){
       <span class="t-xs">${grupos[a].length}</span>
       <span class="gh-line"></span>
     </div>
-    ${grupos[a].slice(0, verMas.has(a)?999:MAX).map(({v,t},i)=>`
-      <div class="task-card fade-up" id="tc-${v.id}-${t.k}" style="animation-delay:${Math.min(i,8)*35}ms"
+    <div class="lista">${grupos[a].slice(0, verMas.has(a)?999:MAX).map(({v,t},i)=>`
+      <div class="task-card" id="tc-${v.id}-${t.k}"
            onclick="${t.foto?`abrirDetalle('${v.id}')`:`marcarDesdeLista('${v.id}','${t.k}')`}">
         <div class="task-check" id="chk-${v.id}-${t.k}">${t.foto?ico("clip",13,2):ico("ok",14,2.4)}</div>
         <div class="flex-1 min-w-0">
@@ -1303,7 +1359,8 @@ function pintarMias(){
         ${t.foto?`<span class="chip chip-wn flex-shrink-0 solo-pc">comprobante</span><span class="solo-movil flex-shrink-0" style="color:var(--warn)" title="Pide comprobante">${ico("clip",15,1.8)}</span>`:""}
         <button onclick="event.stopPropagation();abrirDetalle('${v.id}')" class="btn-g px-2.5 py-1.5 rounded-lg flex-shrink-0">Ver</button>
       </div>`).join("")}
-    ${grupos[a].length>MAX ? `<button onclick="verMasArea('${a}')" class="ver-mas">${verMas.has(a)?'Ver menos':`Ver ${grupos[a].length-MAX} más`}</button>`:""}
+    ${grupos[a].length>MAX ? `<button onclick="verMasArea('${a}')" class="ver-mas">${verMas.has(a)?'Ver menos':`Ver ${grupos[a].length-MAX} más`}</button>`:""}</div>
+    ${false ? `<button onclick="verMasArea('${a}')" class="ver-mas">${verMas.has(a)?'Ver menos':`Ver ${grupos[a].length-MAX} más`}</button>`:""}
   `).join("");
 }
 const verMas = new Set();
@@ -1335,11 +1392,10 @@ function pintarFinanzas(){
       <p class="t-lbl mt-1">${label}</p>
     </div>`;
 
+  const celda = (l,val,col) => `<div><p class="t-sm">${l}</p><p class="res-n" style="color:${col}">${money(val)}</p></div>`;
   document.getElementById('finCifras').innerHTML =
-      tarjeta("caja","Invertido", costo, "var(--txt)")
-    + tarjeta("apreton","Venta proyectada", venta, "var(--info)")
-    + tarjeta("ok","Ya cobrado", cobrado, "var(--ok)")
-    + tarjeta("reloj","Por cobrar", porCobrar, "var(--warn)");
+      celda("Invertido", costo, "var(--t1)") + celda("Venta proyectada", venta, "var(--t1)")
+    + celda("Ya cobrado", cobrado, "var(--ok)") + celda("Por cobrar", porCobrar, "var(--warn)");
 
   const barra = (label,val,tot,color) => {
     const p = tot>0 ? Math.round((val/tot)*100) : 0;
@@ -1474,12 +1530,13 @@ function heroSiguiente(v){
   const otraMia = !meToca && mias.length ? mias[0] : null;
   const multiInfo = t.multi && req.length ? ` · ${req.filter(u=>(v.tareas?.[t.k]?.marcas||{})[u]).length} de ${req.length} marcaron` : "";
   return `<div class="hero-sig">
-    <div class="flex items-center justify-between gap-2 mb-3">
-      <p class="t-lbl" style="color:var(--brand)">Siguiente paso</p>
-      <span class="t-xs num">Paso ${paso} de ${ls.length} · ${pct}%</span>
+    ${ruta(v,true)}
+    <div class="hero-div"></div>
+    <div class="flex items-center justify-between gap-2">
+      <p class="t-sm" style="color:var(--brand);font-weight:550">Siguiente paso</p>
+      <span class="t-xs num">Paso ${paso} de ${ls.length}</span>
     </div>
-    ${barra}
-    <p class="hero-t mt-4">${esc(t.t)}</p>
+    <p class="hero-t mt-2">${esc(t.t)}</p>
     ${t.d?`<p class="t-sm mt-1.5" style="line-height:1.5">${esc(t.d)}</p>`:""}
     <div class="flex items-center gap-2 mt-3 flex-wrap">
       <span class="chip chip-gr">${areaI(t.a,13)} ${esc(areaN(t.a))}</span>
