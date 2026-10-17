@@ -11,222 +11,285 @@
 <link rel="manifest" href="manifest.json">
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Montserrat:wght@700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
-  --brand:#ff2e88; --brand-soft:rgba(255,46,136,.12); --brand-2:#ff5fa3;
-  --cyan:#22e2e2; --cyan-soft:rgba(34,226,226,.10);
-  --ok:#34d399; --warn:#fbbf24; --danger:#fb7185; --info:#22e2e2;
-  --bg:#070b14; --panel:#0e1524; --panel-hi:#131b2e; --deep:#0a0f1c;
-  --line:rgba(148,163,184,.14); --line-strong:rgba(148,163,184,.28);
-  --txt:#e7ecf5; --txt-soft:#8a95ab;
-  --glow:0 0 24px -4px rgba(255,46,136,.45);
+  /* Marca */
+  --brand:#FF2E88; --brand-2:#FF5BA3; --brand-dim:rgba(255,46,136,.12);
+  --cyan:#22E2E2;  --cyan-dim:rgba(34,226,226,.11);
+  --ok:#30D158;    --ok-dim:rgba(48,209,88,.12);
+  --warn:#FF9F0A;  --warn-dim:rgba(255,159,10,.12);
+  --danger:#FF453A;--danger-dim:rgba(255,69,58,.12);
+
+  /* Superficies */
+  --bg:#09090B;
+  --s1:#131316;  --s2:#1A1A1E;  --s3:#232328;
+  --line:rgba(255,255,255,.07);
+  --line-2:rgba(255,255,255,.13);
+
+  /* Texto */
+  --t1:#F7F7F8; --t2:#A0A0A8; --t3:#6B6B73;
+
+  /* Radios y sombras */
+  --r1:10px; --r2:14px; --r3:18px; --r4:24px;
+  --sh1:0 1px 3px rgba(0,0,0,.3);
+  --sh2:0 8px 24px -8px rgba(0,0,0,.55);
+  --sh3:0 24px 60px -20px rgba(0,0,0,.8);
 }
 *{box-sizing:border-box}
+html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
 body{
-  font-family:'Inter',sans-serif;color:var(--txt);margin:0;background-color:var(--bg);
-  background-image:
-    radial-gradient(900px 500px at 12% -10%, rgba(255,46,136,.10), transparent 60%),
-    radial-gradient(700px 400px at 100% 0%, rgba(34,226,226,.07), transparent 55%),
-    linear-gradient(rgba(34,226,226,.035) 1px,transparent 1px),
-    linear-gradient(90deg, rgba(34,226,226,.035) 1px,transparent 1px);
-  background-size:auto,auto,38px 38px,38px 38px;
-  background-attachment:fixed;
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;
+  background:var(--bg);color:var(--t1);margin:0;
+  letter-spacing:-0.011em;font-size:14px;line-height:1.5;
 }
-::-webkit-scrollbar{width:8px;height:8px}
-::-webkit-scrollbar-track{background:var(--bg)}
-::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:9999px}
-::-webkit-scrollbar-thumb:hover{background:var(--cyan)}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.11);border-radius:99px;border:3px solid var(--bg)}
+::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.2)}
+::selection{background:var(--brand);color:#fff}
 
-.font-mono{font-family:'JetBrains Mono',monospace}
-.font-display{font-family:'Space Grotesk',sans-serif}
-.brand-logo{font-family:'Montserrat',sans-serif}
+/* ── Tipografía ── */
+h1,h2,h3,h4{margin:0;letter-spacing:-0.022em;font-weight:600}
+.t-xl{font-size:30px;font-weight:650;letter-spacing:-0.03em;line-height:1.12}
+.t-lg{font-size:21px;font-weight:600;letter-spacing:-0.024em;line-height:1.25}
+.t-md{font-size:16px;font-weight:600;letter-spacing:-0.018em}
+.t-sm{font-size:13px;color:var(--t2);letter-spacing:-0.006em}
+.t-xs{font-size:12px;color:var(--t3);letter-spacing:0}
+.t-lbl{font-size:11px;font-weight:550;color:var(--t3);letter-spacing:.01em}
+.num{font-variant-numeric:tabular-nums;letter-spacing:-0.022em}
+.mono{font-family:'JetBrains Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums;font-size:12px}
+.font-mono{font-family:'Inter',sans-serif}
+.font-display{font-family:'Inter',sans-serif}
+.brand-logo{font-family:'Inter',sans-serif;letter-spacing:-0.032em;font-weight:700}
 
-.glass{background:linear-gradient(180deg,var(--panel-hi),var(--panel));border:1px solid var(--line);box-shadow:0 24px 48px -24px rgba(0,0,0,.85), inset 0 1px 0 rgba(255,255,255,.03)}
-.deep{background:var(--deep);border:1px solid var(--line)}
-.lift{transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
-.lift:hover{transform:translateY(-3px);border-color:rgba(34,226,226,.35);box-shadow:0 18px 36px -14px rgba(34,226,226,.20)}
+/* ── Superficies ── */
+.glass,.card-s{background:var(--s1);border:1px solid var(--line);border-radius:var(--r3);box-shadow:var(--sh1)}
+.deep{background:var(--bg);border:1px solid var(--line);border-radius:var(--r2)}
+.raised{background:var(--s2);border:1px solid var(--line);border-radius:var(--r2)}
+.lift{transition:transform .2s cubic-bezier(.3,.8,.4,1),border-color .2s,box-shadow .2s}
+.lift:hover{transform:translateY(-2px);border-color:var(--line-2);box-shadow:var(--sh2)}
+.divider{height:1px;background:var(--line);border:0}
+.hud,.team-card::after,.hero::before,.hero::after,.stat::before,.stat::after{display:none}
+.hero{background:var(--s1);border:1px solid var(--line);border-radius:var(--r4);position:relative}
 
-.hud{position:absolute;width:14px;height:14px;border-color:var(--cyan);pointer-events:none}
-.hud.tl{top:-1px;left:-1px;border-top:2px solid;border-left:2px solid;border-radius:5px 0 0 0}
-.hud.tr{top:-1px;right:-1px;border-top:2px solid;border-right:2px solid;border-radius:0 5px 0 0}
-.hud.bl{bottom:-1px;left:-1px;border-bottom:2px solid;border-left:2px solid;border-radius:0 0 0 5px}
-.hud.br{bottom:-1px;right:-1px;border-bottom:2px solid;border-right:2px solid;border-radius:0 0 5px 0}
-
-.glow{box-shadow:0 0 10px 2px var(--cyan);animation:pulse 2.2s ease-in-out infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
-
-.inp{background:var(--deep);border:1px solid var(--line-strong);color:var(--txt);font-family:'JetBrains Mono',monospace;transition:all .15s;outline:none}
-.inp::placeholder{color:#4b5670;font-family:'Inter',sans-serif}
-.inp:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(34,226,226,.18)}
-select.inp option{background:var(--panel);color:var(--txt)}
-
-.tab{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
-  padding:9px 14px;border-radius:.6rem;color:var(--txt-soft);background:transparent;border:none;cursor:pointer;transition:all .15s;white-space:nowrap}
-.tab:hover{color:var(--txt)}
-.tab.on{background:linear-gradient(90deg,var(--brand),var(--brand-2));color:#05070c;box-shadow:var(--glow)}
-@media(max-width:640px){.tab{padding:8px 8px;font-size:9px;white-space:normal;line-height:1.2}}
-
-.btn-p{background:linear-gradient(90deg,var(--brand),var(--brand-2));color:#05070c;font-family:'JetBrains Mono',monospace;font-weight:800;
-  box-shadow:0 0 0 1px rgba(255,46,136,.4), var(--glow);border:none;cursor:pointer;transition:all .15s}
-.btn-p:hover{filter:brightness(1.08)}
-.btn-p:disabled{opacity:.5;cursor:not-allowed;filter:none}
-.btn-g{background:var(--deep);color:var(--txt-soft);border:1px solid var(--line-strong);font-family:'JetBrains Mono',monospace;font-weight:700;cursor:pointer;transition:all .15s}
-.btn-g:hover{color:var(--txt);border-color:var(--cyan)}
-
-.chip{display:inline-flex;align-items:center;gap:5px;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:800;
-  text-transform:uppercase;letter-spacing:.06em;padding:4px 9px;border-radius:999px}
-.chip .dot{width:6px;height:6px;border-radius:999px;background:currentColor;box-shadow:0 0 8px 1px currentColor}
-.chip-cy{background:var(--cyan-soft);color:var(--cyan);border:1px solid rgba(34,226,226,.35)}
-.chip-pk{background:var(--brand-soft);color:var(--brand);border:1px solid rgba(255,46,136,.4)}
-.chip-ok{background:rgba(52,211,153,.1);color:var(--ok);border:1px solid rgba(52,211,153,.35)}
-.chip-wn{background:rgba(251,191,36,.1);color:var(--warn);border:1px solid rgba(251,191,36,.35)}
-.chip-gr{background:var(--deep);color:var(--txt-soft);border:1px solid var(--line-strong)}
-
-.stat{background:linear-gradient(180deg,var(--panel-hi),var(--panel));border:1px solid var(--line);border-radius:1rem;padding:14px 16px;position:relative;overflow:hidden}
-.stat::before{content:"";position:absolute;top:0;left:0;width:100%;height:2px;background:linear-gradient(90deg,var(--brand),transparent)}
-.stat::after{content:"";position:absolute;right:-30px;top:-30px;width:110px;height:110px;border-radius:999px;
-  background:radial-gradient(circle,rgba(255,46,136,.10),transparent 70%);pointer-events:none}
-.stat:hover{border-color:var(--line-strong)}
-
-.icon-badge{width:34px;height:34px;border-radius:.65rem;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;
-  background:linear-gradient(135deg,rgba(255,46,136,.18),rgba(34,226,226,.12));border:1px solid var(--line-strong)}
-
-.tarea{display:flex;align-items:flex-start;gap:10px;padding:9px 11px;border-radius:.65rem;background:var(--deep);border:1px solid var(--line);transition:all .15s}
-.tarea:hover{border-color:var(--line-strong)}
-.tarea.hecha{background:rgba(52,211,153,.06);border-color:rgba(52,211,153,.3)}
-.tarea.bloq{opacity:.45}
-.tbox{width:20px;height:20px;border-radius:6px;border:2px solid var(--line-strong);flex-shrink:0;display:flex;align-items:center;
-  justify-content:center;font-size:12px;cursor:pointer;transition:all .15s;margin-top:1px;background:transparent;color:transparent}
-.tbox:hover{border-color:var(--cyan)}
-.tbox.on{background:var(--ok);border-color:var(--ok);color:#05070c;box-shadow:0 0 10px -2px rgba(52,211,153,.7)}
-.tbox.lock{cursor:not-allowed;border-style:dashed}
-.tbox.lock:hover{border-color:var(--line-strong)}
-
-.bar{height:6px;border-radius:999px;background:var(--deep);border:1px solid var(--line);overflow:hidden}
-.bar>i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--brand),var(--cyan));transition:width .4s ease}
-
-.modal-bg{position:fixed;inset:0;background:rgba(3,6,12,.82);backdrop-filter:blur(6px);z-index:80;display:flex;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto}
-
-#toaster{position:fixed;bottom:16px;right:16px;z-index:200;display:flex;flex-direction:column;gap:8px;max-width:330px}
-.toast{padding:12px 14px;border-radius:.8rem;font-size:12px;font-weight:700;animation:slideIn .25s ease;background:var(--panel-hi);border:1px solid var(--line-strong);box-shadow:0 12px 28px -10px rgba(0,0,0,.7)}
-@keyframes slideIn{from{transform:translateX(30px);opacity:0}to{transform:translateX(0);opacity:1}}
-
-.ring-wrap{position:relative;display:inline-flex;align-items:center;justify-content:center}
-.ring-wrap .ring-txt{position:absolute;text-align:center;line-height:1.1}
-.ring-wrap .ring-num{font-family:'JetBrains Mono',monospace;font-weight:700;color:#fff}
-.ring-wrap .ring-lbl{font-family:'JetBrains Mono',monospace;font-size:8px;text-transform:uppercase;letter-spacing:.1em;color:var(--txt-soft)}
-.glow-txt{text-shadow:0 0 18px rgba(255,46,136,.55)}
-.icon-badge{background:linear-gradient(135deg,rgba(255,46,136,.20),rgba(34,226,226,.10))!important;border-color:var(--line-strong)!important}
-.bar>i{background:linear-gradient(90deg,var(--brand),var(--cyan))!important;box-shadow:0 0 12px -2px rgba(255,46,136,.6)}
-.fase-h{display:flex;align-items:center;gap:8px;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:800;
-  text-transform:uppercase;letter-spacing:.12em;color:var(--txt-soft);margin:14px 0 7px}
-.fase-h::after{content:"";flex:1;height:1px;background:var(--line)}
-
-/* ═══ SHELL: riel lateral + contenido ═══ */
+/* ── Riel lateral ── */
 .rail{
-  position:absolute;left:0;top:0;bottom:0;width:74px;z-index:60;
-  background:linear-gradient(180deg,#0c1322,#080d18);border-right:1px solid var(--line);
-  display:flex;flex-direction:column;align-items:center;padding:16px 0;gap:6px;
+  position:fixed;left:0;top:0;bottom:0;width:76px;z-index:60;
+  background:var(--s1);border-right:1px solid var(--line);
+  display:flex;flex-direction:column;align-items:center;padding:20px 0 16px;gap:3px;
+}
+.rail-logo{
+  width:38px;height:38px;border-radius:11px;margin-bottom:18px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--brand);color:#fff;font-weight:700;font-size:16px;letter-spacing:-0.03em;
 }
 .rail-btn{
-  width:46px;height:46px;border-radius:15px;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:2px;cursor:pointer;border:1px solid transparent;background:transparent;color:var(--txt-soft);
-  transition:all .18s;position:relative;font-size:18px;
+  width:52px;height:50px;border-radius:var(--r2);display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:4px;cursor:pointer;border:0;background:transparent;color:var(--t3);
+  transition:color .18s,background .18s;position:relative;
 }
-.rail-btn small{font-family:'JetBrains Mono',monospace;font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:.02em;opacity:.85}
-.rail-btn:hover{color:var(--txt);background:rgba(255,255,255,.04)}
-.rail-btn.on{
-  color:#fff;background:linear-gradient(160deg,rgba(255,46,136,.22),rgba(34,226,226,.10));
-  border-color:rgba(255,46,136,.35);box-shadow:0 8px 22px -10px rgba(255,46,136,.7);
-}
-.rail-btn.on::before{content:"";position:absolute;left:-16px;top:50%;transform:translateY(-50%);width:3px;height:22px;border-radius:0 4px 4px 0;background:var(--brand);box-shadow:0 0 12px var(--brand)}
-.rail-badge{position:absolute;top:4px;right:4px;min-width:16px;height:16px;padding:0 4px;border-radius:999px;
-  background:var(--brand);color:#05070c;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:800;
-  display:flex;align-items:center;justify-content:center;box-shadow:0 0 10px -1px var(--brand)}
-.shell{margin-left:74px;min-height:100vh}
-.topbar{
-  position:sticky;top:0;z-index:50;padding:14px 22px;
-  background:rgba(7,11,20,.82);backdrop-filter:blur(14px);border-bottom:1px solid var(--line);
-}
-.pill{background:var(--deep);border:1px solid var(--line);border-radius:999px}
+.rail-btn small{font-size:9.5px;font-weight:550;letter-spacing:-0.005em;line-height:1}
+.rail-btn:hover{color:var(--t2);background:rgba(255,255,255,.04)}
+.rail-btn.on{color:var(--t1);background:rgba(255,255,255,.07)}
+.rail-btn.on::after{content:"";position:absolute;left:-9px;top:50%;transform:translateY(-50%);
+  width:3px;height:22px;border-radius:0 3px 3px 0;background:var(--brand)}
+.rail-badge{position:absolute;top:0px;right:0px;min-width:16px;height:16px;padding:0 4px;border-radius:99px;
+  background:var(--brand);color:#fff;font-size:9.5px;font-weight:600;display:flex;align-items:center;
+  justify-content:center;letter-spacing:-0.01em;box-shadow:0 0 0 2px var(--s1)}
+.rail-badge.cero{display:none}
+
+/* avisos y formularios */
+.nota{display:flex;gap:9px;align-items:flex-start;padding:10px 12px;border-radius:var(--r2);margin-bottom:12px;
+  background:color-mix(in srgb, var(--c) 9%, transparent);border:1px solid color-mix(in srgb, var(--c) 22%, transparent)}
+.nota svg{margin-top:1px}
+.pasos{counter-reset:p;margin:0 0 12px;padding:0;list-style:none;display:flex;flex-direction:column;gap:7px}
+.pasos li{counter-increment:p;position:relative;padding-left:26px;font-size:13px;color:var(--t2);line-height:1.5}
+.pasos li::before{content:counter(p);position:absolute;left:0;top:1px;width:18px;height:18px;border-radius:50%;
+  background:var(--s3);color:var(--t2);font-size:10.5px;font-weight:600;display:flex;align-items:center;justify-content:center}
+.sw{display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none}
+.sw input{appearance:none;width:38px;height:22px;border-radius:99px;background:var(--s3);position:relative;
+  cursor:pointer;transition:background .2s;flex-shrink:0;border:1px solid var(--line)}
+.sw input::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;
+  background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.sw input:checked{background:var(--brand);border-color:transparent}
+.sw input:checked::after{transform:translateX(16px)}
+details>summary{list-style:none}
+details>summary::-webkit-details-marker{display:none}
+details>summary::before{content:"›";display:inline-block;margin-right:7px;transition:transform .2s;color:var(--t3)}
+details[open]>summary::before{transform:rotate(90deg)}
+
+.shell{margin-left:76px;min-height:100vh}
+.topbar{position:sticky;top:0;z-index:50;padding:18px 30px;
+  background:rgba(9,9,11,.76);backdrop-filter:saturate(180%) blur(22px);
+  -webkit-backdrop-filter:saturate(180%) blur(22px);border-bottom:1px solid var(--line)}
 
 @media(max-width:1023px){
-  .rail{position:fixed;top:auto;right:0;bottom:0;width:100%;height:64px;flex-direction:row;justify-content:space-around;
-    padding:0 4px;border-right:none;border-top:1px solid var(--line)}
-  .rail-btn{width:auto;flex:1;height:52px;border-radius:13px}
-  .rail-btn.on::before{left:50%;top:-1px;transform:translateX(-50%);width:26px;height:3px;border-radius:0 0 4px 4px}
-  .rail .rail-logo{display:none}
-  .shell{margin-left:0;padding-bottom:70px}
-  .topbar{padding:12px 14px}
+  .rail{top:auto;right:0;bottom:0;width:100%;height:62px;flex-direction:row;justify-content:space-around;
+    padding:0 8px;border-right:0;border-top:1px solid var(--line);
+    background:rgba(19,19,22,.92);backdrop-filter:blur(22px)}
+  .rail-logo{display:none}
+  .rail-btn{width:auto;flex:1;height:50px;max-width:76px}
+  .rail-btn.on::after{left:50%;top:-1px;transform:translateX(-50%);width:22px;height:3px;border-radius:0 0 3px 3px}
+  .shell{margin-left:0;padding-bottom:68px}
+  .topbar{padding:14px 18px}
 }
 
-/* ═══ Ventana flotante tipo app ═══ */
-.app-frame{
-  margin:14px; border-radius:28px; overflow:hidden; position:relative;
-  background:#080d16; border:1px solid rgba(255,255,255,.07);
-  box-shadow:0 40px 90px -30px rgba(0,0,0,.9), 0 0 0 1px rgba(255,255,255,.02) inset;
-  min-height:calc(100vh - 28px);
+/* ── Controles ── */
+.inp{
+  background:var(--bg);border:1px solid var(--line);color:var(--t1);border-radius:var(--r2);
+  font-family:inherit;font-size:14px;letter-spacing:-0.01em;transition:border-color .16s,box-shadow .16s;outline:0;
 }
-@media(max-width:1023px){ .app-frame{margin:0;border-radius:0;border:none;min-height:100vh} }
+.inp::placeholder{color:var(--t3)}
+.inp:hover{border-color:var(--line-2)}
+.inp:focus{border-color:var(--brand);box-shadow:0 0 0 3.5px var(--brand-dim)}
+select.inp{cursor:pointer}
+select.inp option{background:var(--s2);color:var(--t1)}
 
-/* ═══ Tareas que dan gusto marcar ═══ */
-.task-card{
-  display:flex;align-items:center;gap:14px;padding:15px 16px;border-radius:1.1rem;
-  background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.012));
-  border:1px solid var(--line);transition:all .2s cubic-bezier(.2,.7,.3,1);cursor:pointer;position:relative;overflow:hidden;
-}
-.task-card:hover{border-color:var(--line-strong);transform:translateX(3px);background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02))}
-.task-card.done{opacity:.45}
+.btn-p{background:var(--brand);color:#fff;font-family:inherit;font-weight:550;font-size:13.5px;
+  letter-spacing:-0.012em;border:0;cursor:pointer;border-radius:var(--r2);
+  transition:background .16s,transform .1s}
+.btn-p:hover{background:var(--brand-2)}
+.btn-p:active{transform:scale(.985)}
+.btn-p:disabled{opacity:.4;cursor:not-allowed}
+.btn-g{background:var(--s2);color:var(--t2);border:1px solid var(--line);font-family:inherit;
+  font-weight:500;font-size:12.5px;letter-spacing:-0.008em;cursor:pointer;border-radius:var(--r1);
+  transition:all .16s}
+.btn-g:hover{background:var(--s3);color:var(--t1);border-color:var(--line-2)}
+.btn-d{background:var(--danger-dim);color:var(--danger);border:1px solid rgba(255,69,58,.25)}
+.btn-d:hover{background:rgba(255,69,58,.2);color:var(--danger);border-color:rgba(255,69,58,.4)}
+
+.tab{font-family:inherit;font-size:13px;font-weight:500;letter-spacing:-0.012em;padding:7px 14px;
+  border-radius:var(--r1);color:var(--t3);background:transparent;border:0;cursor:pointer;
+  transition:all .16s;white-space:nowrap}
+.tab:hover{color:var(--t2);background:rgba(255,255,255,.04)}
+.tab.on{background:var(--s3);color:var(--t1);box-shadow:0 1px 2px rgba(0,0,0,.3)}
+/* control segmentado tipo iOS */
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:var(--r2);
+  background:var(--s2);border:1px solid var(--line)}
+.seg .tab{border-radius:var(--r1);padding:10px 12px;justify-content:center}
+.seg .tab.on{background:var(--s3);color:var(--t1)}
+.pill{background:var(--s1);border:1px solid var(--line);border-radius:99px}
+.seg{display:inline-flex;padding:3px;border-radius:11px;background:var(--bg);border:1px solid var(--line)}
+.seg button{padding:6px 14px;border-radius:8px;border:0;background:transparent;cursor:pointer;
+  font-size:12.5px;font-weight:500;color:var(--t3);transition:all .16s;font-family:inherit}
+.seg button.on{background:var(--s3);color:var(--t1)}
+
+/* ── Chips ── */
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:550;
+  padding:3.5px 9px;border-radius:7px;letter-spacing:-0.006em;white-space:nowrap;line-height:1.4}
+.chip .dot{width:5px;height:5px;border-radius:99px;background:currentColor;flex-shrink:0}
+.chip-pk{background:var(--brand-dim);color:var(--brand)}
+.chip-cy{background:var(--cyan-dim);color:var(--cyan)}
+.chip-ok{background:var(--ok-dim);color:var(--ok)}
+.chip-wn{background:var(--warn-dim);color:var(--warn)}
+.chip-gr{background:rgba(255,255,255,.06);color:var(--t3)}
+
+/* ── Estadísticas ── */
+.stat{background:var(--s1);border:1px solid var(--line);border-radius:var(--r3);padding:18px 20px;position:relative}
+.ico-box{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;
+  background:rgba(255,255,255,.055);color:var(--t2);flex-shrink:0}
+.icon-badge{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+  background:rgba(255,255,255,.055);color:var(--t2);flex-shrink:0}
+
+/* ── Barras y anillos ── */
+.bar{height:5px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden}
+.bar>i{display:block;height:100%;border-radius:99px;background:var(--brand);
+  transition:width .55s cubic-bezier(.3,.8,.4,1)}
+.ring-wrap{position:relative;display:inline-flex;align-items:center;justify-content:center}
+.ring-wrap .ring-txt{position:absolute;text-align:center;line-height:1.05}
+.ring-wrap .ring-num{font-weight:600;color:var(--t1);letter-spacing:-0.035em;font-variant-numeric:tabular-nums}
+.ring-wrap .ring-lbl{font-size:10px;color:var(--t3);margin-top:2px;letter-spacing:0}
+
+/* ── Tareas ── */
+.task-card{display:flex;align-items:center;gap:13px;padding:13px 15px;border-radius:var(--r2);
+  background:var(--s1);border:1px solid var(--line);cursor:pointer;
+  transition:background .18s,border-color .18s,opacity .25s}
+.task-card:hover{background:var(--s2);border-color:var(--line-2)}
+.task-card.done{opacity:.35}
 .task-card.done .task-title{text-decoration:line-through}
-.task-check{
-  width:30px;height:30px;border-radius:11px;border:2px solid var(--line-strong);flex-shrink:0;
-  display:flex;align-items:center;justify-content:center;font-size:15px;color:transparent;
-  transition:all .25s cubic-bezier(.2,.9,.3,1.3);background:transparent;
-}
-.task-card:hover .task-check{border-color:var(--cyan);transform:scale(1.08)}
-.task-check.on{background:linear-gradient(135deg,var(--ok),#22e2a8);border-color:transparent;color:#05070c;transform:scale(1)}
-.task-check.lock{border-style:dashed;opacity:.5}
-.task-title{font-size:14px;font-weight:600;line-height:1.3}
-.task-meta{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--txt-soft);margin-top:3px}
-.task-area{
-  width:34px;height:34px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;
-  background:rgba(255,255,255,.04);border:1px solid var(--line);
-}
-@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.25)}100%{transform:scale(1)}}
-.pop{animation:pop .4s cubic-bezier(.2,.9,.3,1.3)}
+.task-check{width:23px;height:23px;border-radius:99px;border:1.7px solid var(--line-2);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;color:transparent;background:transparent;
+  transition:all .2s cubic-bezier(.3,1.25,.5,1)}
+.task-card:hover .task-check{border-color:var(--brand)}
+.task-check.on{background:var(--ok);border-color:var(--ok);color:#fff}
+.task-title{font-size:14px;font-weight:500;line-height:1.35;letter-spacing:-0.012em}
+.task-meta{font-size:12px;color:var(--t3);margin-top:2px;letter-spacing:-0.004em}
+.group-head{display:flex;align-items:center;gap:9px;margin:24px 0 10px}
+.group-head .gh-ico{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;
+  justify-content:center;background:rgba(255,255,255,.055);color:var(--t2)}
+.group-head .gh-line{display:none}
+@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.18)}100%{transform:scale(1)}}
+.pop{animation:pop .32s cubic-bezier(.3,1.3,.5,1)}
 
-/* Cabecera de grupo de tareas */
-.group-head{display:flex;align-items:center;gap:10px;margin:20px 0 10px}
-.group-head .gh-ico{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;
-  background:linear-gradient(135deg,rgba(255,46,136,.18),rgba(34,226,226,.10));border:1px solid var(--line-strong)}
-.group-head .gh-line{flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent)}
+.tarea{display:flex;align-items:flex-start;gap:11px;padding:11px 13px;border-radius:var(--r2);
+  background:var(--bg);border:1px solid var(--line);transition:border-color .18s}
+.tarea:hover{border-color:var(--line-2)}
+.tarea.hecha{background:transparent;border-color:var(--line);opacity:.62}
+.tarea.hecha:hover{opacity:.9}
+.tarea.bloq{opacity:.38}
+.tbox{width:21px;height:21px;border-radius:99px;border:1.7px solid var(--line-2);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;margin-top:1px;
+  background:transparent;color:transparent;transition:all .2s}
+.tbox:hover{border-color:var(--brand)}
+.tbox.on{background:var(--ok);border-color:var(--ok);color:#fff}
+.tbox.lock{cursor:not-allowed;border-style:dashed;opacity:.45}
+.file-btn{display:flex;align-items:center;gap:7px;padding:7px 11px;border-radius:var(--r1);cursor:pointer;
+  background:var(--s2);border:1px solid var(--line);color:var(--t2);font-size:12px;overflow:hidden}
+.file-btn:hover{border-color:var(--line-2);color:var(--t1)}
+.file-btn input{display:none}
+.file-btn b{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.campo-num{display:flex;align-items:baseline;gap:2px;color:var(--brand)}
+.campo-num span{font-size:17px;font-weight:600}
+.campo-num input{background:transparent;border:0;outline:0;color:var(--brand);font-size:17px;font-weight:600;
+  width:100%;padding:0;letter-spacing:-0.022em;font-variant-numeric:tabular-nums;border-bottom:1px dashed var(--line-2)}
+.campo-num input:focus{border-bottom-color:var(--brand)}
+.campo-num input::-webkit-outer-spin-button,.campo-num input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+/* permisos por area */
+.perm{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--r1);cursor:pointer;
+  color:var(--t3);font-size:13px;transition:background .15s,color .15s;border:1px solid transparent}
+.perm:hover{background:rgba(255,255,255,.035);color:var(--t2)}
+.perm input{display:none}
+.perm-box{width:19px;height:19px;border-radius:6px;border:1.6px solid var(--line-2);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;color:transparent;transition:all .15s}
+.perm.on .perm-box{background:var(--cyan);border-color:var(--cyan);color:#06181a}
+.perm.on{color:var(--t1);background:var(--cyan-dim);border-color:rgba(34,226,226,.18)}
+.perm-ico{display:flex;opacity:.55}
+.perm.on .perm-ico{opacity:1;color:var(--cyan)}
+.perm-n{font-weight:450;letter-spacing:-0.01em}
+.fase-h{display:flex;align-items:center;gap:9px;font-size:11.5px;font-weight:600;color:var(--t3);
+  margin:22px 0 9px;letter-spacing:0}
+.fase-h::after{content:"";flex:1;height:1px;background:var(--line)}
 
-/* Control segmentado */
-.seg{display:inline-flex;padding:3px;border-radius:12px;background:var(--deep);border:1px solid var(--line)}
-.seg button{padding:6px 14px;border-radius:9px;border:none;background:transparent;cursor:pointer;
-  font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;text-transform:uppercase;color:var(--txt-soft);transition:all .15s}
-.seg button.on{background:rgba(255,255,255,.08);color:#fff}
-
-/* ═══ Detalles ricos ═══ */
-.avatar{width:26px;height:26px;border-radius:999px;display:flex;align-items:center;justify-content:center;
-  font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:800;color:#05070c;border:2px solid var(--panel);flex-shrink:0}
+/* ── Varios ── */
+.avatar{width:26px;height:26px;border-radius:99px;display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:600;color:#fff;border:2px solid var(--s1);flex-shrink:0;letter-spacing:-0.01em}
 .avatar-stack{display:flex}
-.avatar-stack .avatar:not(:first-child){margin-left:-9px}
-.hero{
-  position:relative;overflow:hidden;border-radius:1.6rem;
-  background:linear-gradient(135deg,#16203a 0%,#0f1626 55%,#131b2e 100%);
-  border:1px solid var(--line);
-}
-.hero::before{content:"";position:absolute;width:420px;height:420px;right:-140px;top:-190px;border-radius:999px;
-  background:radial-gradient(circle,rgba(255,46,136,.30),transparent 62%);pointer-events:none}
-.hero::after{content:"";position:absolute;width:340px;height:340px;left:-120px;bottom:-190px;border-radius:999px;
-  background:radial-gradient(circle,rgba(34,226,226,.22),transparent 62%);pointer-events:none}
-.kpi-up{color:var(--ok)} .kpi-down{color:var(--danger)}
-.fade-up{animation:fadeUp .45s cubic-bezier(.2,.7,.3,1) both}
-@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
-.grad-txt{background:linear-gradient(90deg,#fff,var(--cyan));-webkit-background-clip:text;background-clip:text;color:transparent}
-.divider{height:1px;background:linear-gradient(90deg,transparent,var(--line-strong),transparent)}
+.avatar-stack .avatar:not(:first-child){margin-left:-8px}
+.fade-up{animation:fadeUp .4s cubic-bezier(.3,.8,.4,1) both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+.glow,.glow-txt{animation:none;box-shadow:none;text-shadow:none}
+
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.62);backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);z-index:80;display:flex;align-items:flex-start;
+  justify-content:center;padding:22px;overflow-y:auto}
+#toaster{position:fixed;bottom:22px;right:22px;z-index:200;display:flex;flex-direction:column;gap:9px;max-width:340px}
+@media(max-width:1023px){#toaster{bottom:76px;right:14px;left:14px;max-width:none}}
+.toast{padding:13px 16px;border-radius:var(--r2);font-size:13.5px;font-weight:500;letter-spacing:-0.01em;
+  background:var(--s3);border:1px solid var(--line-2);box-shadow:var(--sh3);
+  animation:slideIn .3s cubic-bezier(.3,.8,.4,1)}
+@keyframes slideIn{from{transform:translateY(10px);opacity:0}to{transform:none;opacity:1}}
+
+/* Tabla */
+table{border-collapse:collapse}
+thead tr{background:transparent!important}
+thead th{font-size:11.5px;font-weight:550;color:var(--t3);letter-spacing:0;text-transform:none;
+  padding:13px 16px;border-bottom:1px solid var(--line)}
+tbody td{padding:14px 16px;font-size:13.5px;letter-spacing:-0.008em}
+tbody tr{border-bottom:1px solid var(--line);transition:background .15s}
+tbody tr:hover{background:rgba(255,255,255,.025)}
+tbody tr:last-child{border-bottom:0}
+
 </style>
 </head>
 <body class="min-h-screen pb-20 selection:bg-pink-600 selection:text-white">
@@ -236,26 +299,26 @@ select.inp option{background:var(--panel);color:var(--txt)}
 <!-- ══════════ LOGIN ══════════ -->
 <div id="login" class="fixed inset-0 z-[100] flex items-center justify-center p-4" style="background:var(--bg)">
   <div class="glass rounded-3xl p-8 w-full max-w-sm space-y-5 relative" style="border-top:2px solid var(--cyan)">
-    <div class="hud tl"></div><div class="hud tr"></div><div class="hud bl"></div><div class="hud br"></div>
+    
     <div class="text-center space-y-2">
-      <div class="w-14 h-14 mx-auto rounded-2xl flex items-center justify-center font-mono font-bold text-[#05070c] text-2xl relative"
+      <div class="w-14 h-14 mx-auto rounded-2xl flex items-center justify-center font-bold text-white text-2xl relative" style="letter-spacing:-0.03em"
            style="background:linear-gradient(135deg,var(--brand),var(--brand-2))">Y
-        <span class="absolute -top-1 -right-1 w-3 h-3 rounded-full glow" style="background:var(--cyan)"></span>
+        
       </div>
-      <h1 class="brand-logo text-lg font-black text-white italic uppercase tracking-tight">Centro de Control</h1>
-      <p class="font-mono text-[10px] font-bold uppercase tracking-wider" style="color:var(--txt-soft)">// Importaciones Yesica</p>
+      <h1 class="t-lg">Centro de Control</h1>
+      <p class="t-lbl" style="color:var(--t3)">Importaciones Yesica</p>
     </div>
     <div>
-      <label class="block font-mono text-[10px] font-bold uppercase tracking-wider mb-1.5" style="color:var(--txt-soft)">¿Quién eres?</label>
-      <select id="lgUser" class="inp w-full px-4 py-3 rounded-2xl text-sm font-bold"><option value="">Selecciona tu nombre…</option></select>
+      <label class="t-lbl block mb-2">¿Quién eres?</label>
+      <select id="lgUser" class="inp w-full px-4 py-3"><option value="">Selecciona tu nombre…</option></select>
     </div>
     <div>
-      <label class="block font-mono text-[10px] font-bold uppercase tracking-wider mb-1.5" style="color:var(--txt-soft)">Contraseña</label>
-      <input type="password" id="lgPass" placeholder="••••••••" class="inp w-full px-4 py-3 rounded-2xl text-sm font-bold" onkeydown="if(event.key==='Enter')entrar()">
+      <label class="t-lbl block mb-2">Contraseña</label>
+      <input type="password" id="lgPass" placeholder="••••••••" class="inp w-full px-4 py-3" onkeydown="if(event.key==='Enter')entrar()">
     </div>
-    <button onclick="entrar()" id="lgBtn" class="btn-p w-full py-3.5 rounded-2xl uppercase tracking-wider text-xs">Entrar</button>
-    <p id="lgMsg" class="text-[11px] text-center font-bold" style="color:var(--danger);min-height:15px"></p>
-    <p class="text-[9px] text-center font-mono leading-relaxed" style="color:var(--txt-soft)">
+    <button onclick="entrar()" id="lgBtn" class="btn-p w-full py-3.5">Entrar</button>
+    <p id="lgMsg" class="t-sm text-center" style="color:var(--danger);min-height:18px"></p>
+    <p class="t-xs text-center leading-relaxed">
       Primera vez: escribe la contraseña que quieras (mín. 6 caracteres) y presiona Entrar. Tu cuenta se crea sola.
     </p>
   </div>
@@ -264,41 +327,36 @@ select.inp option{background:var(--panel);color:var(--txt)}
 <!-- ══════════ APP ══════════ -->
 <div id="app" class="hidden">
 
-<div class="app-frame">
-<!-- ═══ RIEL LATERAL ═══ -->
+<!-- ═══ RIEL ═══ -->
 <aside class="rail">
-  <div class="rail-logo mb-3 w-11 h-11 rounded-2xl flex items-center justify-center font-mono font-bold text-[#05070c] text-lg relative flex-shrink-0"
-       style="background:linear-gradient(135deg,var(--brand),var(--cyan))">Y
-    <span class="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full glow" style="background:var(--cyan)"></span>
-  </div>
-  <button onclick="ir('flota')"    id="tbFlota" class="rail-btn on" title="Flota">🚗<small>Flota</small></button>
-  <button onclick="ir('mias')"     id="tbMias"  class="rail-btn"    title="Mis tareas">✅<small>Tareas</small>
-    <span id="badgeMias" class="rail-badge">0</span></button>
-  <button onclick="ir('nuevo')"    id="tbNuevo" class="rail-btn"    title="Nueva unidad">➕<small>Nueva</small></button>
-  <button onclick="ir('finanzas')" id="tbFin"   class="rail-btn"    title="Finanzas">💰<small>$$</small></button>
-  <button onclick="ir('archivo')"  id="tbArch"  class="rail-btn"    title="Archivo">📂<small>Archivo</small></button>
-  <button onclick="ir('usuarios')" id="tbUsers" class="rail-btn hidden" title="Usuarios">👤<small>Equipo</small></button>
+  <div class="rail-logo">Y</div>
+  <button onclick="ir('flota')"    id="tbFlota" class="rail-btn on" title="Flota"><span id="icFlota"></span><small>Flota</small></button>
+  <button onclick="ir('mias')"     id="tbMias"  class="rail-btn" title="Mis tareas"><span id="icTareas"></span><small>Tareas</small>
+    <span id="badgeMias" class="rail-badge cero">0</span></button>
+  <button onclick="ir('nuevo')"    id="tbNuevo" class="rail-btn" title="Nueva unidad"><span id="icNueva"></span><small>Nueva</small></button>
+  <button onclick="ir('finanzas')" id="tbFin"   class="rail-btn" title="Finanzas"><span id="icFin"></span><small>Finanzas</small></button>
+  <button onclick="ir('archivo')"  id="tbArch"  class="rail-btn" title="Archivo"><span id="icArch"></span><small>Archivo</small></button>
+  <button onclick="ir('usuarios')" id="tbUsers" class="rail-btn hidden" title="Equipo"><span id="icEquipo"></span><small>Equipo</small></button>
 </aside>
 
 <div class="shell">
-  <!-- ═══ BARRA SUPERIOR ═══ -->
   <header class="topbar">
-    <div class="max-w-[1500px] mx-auto flex items-center gap-3">
+    <div class="max-w-[1500px] mx-auto flex items-center gap-4">
       <div class="min-w-0 flex-1">
-        <h1 id="tituloPagina" class="font-display text-lg lg:text-xl font-bold text-white leading-none truncate">Flota activa</h1>
-        <p id="subPagina" class="font-mono text-[9px] font-bold uppercase tracking-[0.18em] mt-1" style="color:var(--txt-soft)">// Importaciones Yesica</p>
+        <h1 id="tituloPagina" class="t-lg truncate">Flota activa</h1>
+        <p id="subPagina" class="t-sm mt-0.5 truncate">Todo lo que est&aacute; en proceso ahora</p>
       </div>
       <div class="hidden md:flex items-center gap-2 px-3.5 py-2 pill">
-        <span class="text-xs">📅</span>
-        <span id="fechaHoy" class="font-mono text-[10px] font-bold" style="color:var(--txt-soft)"></span>
+        <span style="color:var(--t3)" id="icFecha"></span>
+        <span id="fechaHoy" class="t-xs"></span>
       </div>
-      <div class="flex items-center gap-2 px-2.5 py-1.5 pill">
-        <span id="avatarYo" class="avatar" style="background:linear-gradient(135deg,var(--brand),var(--cyan))">A</span>
-        <div class="hidden sm:block leading-none">
-          <p id="dMe" class="font-mono text-[11px] font-bold" style="color:var(--txt)">—</p>
-          <p id="dRol" class="font-mono text-[8px] uppercase tracking-wider mt-0.5" style="color:var(--txt-soft)">v3</p>
+      <div class="flex items-center gap-2.5 pl-2.5 pr-2 py-1.5 pill">
+        <span id="avatarYo" class="avatar" style="background:var(--brand)">A</span>
+        <div class="hidden sm:block leading-tight">
+          <p id="dMe" class="text-[13px] font-medium" style="letter-spacing:-0.01em">&mdash;</p>
+          <p id="dRol" class="t-xs" style="font-size:11px">equipo</p>
         </div>
-        <button onclick="salir()" class="btn-g text-[9px] uppercase px-2 py-1 rounded-lg ml-1">Salir</button>
+        <button onclick="salir()" class="btn-g px-2 py-1.5 rounded-lg" title="Cerrar sesi&oacute;n"><span id="icSalir"></span></button>
       </div>
     </div>
   </header>
@@ -306,37 +364,39 @@ select.inp option{background:var(--panel);color:var(--txt)}
   <main class="max-w-[1500px] mx-auto px-4 lg:px-7 py-7 space-y-6">
 
   <!-- ═══ RESUMEN ═══ -->
-  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 fade-up">
+  <div id="statsRow" class="grid grid-cols-2 lg:grid-cols-4 gap-4 fade-up">
     <div class="stat lift">
-      <p class="font-mono text-[9px] font-bold uppercase tracking-wider" style="color:var(--txt-soft)">Unidades activas</p>
-      <p id="sTot" class="font-mono text-3xl font-bold text-white mt-1.5">0</p>
-      <p id="sMix" class="font-mono text-[10px] mt-1" style="color:var(--txt-soft)">—</p>
+      <div class="ico-box" id="kiUnidades"></div>
+      <p id="sTot" class="num text-[28px] font-semibold mt-1">0</p>
+      <p class="t-lbl mt-0.5">Unidades activas</p>
+      <p id="sMix" class="t-xs mt-1.5">&mdash;</p>
     </div>
     <div class="stat lift">
-      <p class="font-mono text-[9px] font-bold uppercase tracking-wider" style="color:var(--txt-soft)">Avance promedio</p>
-      <p id="sPro" class="font-mono text-3xl font-bold mt-1.5" style="color:var(--cyan)">0%</p>
-      <div class="bar mt-2.5"><i id="sProBar" style="width:0%"></i></div>
+      <div class="ico-box" id="kiAvance"></div>
+      <p id="sPro" class="num text-[28px] font-semibold mt-1" style="color:var(--cyan)">0%</p>
+      <p class="t-lbl mt-0.5">Avance promedio</p>
+      <div class="bar mt-2.5"><i id="sProBar" style="width:0%;background:var(--cyan)"></i></div>
     </div>
     <div class="stat lift">
-      <p class="font-mono text-[9px] font-bold uppercase tracking-wider" style="color:var(--txt-soft)">Por cobrar</p>
-      <p id="sSal" class="font-mono text-3xl font-bold mt-1.5" style="color:var(--warn)">$0</p>
-      <p id="sCobrado" class="font-mono text-[10px] mt-1" style="color:var(--txt-soft)">—</p>
+      <div class="ico-box" id="kiCobrar"></div>
+      <p id="sSal" class="num text-[28px] font-semibold mt-1" style="color:var(--warn)">$0</p>
+      <p class="t-lbl mt-0.5">Por cobrar</p>
+      <p id="sCobrado" class="t-xs mt-1.5">&mdash;</p>
     </div>
     <div class="stat lift">
-      <p class="font-mono text-[9px] font-bold uppercase tracking-wider" style="color:var(--txt-soft)">Tus pendientes</p>
-      <p id="sMias" class="font-mono text-3xl font-bold mt-1.5" style="color:var(--brand)">0</p>
-      <p class="font-mono text-[10px] mt-1" style="color:var(--txt-soft)">tareas para ti</p>
+      <div class="ico-box" id="kiMias"></div>
+      <p id="sMias" class="num text-[28px] font-semibold mt-1" style="color:var(--brand)">0</p>
+      <p class="t-lbl mt-0.5">Tus pendientes</p>
+      <p class="t-xs mt-1.5">tareas asignadas a ti</p>
     </div>
   </div>
 
-  <div class="hidden">
-    <span id="sEnc">0</span><span id="sStk">0</span>
-  </div>
+  <div class="hidden"><span id="sEnc">0</span><span id="sStk">0</span></div>
 
   <!-- ══ FLOTA ══ -->
   <section id="pgFlota" class="space-y-4">
     <div class="glass rounded-2xl p-3.5 flex flex-wrap items-center gap-2.5">
-      <input id="buscar" oninput="pintarFlota()" placeholder="🔍 Buscar vehículo, cliente, VIN…" class="inp flex-1 min-w-[190px] px-4 py-2.5 rounded-xl text-xs font-bold">
+      <input id="buscar" oninput="pintarFlota()" placeholder="Buscar vehículo, cliente, VIN…" class="inp flex-1 min-w-[200px] px-4 py-2.5">
       <div class="flex gap-1.5 flex-wrap">
         <button onclick="setF('todos')"   id="fTodos" class="tab on">Todos</button>
         <button onclick="setF('Encargo')" id="fEnc"   class="tab">Encargo</button>
@@ -355,9 +415,9 @@ select.inp option{background:var(--panel);color:var(--txt)}
         <div class="glass rounded-3xl p-6 fade-up">
           <div class="flex items-center justify-between gap-4 flex-wrap mb-1">
             <div>
-              <p class="font-mono text-[10px] font-bold uppercase tracking-[0.2em]" style="color:var(--txt-soft)">Tu jornada</p>
-              <h2 id="miasTitulo" class="font-display text-2xl font-bold text-white mt-1">Todo listo</h2>
-              <p id="miasSub" class="text-xs mt-1" style="color:var(--txt-soft)">Solo lo que te toca a ti.</p>
+              <p class="t-lbl">Tu jornada</p>
+              <h2 id="miasTitulo" class="t-xl mt-1.5">Todo listo</h2>
+              <p id="miasSub" class="t-sm mt-1">Solo lo que te toca a ti.</p>
             </div>
             <div id="miasAnillo"></div>
           </div>
@@ -369,10 +429,10 @@ select.inp option{background:var(--panel);color:var(--txt)}
       <div class="space-y-4 xl:sticky xl:top-24">
         <div class="glass rounded-3xl p-5 fade-up">
           <div class="flex items-center gap-2.5 mb-3">
-            <div class="icon-badge">🔔</div>
+            <div class="icon-badge"><span id="icAvisos"></span></div>
             <div>
-              <p class="font-mono text-[10px] font-black text-white uppercase tracking-wide">Avisos</p>
-              <p class="font-mono text-[8px] uppercase tracking-wide" style="color:var(--txt-soft)">// por Telegram</p>
+              <p class="t-md">Avisos</p>
+              <p class="t-xs">por Telegram</p>
             </div>
           </div>
           <div id="cfgNotis"></div>
@@ -384,101 +444,101 @@ select.inp option{background:var(--panel);color:var(--txt)}
 
   <!-- ══ NUEVA UNIDAD ══ -->
   <section id="pgNuevo" class="hidden">
-    <div class="max-w-2xl mx-auto glass rounded-3xl p-6 md:p-8 space-y-5 relative" style="border-top:2px solid var(--brand)">
-      <div class="hud tl"></div><div class="hud tr"></div>
+    <div class="max-w-2xl mx-auto glass rounded-3xl p-6 md:p-8 space-y-5 relative" >
+      
       <div class="flex items-center gap-3 border-b pb-4" style="border-color:var(--line)">
-        <div class="icon-badge">➕</div>
+        <div class="icon-badge"><span id="icNuevaH"></span></div>
         <div>
-          <h2 class="font-mono text-xs font-black text-white uppercase tracking-wide">Ingresar nueva unidad</h2>
-          <p class="font-mono text-[9px] font-bold uppercase tracking-wide mt-0.5" style="color:var(--txt-soft)">// Se abre su checklist automáticamente</p>
+          <h2 class="t-md">Ingresar nueva unidad</h2>
+          <p class="t-sm mt-0.5">Se abre su checklist automáticamente</p>
         </div>
       </div>
 
       <div>
-        <label class="block font-mono text-[10px] font-bold uppercase tracking-wider mb-2" style="color:var(--txt-soft)">Modalidad</label>
-        <div class="grid grid-cols-2 gap-2.5">
-          <button type="button" onclick="setTipo('Encargo')" id="btEnc" class="tab on py-3.5 rounded-xl">🤝 Por Encargo</button>
-          <button type="button" onclick="setTipo('Stock')"   id="btStk" class="tab py-3.5 rounded-xl">📦 Stock (Sin Encargo)</button>
+        <label class="block t-lbl mb-2" style="color:var(--t3)">Modalidad</label>
+        <div class="seg">
+          <button type="button" onclick="setTipo('Encargo')" id="btEnc" class="tab on flex items-center justify-center gap-2"><span id="icEnc"></span> Por encargo</button>
+          <button type="button" onclick="setTipo('Stock')"   id="btStk" class="tab flex items-center justify-center gap-2"><span id="icStk"></span> Stock</button>
         </div>
-        <p id="tipoAyuda" class="text-[10px] mt-2 leading-relaxed" style="color:var(--txt-soft)">El cliente pide un carro específico y se lo buscamos. Arranca con los $100 de abono.</p>
+        <p id="tipoAyuda" class="t-xs mt-2 leading-relaxed">El cliente pide un carro específico y se lo buscamos. Arranca con los $100 de abono.</p>
       </div>
 
       <div id="camposCli" class="space-y-3 p-4 rounded-2xl" style="background:var(--cyan-soft);border:1px solid var(--line)">
-        <p class="font-mono text-[10px] font-black uppercase tracking-wider" style="color:var(--cyan)">Datos del cliente</p>
+        <p class="t-lbl" style="color:var(--cyan)">Datos del cliente</p>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div><label class="block font-mono text-[9px] font-bold uppercase mb-1" style="color:var(--txt-soft)">Nombre completo</label>
-            <input id="nCli" class="inp w-full px-3.5 py-2.5 rounded-xl text-xs font-bold"></div>
-          <div><label class="block font-mono text-[9px] font-bold uppercase mb-1" style="color:var(--txt-soft)">Teléfono</label>
-            <input id="tCli" class="inp w-full px-3.5 py-2.5 rounded-xl text-xs font-bold" placeholder="7777-7777"></div>
+          <div><label class="t-lbl block mb-1.5">Nombre completo</label>
+            <input id="nCli" class="inp w-full px-3.5 py-2.5"></div>
+          <div><label class="t-lbl block mb-1.5">Teléfono</label>
+            <input id="tCli" class="inp w-full px-3.5 py-2.5" placeholder="7777-7777"></div>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div><label class="block font-mono text-[9px] font-bold uppercase mb-1" style="color:var(--cyan)">Carro deseado / presupuesto</label>
-            <input id="dCli" class="inp w-full px-3.5 py-2.5 rounded-xl text-xs font-bold" placeholder="Ej: Kia Rio 2018-2020, hasta $9,000"></div>
-          <div><label class="block font-mono text-[9px] font-bold uppercase mb-1" style="color:var(--txt-soft)">Abono inicial ($)</label>
-            <input type="number" id="aCli" value="100" class="inp w-full px-3.5 py-2.5 rounded-xl text-xs font-bold"></div>
+          <div><label class="t-lbl block mb-1.5" style="color:var(--cyan)">Carro deseado / presupuesto</label>
+            <input id="dCli" class="inp w-full px-3.5 py-2.5" placeholder="Ej: Kia Rio 2018-2020, hasta $9,000"></div>
+          <div><label class="t-lbl block mb-1.5">Abono inicial ($)</label>
+            <input type="number" id="aCli" value="100" class="inp w-full px-3.5 py-2.5"></div>
         </div>
       </div>
 
       <div id="avisoVeh" class="deep rounded-xl p-3 flex gap-2.5">
-        <span class="text-base">💡</span>
-        <p class="text-[11px] leading-relaxed" style="color:var(--txt-soft)">
-          Si todavía <b style="color:var(--txt)">no se ha ganado el carro</b>, deja estos campos vacíos. Registra solo al cliente y lo que busca —
+        <span style="color:var(--cyan)"><span id="icAlertaH"></span></span>
+        <p class="t-sm leading-relaxed">
+          Si todavía <b style="color:var(--t1)">no se ha ganado el carro</b>, deja estos campos vacíos. Registra solo al cliente y lo que busca —
           después, al ganar la subasta, abres la unidad y le asignas el vehículo real con su VIN y costo.
         </p>
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div><label id="lbVeh" class="block font-mono text-[10px] font-bold uppercase mb-1.5" style="color:var(--txt-soft)">Vehículo (año marca modelo)</label>
-          <input id="fVeh" class="inp w-full px-4 py-3 rounded-2xl text-xs font-bold" placeholder="2018 Toyota Corolla"></div>
-        <div><label class="block font-mono text-[10px] font-bold uppercase mb-1.5" style="color:var(--txt-soft)">VIN / Lote</label>
-          <input id="fVin" class="inp w-full px-4 py-3 rounded-2xl uppercase text-xs font-bold"></div>
+        <div><label id="lbVeh" class="t-lbl block mb-2">Vehículo (año marca modelo)</label>
+          <input id="fVeh" class="inp w-full px-4 py-3" placeholder="2018 Toyota Corolla"></div>
+        <div><label class="t-lbl block mb-2">VIN / Lote</label>
+          <input id="fVin" class="inp w-full px-4 py-3" style="text-transform:uppercase"></div>
       </div>
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div><label class="block font-mono text-[10px] font-bold uppercase mb-1.5" style="color:var(--txt-soft)">Plataforma</label>
-          <select id="fPlat" class="inp w-full px-4 py-3 rounded-2xl text-xs font-bold"><option>Copart</option><option>IAAI</option><option>ADESA</option><option>Manheim</option><option>Otro</option></select></div>
-        <div><label class="block font-mono text-[10px] font-bold uppercase mb-1.5" style="color:var(--txt-soft)">Costo ($)</label>
-          <input type="number" id="fCosto" class="inp w-full px-4 py-3 rounded-2xl text-xs font-bold" placeholder="0"></div>
-        <div><label class="block font-mono text-[10px] font-bold uppercase mb-1.5" style="color:var(--brand)">Precio venta ($)</label>
-          <input type="number" id="fVenta" class="inp w-full px-4 py-3 rounded-2xl text-xs font-bold" style="border-color:rgba(255,46,136,.4)" placeholder="0"></div>
+        <div><label class="t-lbl block mb-2">Plataforma</label>
+          <select id="fPlat" class="inp w-full px-4 py-3"><option>Copart</option><option>IAAI</option><option>ADESA</option><option>Manheim</option><option>Otro</option></select></div>
+        <div><label class="t-lbl block mb-2">Costo ($)</label>
+          <input type="number" id="fCosto" class="inp w-full px-4 py-3" placeholder="0"></div>
+        <div><label class="t-lbl block mb-2" style="color:var(--brand)">Precio venta ($)</label>
+          <input type="number" id="fVenta" class="inp w-full px-4 py-3" style="border-color:rgba(255,46,136,.4)" placeholder="0"></div>
       </div>
 
-      <button onclick="crearUnidad()" id="btnCrear" class="btn-p w-full py-3.5 rounded-2xl uppercase tracking-wider text-xs">Registrar unidad</button>
+      <button onclick="crearUnidad()" id="btnCrear" class="btn-p w-full py-3.5">Registrar unidad</button>
     </div>
   </section>
 
   <!-- ══ FINANZAS ══ -->
   <section id="pgFin" class="hidden space-y-5">
     <div class="grid grid-cols-1 xl:grid-cols-3 gap-5">
-      <div class="glass rounded-3xl p-6 xl:col-span-2 relative" style="border-top:2px solid var(--brand)">
-        <div class="hud tl"></div><div class="hud tr"></div>
+      <div class="glass rounded-3xl p-6 xl:col-span-2 relative" >
+        
         <div class="flex items-center gap-3 mb-5">
-          <div class="icon-badge">💰</div>
+          <div class="icon-badge"><span id="icFinH"></span></div>
           <div>
-            <h2 class="font-mono text-xs font-black text-white uppercase tracking-wide">Resumen financiero</h2>
-            <p class="font-mono text-[9px] font-bold uppercase tracking-wide mt-0.5" style="color:var(--txt-soft)">// Solo unidades activas</p>
+            <h2 class="t-md">Resumen financiero</h2>
+            <p class="t-sm mt-0.5">Solo unidades activas</p>
           </div>
         </div>
         <div id="finCifras" class="grid grid-cols-2 lg:grid-cols-4 gap-3"></div>
         <div id="finBarras" class="mt-5 space-y-3"></div>
       </div>
 
-      <div class="glass rounded-3xl p-6 flex flex-col items-center justify-center gap-4" style="border-top:2px solid var(--brand)">
-        <p class="font-mono text-[10px] font-black uppercase tracking-[0.2em]" style="color:var(--txt-soft)">Cobrado del total</p>
+      <div class="glass rounded-3xl p-6 flex flex-col items-center justify-center gap-4" >
+        <p class="t-lbl" style="color:var(--t3)">Cobrado del total</p>
         <div id="finAnillo"></div>
         <div id="finAnilloDet" class="text-center"></div>
       </div>
     </div>
 
-    <div class="glass rounded-3xl overflow-hidden" style="border-top:2px solid var(--brand)">
+    <div class="glass rounded-3xl overflow-hidden" >
       <div class="px-6 py-4 border-b flex items-center gap-3" style="background:var(--deep);border-color:var(--line)">
-        <div class="icon-badge">📊</div>
+        <div class="icon-badge"><span id="icDirH"></span></div>
         <div>
-          <h2 class="font-mono text-xs font-black text-white uppercase tracking-wide">Detalle por unidad</h2>
-          <p class="font-mono text-[9px] font-bold uppercase tracking-wide mt-0.5" style="color:var(--txt-soft)">// Costo, venta, cobrado y saldo</p>
+          <h2 class="t-md">Detalle por unidad</h2>
+          <p class="t-sm mt-0.5">Costo, venta, cobrado y saldo</p>
         </div>
       </div>
       <div class="overflow-x-auto"><table class="w-full text-left border-collapse">
-        <thead><tr class="font-mono text-[10px] uppercase font-black border-b" style="background:var(--bg);border-color:var(--line);color:var(--txt-soft)">
+        <thead><tr>
           <th class="p-4">Vehículo</th><th class="p-4">Cliente</th>
           <th class="p-4 text-right">Costo</th><th class="p-4 text-right">Venta</th>
           <th class="p-4 text-right">Cobrado</th><th class="p-4 text-right">Saldo</th>
@@ -493,14 +553,14 @@ select.inp option{background:var(--panel);color:var(--txt)}
   <section id="pgArch" class="hidden">
     <div class="glass rounded-3xl overflow-hidden" style="border-top:2px solid var(--cyan)">
       <div class="px-6 py-4 border-b flex items-center gap-3" style="background:var(--deep);border-color:var(--line)">
-        <div class="icon-badge">📂</div>
+        <div class="icon-badge"><span id="icArchH"></span></div>
         <div>
-          <h2 class="font-mono text-xs font-black text-white uppercase tracking-wide">Archivo histórico</h2>
-          <p class="font-mono text-[9px] font-bold uppercase tracking-wide mt-0.5" style="color:var(--txt-soft)">// Unidades finalizadas o archivadas</p>
+          <h2 class="t-md">Archivo histórico</h2>
+          <p class="t-sm mt-0.5">Unidades finalizadas o archivadas</p>
         </div>
       </div>
       <div class="overflow-x-auto"><table class="w-full text-left border-collapse">
-        <thead><tr class="font-mono text-[10px] uppercase font-black border-b" style="background:var(--bg);border-color:var(--line);color:var(--txt-soft)">
+        <thead><tr>
           <th class="p-4">Fecha</th><th class="p-4">Vehículo</th><th class="p-4">Cliente</th><th class="p-4">VIN</th>
           <th class="p-4 text-center">Avance</th><th class="p-4 text-right">Costo / Venta</th><th class="p-4"></th>
         </tr></thead>
@@ -511,19 +571,19 @@ select.inp option{background:var(--panel);color:var(--txt)}
 
   <!-- ══ USUARIOS ══ -->
   <section id="pgUsers" class="hidden">
-    <div class="glass rounded-3xl p-6 md:p-8 space-y-5 relative" style="border-top:2px solid var(--brand)">
-      <div class="hud tl"></div><div class="hud tr"></div>
+    <div class="glass rounded-3xl p-6 md:p-8 space-y-5 relative" >
+      
       <div class="flex items-center gap-3 border-b pb-4" style="border-color:var(--line)">
-        <div class="icon-badge">👤</div>
+        <div class="icon-badge"><span id="icEqH1"></span></div>
         <div>
-          <h2 class="font-mono text-xs font-black text-white uppercase tracking-wide">Usuarios y permisos</h2>
-          <p class="text-xs mt-0.5" style="color:var(--txt-soft)">Marca las áreas de cada quien. Se activa al instante en su cuenta.</p>
+          <h2 class="t-md">Usuarios y permisos</h2>
+          <p class="t-sm mt-0.5">Marca las áreas de cada quien. Se activa al instante en su cuenta.</p>
         </div>
       </div>
       <div class="deep rounded-xl p-3.5 flex gap-2.5">
-        <span class="text-base">👥</span>
-        <p class="text-[11px] leading-relaxed" style="color:var(--txt-soft)">
-          En las tareas de <b style="color:var(--cyan)">Marketing</b> (enviar opciones y publicidad) <b style="color:var(--txt)">cada persona con esa área marca su propio check</b>
+        <span style="color:var(--t3)"><span id="icEqH2"></span></span>
+        <p class="t-sm leading-relaxed">
+          En las tareas de <b style="color:var(--cyan)">Marketing</b> (enviar opciones y publicidad) <b style="color:var(--t1)">cada persona con esa área marca su propio check</b>
           —una por Facebook, otra por el grupo de WhatsApp, etc.— y la tarea solo se da por completa cuando todas marcaron.
           Si eres admin y no haces marketing, deja esa casilla sin marcar para que no te la pida.
         </p>
@@ -533,7 +593,6 @@ select.inp option{background:var(--panel);color:var(--txt)}
   </section>
 
 </main>
-</div>
 </div>
 </div>
 
@@ -570,17 +629,20 @@ const EQUIPO = {
   leslie: { nombre:"Leslie",  admin:false },
 };
 const AREAS = [
-  { k:"ventas",    n:"Ventas / Cliente",     i:"📞" },
-  { k:"marketing", n:"Marketing / Redes",    i:"📢" },
-  { k:"compras",   n:"Compras / Subastas",   i:"🔨" },
-  { k:"finanzas",  n:"Finanzas / Pagos",     i:"💳" },
-  { k:"naviera",   n:"Naviera / Logística",  i:"🚢" },
-  { k:"aduana",    n:"Aduana / Llegada",     i:"🛃" },
-  { k:"legal",     n:"Legal / Compraventa",  i:"⚖️" },
-  { k:"direccion", n:"Dirección / Precios",  i:"📊" },
+  { k:"ventas",    n:"Ventas y clientes",   ic:"ventas" },
+  { k:"marketing", n:"Marketing",           ic:"marketing" },
+  { k:"compras",   n:"Compras y subastas",  ic:"compras" },
+  { k:"finanzas",  n:"Finanzas y pagos",    ic:"finanzas" },
+  { k:"naviera",   n:"Naviera y logística", ic:"naviera" },
+  { k:"aduana",    n:"Aduana y llegada",    ic:"aduana" },
+  { k:"legal",     n:"Legal y compraventa", ic:"legal" },
+  { k:"direccion", n:"Dirección y precios", ic:"direccion" },
 ];
 const areaN = k => (AREAS.find(a=>a.k===k)||{n:k}).n;
-const areaI = k => (AREAS.find(a=>a.k===k)||{i:"•"}).i;
+const areaI = (k, s=16) => ico(((AREAS.find(a=>a.k===k)||{}).ic)||'ok', s);
+const fch = ms => { if(!ms) return ""; const d=new Date(ms); const hoy=new Date();
+  const o = d.getFullYear()===hoy.getFullYear() ? {day:'numeric',month:'short'} : {day:'numeric',month:'short',year:'2-digit'};
+  return d.toLocaleDateString('es-SV', o).replace('.',''); };
 
 /* ════════ PROCESOS ════════ */
 const FASES_ENC = ["1 · Inicio de proceso","2 · Adquisición y pago inicial","3 · Llegada y compraventa"];
@@ -599,6 +661,7 @@ const T_ENC = [
   {k:"e12",f:1,a:"finanzas", t:"Facturar el abono del 50%"},
   {k:"e13",f:1,a:"legal",    t:"Crear promesa de venta"},
   {k:"e14",f:2,a:"aduana",   t:"Marcar llegada del vehículo al país"},
+  {k:"e24",f:2,a:"ventas",   t:"Avisar al cliente que su vehículo llegó al país", d:"Mensaje al cliente apenas arriba, con los siguientes pasos y lo que falta pagar"},
   {k:"e15",f:2,a:"marketing",t:"Subir el carro como publicidad", d:"Cada quien en su canal (Facebook, grupo de WhatsApp, etc.)", multi:true},
   {k:"e16",f:2,a:"finanzas", t:"Pagar a la naviera", d:"Adjuntar comprobante del pago", foto:true},
   {k:"e17",f:2,a:"aduana",   t:"Cancelar impuestos de aduana", d:"Adjuntar comprobante / DUCA", foto:true},
@@ -606,7 +669,8 @@ const T_ENC = [
   {k:"e19",f:2,a:"finanzas", t:"Cliente cancela el restante", d:"Siempre con comprobante", pago:true, foto:true},
   {k:"e20",f:2,a:"finanzas", t:"Facturar el monto pagado"},
   {k:"e21",f:2,a:"aduana",   t:"Liberación del vehículo"},
-  {k:"e22",f:2,a:"legal",    t:"Crear compraventa y entregar vehículo", d:"Adjuntar foto del contrato firmado", foto:true},
+  {k:"e22",f:2,a:"legal",    t:"Crear compraventa y firmar contrato", d:"Adjuntar foto del contrato firmado por ambas partes", foto:true},
+  {k:"e25",f:2,a:"ventas",   t:"Entregar el vehículo al cliente", d:"Coordinar la entrega y dejar constancia con foto", foto:true},
   {k:"e23",f:2,a:"legal",    t:"Hacer prórroga de compraventa", opc:true},
 ];
 const FASES_STK = ["1 · Coste e introducción","2 · Preparación y logística USA","3 · Gestión comercial","4 · Arribo y finalización"];
@@ -622,12 +686,14 @@ const T_STK = [
   {k:"s09",f:2,a:"legal",    t:"Creación de promesa de venta"},
   {k:"s10",f:2,a:"naviera",  t:"Control de estatus al cliente", d:"Semanal hasta que llegue", repetible:true},
   {k:"s11",f:3,a:"aduana",   t:"Arribo al país"},
+  {k:"s19",f:3,a:"ventas",   t:"Avisar al cliente que el vehículo llegó", d:"Solo si ya está asignado a un cliente"},
   {k:"s12",f:3,a:"aduana",   t:"Pago de impuestos en aduana", d:"Adjuntar comprobante / DUCA", foto:true},
   {k:"s13",f:3,a:"aduana",   t:"Revisión mecánica", d:"Subir fotos del estado del vehículo", foto:true},
   {k:"s14",f:3,a:"aduana",   t:"Liberación del vehículo"},
   {k:"s15",f:3,a:"finanzas", t:"Facturación del restante"},
   {k:"s16",f:3,a:"finanzas", t:"Cancelación total (pago final)", d:"Adjuntar comprobante del pago final", pago:true, foto:true},
   {k:"s17",f:3,a:"legal",    t:"Compraventa (firma contrato final)", d:"Adjuntar foto del contrato firmado", foto:true},
+  {k:"s20",f:3,a:"ventas",   t:"Entregar el vehículo al cliente", d:"Coordinar la entrega y dejar constancia con foto", foto:true},
   {k:"s18",f:3,a:"legal",    t:"Crear prórroga de compraventa", opc:true},
 ];
 const defT   = v => v.tipoProceso === "Encargo" ? T_ENC : T_STK;
@@ -638,6 +704,48 @@ let yo = null, usersData = {}, autos = [], filtro = "todos", tipoNuevo = "Encarg
 
 const esc = s => String(s??"").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money = n => "$" + Number(n||0).toLocaleString('en-US',{maximumFractionDigits:0});
+
+/* ═══ Iconos de línea ═══ */
+const ICO = {
+  flota:    '<path d="M4.5 16.5v1.8a.9.9 0 0 1-.9.9h-.7a.9.9 0 0 1-.9-.9V13c0-.5.1-.9.3-1.3l1.5-3A2 2 0 0 1 5.6 7.6h8.8c.6 0 1.2.3 1.6.8l2 2.4 2.4.6c.8.2 1.4.9 1.4 1.8v3a.9.9 0 0 1-.9.9h-.7a.9.9 0 0 1-.9-.9"/><path d="M2.6 13.6h18.8M8.4 7.8l.6 5.6"/><circle cx="7" cy="16.4" r="1.9"/><circle cx="17" cy="16.4" r="1.9"/>',
+  tareas:   '<rect x="3.5" y="4.5" width="17" height="15" rx="3.5"/><path d="M8.5 12l2.4 2.4L15.5 9.6"/>',
+  nueva:    '<path d="M12 5.5v13M5.5 12h13"/>',
+  finanzas: '<path d="M4 19.5V10M10 19.5V5M16 19.5v-6.5M21.5 19.5h-19"/>',
+  archivo:  '<path d="M4 8.5h16M6 8.5V6.5a2 2 0 0 1 2-2h2.4l1.6 2H18a2 2 0 0 1 2 2v2M4.5 8.5v9a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-9"/>',
+  equipo:   '<circle cx="9" cy="8" r="3"/><path d="M3.5 19.5v-.6A4.9 4.9 0 0 1 8.4 14h1.2a4.9 4.9 0 0 1 4.9 4.9v.6M16 5.6a3 3 0 0 1 0 5.8M17.6 14.4a4 4 0 0 1 2.9 3.8v1.3"/>',
+  ventas:   '<path d="M5.5 4.5h3l1.5 4-2 1.4a12 12 0 0 0 5.6 5.6l1.4-2 4 1.5v3a1.5 1.5 0 0 1-1.7 1.5A16 16 0 0 1 4 6.2 1.5 1.5 0 0 1 5.5 4.5z"/>',
+  marketing:'<path d="M3.5 10v4a1 1 0 0 0 1 1H7l5 3.5V5.5L7 9H4.5a1 1 0 0 0-1 1z"/><path d="M16 9a4 4 0 0 1 0 6"/>',
+  compras:  '<path d="M3.5 6.5h17l-1.5 9a2 2 0 0 1-2 1.7H7a2 2 0 0 1-2-1.7l-1.5-9z"/><path d="M8.5 6.5V5a3.5 3.5 0 0 1 7 0v1.5"/>',
+  naviera:  '<path d="M3 17.6c1.4.9 2.8.9 4.2 0s2.8-.9 4.2 0 2.8.9 4.2 0 2.8-.9 4.2 0"/><path d="M5.5 14.2V9.6L12 7.2l6.5 2.4v4.6"/><path d="M12 4.6v2.6"/>',
+  aduana:   '<path d="M3.5 20.5h17M5.5 20.5V9.6L12 4.5l6.5 5.1v10.9"/><path d="M10 20.5V16h4v4.5"/>',
+  legal:    '<path d="M12 4.5v15M7 8.5l-3 5.5h6zM17 8.5l-3 5.5h6zM5 8.5h14"/>',
+  direccion:'<path d="M3.5 3.5v17h17"/><path d="M7.5 15.2l3.6-3.6 2.5 2.5 4.9-5.4"/>',
+  campana:  '<path d="M6.5 9.5a5.5 5.5 0 0 1 11 0c0 4.4 2 5.5 2 5.5h-15s2-1.1 2-5.5z"/><path d="M10.2 18.5a2 2 0 0 0 3.6 0"/>',
+  reloj:    '<circle cx="12" cy="12" r="8"/><path d="M12 7.6V12l3 1.8"/>',
+  buscar:   '<circle cx="11" cy="11" r="6.5"/><path d="M15.8 15.8l4.2 4.2"/>',
+  clip:     '<path d="M19.4 11.6l-7.5 7.5a4.2 4.2 0 1 1-5.9-5.9l7.9-7.9a2.8 2.8 0 0 1 4 4l-7.9 7.9a1.4 1.4 0 0 1-2-2l7.2-7.2"/>',
+  editar:   '<path d="M16.5 4.8l2.7 2.7L8.4 18.3l-3.4.7.7-3.4z"/>',
+  basura:   '<path d="M4.5 7h15M9.5 7V5.3h5V7M6.6 7l.9 12.2h9l.9-12.2"/>',
+  cerrar:   '<path d="M6.6 6.6l10.8 10.8M17.4 6.6L6.6 17.4"/>',
+  ok:       '<path d="M5 12.6l5 5 9-10"/>',
+  mas:      '<path d="M12 6v12M6 12h12"/>',
+  chat:     '<path d="M20 11.9a7.4 7.4 0 0 1-10.8 6.6L4 20l1.4-5A7.4 7.4 0 1 1 20 11.9z"/>',
+  usuario:  '<circle cx="12" cy="8" r="3.4"/><path d="M4.6 20v-.8A5.2 5.2 0 0 1 9.8 14h4.4a5.2 5.2 0 0 1 5.2 5.2v.8"/>',
+  caja:     '<path d="M3.6 7.6L12 3.5l8.4 4.1v8.8L12 20.5l-8.4-4.1z"/><path d="M3.6 7.6L12 11.7l8.4-4.1M12 11.7v8.8"/>',
+  apreton:  '<path d="M8.5 10.5l2.5 2.5 1.5-1.5 3.5 3.5a1.8 1.8 0 1 1-2.5 2.5"/><path d="M12 6h4l4.5 4.5M11 6H7.5L3 10.5 6 13.5"/>',
+  avion:    '<path d="M10.5 12.5L3 10l2-2 5.5 1.5L16 4a2 2 0 0 1 2.8 2.8L13.5 13 15 18.5l-2 2z"/>',
+  alerta:   '<path d="M12 8.5v5M12 16.8v.1"/><circle cx="12" cy="12" r="8"/>',
+  reloj2:   '<circle cx="12" cy="12" r="8"/><path d="M12 7.6V12l2.8 1.6"/>',
+  robot:    '<rect x="4.5" y="8" width="15" height="11" rx="3"/><path d="M12 4.5V8M8.5 13v1.5M15.5 13v1.5"/><circle cx="12" cy="4" r="1.2"/>',
+  foto:     '<rect x="3.5" y="6.5" width="17" height="13" rx="3"/><circle cx="12" cy="13" r="3.2"/><path d="M8.5 6.5l1.2-2h4.6l1.2 2"/>',
+  candado:  '<rect x="5.5" y="10.5" width="13" height="9" rx="2.5"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/>',
+  flecha:   '<path d="M5 12h13M13 7l5 5-5 5"/>',
+  salir:    '<path d="M14 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-2"/><path d="M18 12H9M15.5 9l3 3-3 3"/>',
+};
+function ico(n, s=18, w=1.6){
+  return `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;display:block">${ICO[n]||ICO.ok}</svg>`;
+}
 
 // Anillo de progreso estilo dashboard
 function anillo(pct, size=120, grosor=9, etiqueta=""){
@@ -707,10 +815,10 @@ window.entrar = async function(){
   b.disabled = true; b.innerText = "Entrando…";
   const mail = u + "@yesica.local";
   const explica = c => ({
-    "auth/api-key-not-valid.-please-pass-a-valid-api-key.":"⚙️ La clave de conexión no es válida. Revisa la configuración de Firebase.",
-    "auth/api-key-not-valid":"⚙️ La clave de conexión no es válida. Revisa la configuración de Firebase.",
-    "auth/operation-not-allowed":"⚙️ Falta activar “Correo electrónico/contraseña” en Firebase → Authentication → Sign-in method.",
-    "auth/unauthorized-domain":"⚙️ Este dominio no está autorizado. Agrégalo en Firebase → Authentication → Settings → Authorized domains.",
+    "auth/api-key-not-valid.-please-pass-a-valid-api-key.":"La clave de conexión no es válida. Revisa la configuración de Firebase.",
+    "auth/api-key-not-valid":"La clave de conexión no es válida. Revisa la configuración de Firebase.",
+    "auth/operation-not-allowed":"Falta activar “Correo electrónico/contraseña” en Firebase → Authentication → Sign-in method.",
+    "auth/unauthorized-domain":"Este dominio no está autorizado. Agrégalo en Firebase → Authentication → Settings → Authorized domains.",
     "auth/network-request-failed":"📶 Sin conexión a internet. Revisa tu red e intenta de nuevo.",
     "auth/too-many-requests":"⏳ Demasiados intentos. Espera unos minutos e intenta otra vez.",
     "auth/wrong-password":"Contraseña incorrecta.",
@@ -756,8 +864,8 @@ onAuthStateChanged(auth, async user=>{
     document.getElementById('app').classList.remove('hidden');
     document.getElementById('dMe').innerText = yo.nombre;
     document.getElementById('avatarYo').innerText = (yo.nombre||"?").charAt(0).toUpperCase();
-    document.getElementById('dRol').innerText = (yo.admin ? "ADMIN" : "v3") ;
-    document.getElementById('dRol').style.color = yo.admin ? "var(--brand)" : "var(--txt-soft)";
+    document.getElementById('dRol').innerText = yo.admin ? "Administrador" : ((yo.areas||[]).length + " áreas");
+    document.getElementById('dRol').style.color = "var(--t3)";
     document.getElementById('tbUsers').classList.toggle('hidden', !yo.admin);
     pintarUsers(); pintarTodo();
     if(!suscrito){
@@ -790,12 +898,12 @@ onAuthStateChanged(auth, async user=>{
 /* ════════ NAVEGACIÓN ════════ */
 const PGS = { flota:["pgFlota","tbFlota"], mias:["pgMias","tbMias"], nuevo:["pgNuevo","tbNuevo"], finanzas:["pgFin","tbFin"], archivo:["pgArch","tbArch"], usuarios:["pgUsers","tbUsers"] };
 const TITULOS = {
-  flota:    ["Flota activa",       "// Todo lo que está en proceso ahora"],
-  mias:     ["Mis tareas",         "// Solo lo que te toca a ti"],
-  nuevo:    ["Nueva unidad",       "// Registra un carro o un cliente"],
-  finanzas: ["Panel financiero",   "// Inversión, cobros y ganancia"],
-  archivo:  ["Archivo histórico",  "// Unidades finalizadas"],
-  usuarios: ["Equipo y permisos",  "// Quién hace qué"],
+  flota:    ["Flota activa",      "Todo lo que está en proceso ahora"],
+  mias:     ["Mis tareas",        "Lo que te toca a ti, agrupado por área"],
+  nuevo:    ["Nueva unidad",      "Registra un vehículo o un cliente"],
+  finanzas: ["Panel financiero",  "Inversión, cobros y ganancia proyectada"],
+  archivo:  ["Archivo",           "Unidades finalizadas o archivadas"],
+  usuarios: ["Equipo y permisos", "Define qué puede tocar cada persona"],
 };
 window.ir = function(p){
   if(p==='finanzas') pintarFinanzas();
@@ -808,6 +916,8 @@ window.ir = function(p){
     document.getElementById('tituloPagina').innerText = t[0];
     document.getElementById('subPagina').innerText = t[1];
   }
+  const sr = document.getElementById('statsRow');
+  if(sr) sr.classList.toggle('hidden', p!=='flota');
   window.scrollTo({top:0, behavior:'smooth'});
 };
 window.setF = function(f){
@@ -824,7 +934,7 @@ window.setTipo = function(t){
   document.getElementById('camposCli').style.display = enc ? "block" : "none";
   document.getElementById('avisoVeh').style.display  = enc ? "flex"  : "none";
   document.getElementById('lbVeh').innerHTML = enc
-    ? 'Vehículo <span style="color:var(--txt-soft)">(opcional — se asigna al ganarlo)</span>'
+    ? 'Vehículo <span style="color:var(--t3)">(opcional — se asigna al ganarlo)</span>'
     : 'Vehículo (año marca modelo)';
   document.getElementById('tipoAyuda').innerText = enc
     ? "El cliente pide un carro específico y se lo buscamos. Al inicio basta con registrar al cliente y lo que busca."
@@ -939,9 +1049,9 @@ function pintarFlota(){
 
   if(!ls.length){
     cont.innerHTML = `<div class="glass rounded-3xl p-14 text-center xl:col-span-2">
-      <div class="text-4xl mb-3">🏁</div>
-      <p class="font-mono font-bold text-sm" style="color:var(--txt-soft)">No hay unidades que coincidan.</p>
-      <p class="text-[11px] mt-1" style="color:var(--txt-soft)">Registra una en “Nueva Unidad” o cambia el filtro.</p></div>`;
+      <div class="flex justify-center mb-3" style="color:var(--t3)">${ico("flota",34,1.3)}</div>
+      <p class="t-md" style="color:var(--t3)">No hay unidades que coincidan.</p>
+      <p class="text-[11px] mt-1" style="color:var(--t3)">Registra una en “Nueva Unidad” o cambia el filtro.</p></div>`;
     return;
   }
 
@@ -950,37 +1060,40 @@ function pintarFlota(){
     const enc = v.tipoProceso==="Encargo";
     const sig = defT(v).filter(t=>!t.opc).find(t=> !tareaOk(v,t));
     const equipoTarea = sig ? respons(sig.a).slice(0,4) : [];
-    return `<div class="glass lift fade-up rounded-2xl p-5 space-y-3.5 relative cursor-pointer overflow-hidden" onclick="abrirDetalle('${v.id}')"
-      style="border-top:2px solid ${enc?'var(--cyan)':'var(--ok)'};animation-delay:${Math.min(idx,8)*40}ms">
-      <div class="flex justify-between items-start gap-3">
+    const cob = pagado(v), vta = Number(v.precio_venta||0);
+    return `<div class="glass lift fade-up p-5 cursor-pointer" onclick="abrirDetalle('${v.id}')"
+      style="animation-delay:${Math.min(idx,8)*35}ms">
+
+      <div class="flex justify-between items-start gap-3 mb-4">
         <div class="min-w-0">
-          <h3 class="font-display font-bold text-base leading-tight truncate" style="color:${v.vehiculo?'#fff':'var(--warn)'}">${esc(v.vehiculo) || "🔎 Carro por asignar"}</h3>
-          <p class="font-mono text-[10px] mt-1 truncate" style="color:var(--txt-soft)">${v.vehiculo?`${esc(v.plataforma)} · ${esc(v.vin)||"sin VIN"}`:(v.deseoCliente?`Busca: ${esc(v.deseoCliente)}`:"Sin vehículo todavía")}</p>
+          <h3 class="t-md truncate" style="color:${v.vehiculo?'var(--t1)':'var(--warn)'}">${esc(v.vehiculo) || "Carro por asignar"}</h3>
+          <p class="t-xs mt-1 truncate">${v.vehiculo?`${esc(v.plataforma)} · ${esc(v.vin)||"sin VIN"}`:(v.deseoCliente?`Busca: ${esc(v.deseoCliente)}`:"Sin vehículo todavía")}</p>
         </div>
-        <span class="chip ${enc?'chip-cy':'chip-ok'} flex-shrink-0">${enc?'🤝 Encargo':'📦 Stock'}</span>
+        <span class="chip ${enc?'chip-cy':'chip-ok'} flex-shrink-0">${enc?'Encargo':'Stock'}</span>
       </div>
 
-      ${v.nombreCliente
-        ? `<p class="font-mono text-[11px] font-bold" style="color:var(--cyan)">👤 ${esc(v.nombreCliente)}</p>`
-        : `<p class="font-mono text-[11px] font-bold" style="color:var(--txt-soft)">👤 Sin cliente asignado</p>`}
-
-      <div>
-        <div class="flex justify-between items-baseline mb-1.5">
-          <span class="font-mono text-[9px] uppercase tracking-wider truncate" style="color:var(--txt-soft)">${esc(defF(v)[fa])}</span>
-          <span class="font-mono text-xs font-bold flex-shrink-0" style="color:var(--cyan)">${p}%</span>
-        </div>
-        <div class="bar"><i style="width:${p}%"></i></div>
+      <div class="flex items-center gap-2 mb-4">
+        <span style="color:var(--t3)">${ico("usuario",14)}</span>
+        <p class="t-sm truncate" style="color:${v.nombreCliente?'var(--t2)':'var(--t3)'}">${esc(v.nombreCliente) || "Sin cliente asignado"}</p>
       </div>
 
-      ${sig ? `<div class="flex items-center gap-2.5 min-w-0">
-        <span class="text-base flex-shrink-0">${areaI(sig.a)}</span>
-        <p class="text-[12px] font-semibold truncate flex-1">${esc(sig.t)}</p>
+      <div class="mb-4">
+        <div class="flex justify-between items-baseline mb-2">
+          <span class="t-xs truncate">${esc(defF(v)[fa])}</span>
+          <span class="num text-[13px] font-semibold flex-shrink-0" style="color:var(--cyan)">${p}%</span>
+        </div>
+        <div class="bar"><i style="width:${p}%;background:var(--cyan)"></i></div>
+      </div>
+
+      ${sig ? `<div class="raised flex items-center gap-2.5 p-2.5 mb-4 min-w-0">
+        <span class="flex-shrink-0" style="color:var(--t3)">${areaI(sig.a,15)}</span>
+        <p class="text-[13px] truncate flex-1" style="letter-spacing:-0.01em">${esc(sig.t)}</p>
       </div>`
-      : `<span class="chip chip-ok"><span class="dot"></span>Proceso completo</span>`}
+      : `<div class="mb-4"><span class="chip chip-ok"><span class="dot"></span>Proceso completo</span></div>`}
 
-      <div class="flex justify-between items-center pt-2.5 border-t gap-2" style="border-color:var(--line)">
-        <span class="font-mono text-[10px] truncate" style="color:var(--txt-soft)">
-          <b style="color:var(--ok)">${money(pagado(v))}</b> de ${money(v.precio_venta)}
+      <div class="flex justify-between items-center pt-3.5 gap-2" style="border-top:1px solid var(--line)">
+        <span class="t-xs truncate">
+          <b class="num" style="color:var(--ok)">${money(cob)}</b> de <span class="num">${money(vta)}</span>
         </span>
         ${mias ? `<span class="chip chip-pk flex-shrink-0"><span class="dot"></span>${mias} para ti</span>`
                : (equipoTarea.length ? `<div class="avatar-stack flex-shrink-0">${equipoTarea.slice(0,3).map((u,i)=>avatarDe(u,i)).join("")}</div>` : "")}
@@ -994,7 +1107,8 @@ function pintarMias(){
 
   const items = [];
   autos.filter(a=>!a.archivado).forEach(v=> pendientesMias(v).forEach(t=> items.push({v,t})));
-  document.getElementById('badgeMias').innerText = items.length;
+  const bm = document.getElementById('badgeMias');
+  bm.innerText = items.length; bm.classList.toggle('cero', items.length===0);
 
   // Cuántas se han completado hoy (de mis áreas) para dar sensación de avance
   const hoy = new Date().toDateString();
@@ -1023,9 +1137,9 @@ function pintarMias(){
 
   if(!items.length){
     cont.innerHTML = `<div class="glass rounded-3xl p-14 text-center fade-up">
-      <div class="text-5xl mb-3">${hechasHoy?"🎉":"☕"}</div>
+      <div class="flex justify-center mb-3" style="color:${hechasHoy?'var(--ok)':'var(--t3)'}">${ico(hechasHoy?"ok":"tareas",38,1.3)}</div>
       <p class="font-display text-lg font-bold text-white">${hechasHoy?"Terminaste todo":"Sin pendientes"}</p>
-      <p class="text-xs mt-1.5" style="color:var(--txt-soft)">${hechasHoy?"Puedes tomarte un respiro.":"Cuando te asignen algo aparecerá aquí."}</p>
+      <p class="text-xs mt-1.5" style="color:var(--t3)">${hechasHoy?"Puedes tomarte un respiro.":"Cuando te asignen algo aparecerá aquí."}</p>
     </div>`;
     return;
   }
@@ -1037,20 +1151,20 @@ function pintarMias(){
   cont.innerHTML = Object.keys(grupos).map(a=>`
     <div class="group-head">
       <span class="gh-ico">${areaI(a)}</span>
-      <span class="font-mono text-[10px] font-black uppercase tracking-[0.14em] text-white">${esc(areaN(a))}</span>
-      <span class="font-mono text-[10px]" style="color:var(--txt-soft)">${grupos[a].length}</span>
+      <span class="t-md">${esc(areaN(a))}</span>
+      <span class="t-xs">${grupos[a].length}</span>
       <span class="gh-line"></span>
     </div>
     ${grupos[a].map(({v,t},i)=>`
       <div class="task-card fade-up" id="tc-${v.id}-${t.k}" style="animation-delay:${Math.min(i,8)*35}ms"
            onclick="${t.foto?`abrirDetalle('${v.id}')`:`marcarDesdeLista('${v.id}','${t.k}')`}">
-        <div class="task-check" id="chk-${v.id}-${t.k}">${t.foto?'📎':'✓'}</div>
+        <div class="task-check" id="chk-${v.id}-${t.k}">${t.foto?ico("clip",13,2):ico("ok",14,2.4)}</div>
         <div class="flex-1 min-w-0">
           <p class="task-title truncate">${esc(t.t)}</p>
           <p class="task-meta truncate">${esc(v.vehiculo)||"Carro por asignar"}${v.nombreCliente?` · ${esc(v.nombreCliente)}`:""}${t.multi&&respons(t.a).length?` · tu parte (${respons(t.a).filter(u=>(v.tareas?.[t.k]?.marcas||{})[u]).length}/${respons(t.a).length})`:""}</p>
         </div>
         ${t.foto?`<span class="chip chip-wn flex-shrink-0">comprobante</span>`:""}
-        <button onclick="event.stopPropagation();abrirDetalle('${v.id}')" class="btn-g text-[9px] uppercase px-2.5 py-1.5 rounded-lg flex-shrink-0">Ver</button>
+        <button onclick="event.stopPropagation();abrirDetalle('${v.id}')" class="btn-g px-2.5 py-1.5 rounded-lg flex-shrink-0">Ver</button>
       </div>`).join("")}
   `).join("");
 }
@@ -1076,22 +1190,22 @@ function pintarFinanzas(){
 
   const tarjeta = (icono,label,valor,color) => `
     <div class="stat">
-      <div class="flex items-center justify-between"><span class="text-lg">${icono}</span>
-        <span class="font-mono text-base font-bold" style="color:${color}">${money(valor)}</span></div>
-      <p class="font-mono text-[9px] font-bold uppercase tracking-wider mt-1.5" style="color:var(--txt-soft)">${label}</p>
+      <div class="ico-box">${ico(icono,16)}</div>
+      <p class="num text-[22px] font-semibold mt-1" style="color:${color}">${money(valor)}</p>
+      <p class="t-lbl mt-1">${label}</p>
     </div>`;
 
   document.getElementById('finCifras').innerHTML =
-      tarjeta("📥","Invertido (costos)", costo, "var(--txt)")
-    + tarjeta("🏷️","Venta proyectada", venta, "var(--info)")
-    + tarjeta("✅","Ya cobrado", cobrado, "var(--ok)")
-    + tarjeta("⏳","Por cobrar", porCobrar, "var(--warn)");
+      tarjeta("caja","Invertido", costo, "var(--txt)")
+    + tarjeta("apreton","Venta proyectada", venta, "var(--info)")
+    + tarjeta("ok","Ya cobrado", cobrado, "var(--ok)")
+    + tarjeta("reloj","Por cobrar", porCobrar, "var(--warn)");
 
   const barra = (label,val,tot,color) => {
     const p = tot>0 ? Math.round((val/tot)*100) : 0;
     return `<div>
-      <div class="flex justify-between font-mono text-[10px] mb-1">
-        <span style="color:var(--txt-soft)">${label}</span>
+      <div class="flex justify-between t-xs mb-1">
+        <span style="color:var(--t3)">${label}</span>
         <span style="color:${color}">${money(val)} · ${p}%</span>
       </div>
       <div class="bar"><i style="width:${p}%;background:${color}!important"></i></div>
@@ -1104,16 +1218,16 @@ function pintarFinanzas(){
 
   document.getElementById('finAnillo').innerHTML = anillo(pctCobrado, 165, 12, "cobrado");
   document.getElementById('finAnilloDet').innerHTML = `
-    <p class="font-mono text-lg font-bold" style="color:var(--ok)">${money(cobrado)}</p>
-    <p class="font-mono text-[10px]" style="color:var(--txt-soft)">de ${money(venta)} proyectados</p>
+    <p class="num text-lg font-semibold" style="color:var(--ok)">${money(cobrado)}</p>
+    <p class="t-xs">de ${money(venta)} proyectados</p>
     <div class="mt-3 pt-3 border-t" style="border-color:var(--line)">
-      <p class="font-mono text-[9px] uppercase tracking-wider" style="color:var(--txt-soft)">Ganancia proyectada</p>
-      <p class="font-mono text-base font-bold" style="color:${ganancia>=0?'var(--brand)':'var(--danger)'}">${money(ganancia)} <span class="text-[10px]">(${Math.round(margen)}% margen)</span></p>
+      <p class="t-lbl" style="color:var(--t3)">Ganancia proyectada</p>
+      <p class="num text-base font-semibold" style="color:${ganancia>=0?'var(--brand)':'var(--danger)'}">${money(ganancia)} <span class="text-[10px]">(${Math.round(margen)}% margen)</span></p>
     </div>`;
 
   const t = document.getElementById('finTabla');
   if(!act.length){
-    t.innerHTML = `<tr><td colspan="8" class="p-14 text-center font-mono font-bold" style="color:var(--txt-soft)"><div class="text-3xl mb-2">📊</div>No hay unidades activas.</td></tr>`;
+    t.innerHTML = `<tr><td colspan="8" class="p-14 text-center t-md" style="color:var(--t3)"><div class="flex justify-center mb-2" style="color:var(--t3)">${ico("direccion",30,1.3)}</div>No hay unidades activas.</td></tr>`;
     return;
   }
   t.innerHTML = act.map(v=>{
@@ -1121,12 +1235,12 @@ function pintarFinanzas(){
     return `<tr class="border-b hover:bg-white/5 cursor-pointer" style="border-color:var(--line)" onclick="abrirDetalle('${v.id}')">
       <td class="p-4 font-bold text-white">${esc(v.vehiculo)||"Por asignar"}</td>
       <td class="p-4" style="color:var(--cyan)">${esc(v.nombreCliente)||"—"}</td>
-      <td class="p-4 text-right font-mono">${money(v.costo_subasta)}</td>
-      <td class="p-4 text-right font-mono" style="color:var(--info)">${money(v.precio_venta)}</td>
-      <td class="p-4 text-right font-mono" style="color:var(--ok)">${money(pagado(v))}</td>
-      <td class="p-4 text-right font-mono" style="color:var(--warn)">${money(saldo(v))}</td>
-      <td class="p-4 text-right font-mono font-bold" style="color:${g>=0?'var(--brand)':'var(--danger)'}">${money(g)}</td>
-      <td class="p-4 text-center font-mono font-black" style="color:var(--cyan)">${progreso(v)}%</td>
+      <td class="p-4 text-right num">${money(v.costo_subasta)}</td>
+      <td class="p-4 text-right num" style="color:var(--info)">${money(v.precio_venta)}</td>
+      <td class="p-4 text-right num" style="color:var(--ok)">${money(pagado(v))}</td>
+      <td class="p-4 text-right num" style="color:var(--warn)">${money(saldo(v))}</td>
+      <td class="p-4 text-right num font-semibold" style="color:${g>=0?'var(--brand)':'var(--danger)'}">${money(g)}</td>
+      <td class="p-4 text-center num font-semibold" style="color:var(--cyan)">${progreso(v)}%</td>
     </tr>`;
   }).join("");
 }
@@ -1134,18 +1248,18 @@ function pintarFinanzas(){
 function pintarArchivo(){
   const t = document.getElementById('tArch');
   const ls = autos.filter(a=>a.archivado);
-  if(!ls.length){ t.innerHTML = `<tr><td colspan="7" class="p-14 text-center font-mono font-bold" style="color:var(--txt-soft)"><div class="text-3xl mb-2">🗂️</div>Nada archivado todavía.</td></tr>`; return; }
+  if(!ls.length){ t.innerHTML = `<tr><td colspan="7" class="p-14 text-center t-md" style="color:var(--t3)"><div class="flex justify-center mb-2" style="color:var(--t3)">${ico("archivo",30,1.3)}</div>Nada archivado todavía.</td></tr>`; return; }
   t.innerHTML = ls.map(v=>`<tr class="border-b hover:bg-white/5" style="border-color:var(--line)">
-    <td class="p-4 font-mono text-[11px]" style="color:var(--txt-soft)">${v.fecha_registro? new Date(v.fecha_registro).toLocaleDateString():"—"}</td>
+    <td class="p-4 t-xs" style="color:var(--t3)">${v.fecha_registro? fch(v.fecha_registro):"—"}</td>
     <td class="p-4 font-bold text-white">${esc(v.vehiculo)||"—"}</td>
     <td class="p-4" style="color:var(--cyan)">${esc(v.nombreCliente)||"—"}</td>
-    <td class="p-4 font-mono text-[11px]" style="color:var(--txt-soft)">${esc(v.vin)}</td>
-    <td class="p-4 text-center font-mono font-black" style="color:var(--cyan)">${progreso(v)}%</td>
-    <td class="p-4 text-right font-mono font-bold">${money(v.costo_subasta)} / <span style="color:var(--brand)">${money(v.precio_venta)}</span></td>
+    <td class="p-4 t-xs" style="color:var(--t3)">${esc(v.vin)}</td>
+    <td class="p-4 text-center num font-semibold" style="color:var(--cyan)">${progreso(v)}%</td>
+    <td class="p-4 text-right num font-semibold">${money(v.costo_subasta)} / <span style="color:var(--brand)">${money(v.precio_venta)}</span></td>
     <td class="p-4 text-right whitespace-nowrap">
-      <button onclick="archivar('${v.id}',false)" class="btn-g text-[9px] uppercase px-2.5 py-1.5 rounded-lg">Reactivar</button>
-      ${yo?.admin ? `<button onclick="eliminar('${v.id}')" class="btn-g text-[9px] uppercase px-2.5 py-1.5 rounded-lg ml-1.5"
-           style="color:var(--danger);border-color:rgba(251,113,133,.4)">🗑</button>`:""}
+      <button onclick="archivar('${v.id}',false)" class="btn-g px-2.5 py-1.5 rounded-lg">Reactivar</button>
+      ${yo?.admin ? `<button onclick="eliminar('${v.id}')" class="btn-g px-2.5 py-1.5 rounded-lg ml-1.5"
+           style="color:var(--danger);border-color:rgba(255,69,58,.3)" title="Eliminar">${ico("basura",14)}</button>`:""}
     </td>
   </tr>`).join("");
 }
@@ -1158,13 +1272,15 @@ function pintarUsers(){
     const body = (d.admin ? `<span class="chip chip-pk mb-1"><span class="dot"></span>Admin · puede todo</span>` : "")
       + AREAS.map(a=>{
           const on = (d.areas||[]).includes(a.k);
-          return `<label class="flex items-center gap-2 text-[11px] font-bold cursor-pointer" style="color:${on?'var(--cyan)':'var(--txt-soft)'}">
-            <input type="checkbox" ${on?'checked':''} onchange="togArea('${u}','${a.k}',this.checked)" class="w-4 h-4 accent-cyan-400 rounded">
-            ${a.i} ${a.n}</label>`;
+          return `<label class="perm ${on?'on':''}">
+            <input type="checkbox" ${on?'checked':''} onchange="togArea('${u}','${a.k}',this.checked)">
+            <span class="perm-box">${ico("ok",11,3)}</span>
+            <span class="perm-ico">${areaI(a.k,15)}</span>
+            <span class="perm-n">${esc(a.n)}</span></label>`;
         }).join("");
     return `<div class="deep lift rounded-2xl p-5 space-y-3">
       <div class="flex items-center justify-between gap-2">
-        <span class="font-mono text-xs font-black uppercase text-white">${esc(d.nombre)}</span>
+        <span class="t-md">${esc(d.nombre)}</span>
         <span class="chip ${creado?'chip-ok':'chip-gr'}">${creado?'activo':'sin entrar'}</span>
       </div>
       <div class="flex flex-col gap-2">${body}</div>
@@ -1194,23 +1310,23 @@ window.abrirDetalle = function(id, silencioso){
           const hecho = !!marcas[u], soyYo = u===yo.usuario;
           return `<div class="flex items-center gap-2 py-1">
             <div class="tbox ${hecho?'on':''} ${soyYo?'':'lock'}" style="width:17px;height:17px;font-size:10px"
-              ${soyYo?`onclick="marcarMulti('${v.id}','${t.k}',${hecho})"`:'title="Solo esta persona puede marcar su parte"'}>${hecho?'✓':(soyYo?'':'·')}</div>
-            <span class="font-mono text-[10px] ${hecho?'':'opacity-70'}" style="color:${hecho?'var(--ok)':'var(--txt-soft)'}">
-              ${esc(usersData[u]?.nombre||u)}${soyYo?' (tú)':''}${hecho&&marcas[u]?` · ${new Date(marcas[u]).toLocaleDateString()}`:''}
+              ${soyYo?`onclick="marcarMulti('${v.id}','${t.k}',${hecho})"`:'title="Solo esta persona puede marcar su parte"'}>${hecho?ico("ok",11,2.6):''}</div>
+            <span class="t-xs ${hecho?'':'opacity-70'}" style="color:${hecho?'var(--ok)':'var(--txt-soft)'}">
+              ${esc(usersData[u]?.nombre||u)}${soyYo?' (tú)':''}${hecho&&marcas[u]?` · ${fch(marcas[u])}`:''}
             </span></div>`;
         }).join("");
         return `<div class="tarea ${ok?'hecha':''}" style="flex-direction:column;align-items:stretch;gap:6px">
           <div class="flex items-start gap-2">
-            <span class="text-sm mt-0.5">${ok?'✅':'👥'}</span>
+            <span class="text-sm mt-0.5">${ok?ico("ok",15,2):ico("equipo",15)}</span>
             <div class="flex-1 min-w-0">
               <p class="text-[13px] font-bold leading-snug ${ok?'line-through opacity-70':''}">${esc(t.t)}</p>
-              ${t.d?`<p class="text-[10px] mt-0.5 leading-snug" style="color:var(--txt-soft)">${esc(t.d)}</p>`:""}
+              ${t.d?`<p class="text-[10px] mt-0.5 leading-snug" style="color:var(--t3)">${esc(t.d)}</p>`:""}
             </div>
             <span class="chip ${ok?'chip-ok':'chip-wn'} flex-shrink-0">${listos}/${req.length}</span>
           </div>
           <div class="pl-6 pt-1 border-t" style="border-color:var(--line)">${filas}</div>
           ${!ok?`<div class="pl-6"><button onclick="avisarWhats('${t.a}','${esc(t.t).replace(/'/g,"")}','${esc(v.vehiculo).replace(/'/g,"")}','${esc(v.vin)}')"
-             class="btn-g text-[9px] uppercase px-2 py-1 rounded-lg">📲 Recordar a los que faltan</button></div>`:""}
+             class="btn-g px-2.5 py-1.5 rounded-lg flex items-center gap-1.5">${ico("chat",13)} Recordar a los que faltan</button></div>`:""}
         </div>`;
       }
 
@@ -1219,56 +1335,56 @@ window.abrirDetalle = function(id, silencioso){
       const bloqueFotos = t.foto ? `
         <div class="mt-2 pt-2 border-t" style="border-color:var(--line)">
           <div class="flex items-center gap-2 mb-1.5">
-            <span class="chip ${fotos.length?'chip-ok':'chip-wn'}">📎 ${fotos.length?`${fotos.length} comprobante${fotos.length>1?'s':''}`:'sin comprobante'}</span>
-            ${st?.sinComprobante?`<span class="font-mono text-[9px]" style="color:var(--warn)">💵 ${esc(st.sinComprobante)}</span>`:""}
+            <span class="chip ${fotos.length?'chip-ok':'chip-wn'}">${fotos.length?`${fotos.length} comprobante${fotos.length>1?'s':''}`:'sin comprobante'}</span>
+            ${st?.sinComprobante?`<span class="t-xs" style="color:var(--warn)">${esc(st.sinComprobante)}</span>`:""}
           </div>
           ${fotos.length?`<div class="flex flex-wrap gap-1.5 mb-2">${fotos.map((f,i)=>`
             <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg deep">
-              <a href="${esc(f.url)}" target="_blank" class="font-mono text-[9px] underline" style="color:var(--cyan)">📄 ${esc((f.nombre||'foto').slice(0,18))}</a>
-              ${can?`<button onclick="borrarFoto('${v.id}','${t.k}',${i})" class="font-mono text-[9px]" style="color:var(--danger)">✕</button>`:""}
+              <a href="${esc(f.url)}" target="_blank" class="t-xs underline" style="color:var(--cyan)">${esc((f.nombre||'foto').slice(0,20))}</a>
+              ${can?`<button onclick="borrarFoto('${v.id}','${t.k}',${i})" class="t-xs" style="color:var(--danger)" title="Quitar">${ico("cerrar",11,2)}</button>`:""}
             </span>`).join("")}</div>`:""}
           ${can?`<div class="flex gap-1.5 items-center">
-            <input type="file" id="f-${t.k}" accept="image/*,application/pdf" class="font-mono text-[9px] flex-1 min-w-0" style="color:var(--txt-soft)">
-            <button onclick="subirFoto('${v.id}','${t.k}')" class="btn-g text-[9px] uppercase px-2.5 py-1.5 rounded-lg flex-shrink-0">Subir</button>
+            <label class="file-btn flex-1 min-w-0"><input type="file" id="f-${t.k}" accept="image/*,application/pdf" onchange="this.parentNode.querySelector('b').innerText=(this.files[0]?.name||'Elegir archivo')"><span>${ico("foto",13)}</span><b>Elegir archivo</b></label>
+            <button onclick="subirFoto('${v.id}','${t.k}')" class="btn-g px-2.5 py-1.5 rounded-lg flex-shrink-0">Subir</button>
           </div>`:""}
         </div>` : "";
 
       return `<div class="tarea ${ok?'hecha':''} ${!can?'bloq':''}" ${t.foto?'style="flex-direction:column;align-items:stretch;gap:0"':''}>
         <div class="flex items-start gap-2.5">
-          <div class="tbox ${ok?'on':''} ${!can?'lock':''}" ${can?`onclick="marcar('${v.id}','${t.k}',${ok})"`:'title="No tienes esta área habilitada"'}>${ok?'✓':(can?'':'🔒')}</div>
+          <div class="tbox ${ok?'on':''} ${!can?'lock':''}" ${can?`onclick="marcar('${v.id}','${t.k}',${ok})"`:'title="No tienes esta área habilitada"'}>${ok?ico("ok",12,2.6):(can?'':ico("candado",11,1.8))}</div>
           <div class="flex-1 min-w-0">
-            <p class="text-[13px] font-bold leading-snug ${ok?'line-through opacity-70':''}">${esc(t.t)}${t.opc?' <span class="font-mono text-[9px]" style="color:var(--txt-soft)">(opcional)</span>':''}${t.foto?' <span title="Requiere comprobante">📎</span>':''}</p>
-            ${t.d?`<p class="text-[10px] mt-0.5 leading-snug" style="color:var(--txt-soft)">${esc(t.d)}</p>`:""}
+            <p class="text-[13px] font-bold leading-snug ${ok?'line-through opacity-70':''}">${esc(t.t)}${t.opc?' <span class="t-xs">(opcional)</span>':''}${t.foto?' <span class="chip chip-wn" style="vertical-align:middle">comprobante</span>':''}</p>
+            ${t.d?`<p class="text-[10px] mt-0.5 leading-snug" style="color:var(--t3)">${esc(t.d)}</p>`:""}
             <div class="flex flex-wrap items-center gap-2 mt-1.5">
               <span class="chip chip-gr">${areaI(t.a)} ${esc(areaN(t.a))}</span>
-              ${ok && st?.por ? `<span class="font-mono text-[9px]" style="color:var(--ok)">✓ ${esc(usersData[st.por]?.nombre||st.por)} · ${st.fecha?new Date(st.fecha).toLocaleDateString():""}</span>`
-                            : `<span class="font-mono text-[9px]" style="color:var(--txt-soft)">→ ${esc(quienes(t.a))}</span>`}
+              ${ok && st?.por ? `<span class="t-xs" style="color:var(--ok)">${esc(usersData[st.por]?.nombre||st.por)} · ${fch(st.fecha)}</span>`
+                            : `<span class="t-xs">→ ${esc(quienes(t.a))}</span>`}
             </div>
           </div>
           ${!ok ? `<button onclick="avisarWhats('${t.a}','${esc(t.t).replace(/'/g,"")}','${esc(v.vehiculo).replace(/'/g,"")}','${esc(v.vin)}')"
-              class="btn-g text-xs px-2 py-1.5 rounded-lg flex-shrink-0" title="Recordar por WhatsApp">📲</button>`:""}
+              class="btn-g text-xs px-2 py-1.5 rounded-lg flex-shrink-0" title="Recordar por WhatsApp">${ico("chat",14)}</button>`:""}
         </div>
         ${bloqueFotos}
       </div>`;
     }).join("");
   }).join("");
 
-  const abonos = (v.abonos||[]).map((a,i)=>`<div class="flex justify-between items-center text-[11px] font-mono py-1.5 border-b" style="border-color:var(--line)">
-      <span style="color:var(--txt-soft)">${a.fecha?new Date(a.fecha).toLocaleDateString():""} · ${esc(usersData[a.por]?.nombre||a.por||"")}${a.nota?` · ${esc(a.nota)}`:""}</span>
+  const abonos = (v.abonos||[]).map((a,i)=>`<div class="flex justify-between items-center t-sm py-1.5 border-b" style="border-color:var(--line)">
+      <span style="color:var(--t3)">${[fch(a.fecha), esc(usersData[a.por]?.nombre||a.por||""), esc(a.nota||"")].filter(Boolean).join(" · ")}</span>
       <b style="color:var(--ok)">${money(a.monto)}</b></div>`).join("") ||
-    `<p class="text-[11px] py-2" style="color:var(--txt-soft)">Sin abonos registrados.</p>`;
+    `<p class="text-[11px] py-2" style="color:var(--t3)">Sin abonos registrados.</p>`;
 
   // ── Panel editable: asignar carro (encargo) o asignar cliente (stock) ──
   const sinCarro   = !v.vehiculo;
   const sinCliente = !v.nombreCliente;
   const panelDatos = editando ? `
     <div class="deep rounded-2xl p-4 space-y-3" style="border-color:var(--cyan)">
-      <p class="font-mono text-[10px] font-black uppercase tracking-wider" style="color:var(--cyan)">✏️ Editar datos de la unidad</p>
+      <p class="t-lbl" style="color:var(--cyan)">Editar datos de la unidad</p>
       <div>
-        <p class="font-mono text-[9px] font-bold uppercase mb-1.5" style="color:var(--txt-soft)">Vehículo asignado</p>
+        <p class="t-lbl mb-2" style="color:var(--t3)">Vehículo asignado</p>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <input id="edVeh"  value="${esc(v.vehiculo)}"    placeholder="2018 Toyota Corolla" class="inp px-3 py-2 rounded-xl text-xs font-bold">
-          <input id="edVin"  value="${esc(v.vin)}"         placeholder="VIN / Lote" class="inp px-3 py-2 rounded-xl text-xs font-bold uppercase">
+          <input id="edVin"  value="${esc(v.vin)}"         placeholder="VIN / Lote" class="inp px-3 py-2 rounded-xl text-xs" style="text-transform:uppercase">
           <select id="edPlat" class="inp px-3 py-2 rounded-xl text-xs font-bold">
             ${["Copart","IAAI","ADESA","Manheim","Otro"].map(p=>`<option ${v.plataforma===p?'selected':''}>${p}</option>`).join("")}
           </select>
@@ -1276,7 +1392,7 @@ window.abrirDetalle = function(id, silencioso){
         </div>
       </div>
       <div>
-        <p class="font-mono text-[9px] font-bold uppercase mb-1.5" style="color:var(--txt-soft)">Cliente</p>
+        <p class="t-lbl mb-2" style="color:var(--t3)">Cliente</p>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <input id="edCli"  value="${esc(v.nombreCliente)}"   placeholder="Nombre del cliente" class="inp px-3 py-2 rounded-xl text-xs font-bold">
           <input id="edTel"  value="${esc(v.telefonoCliente)}" placeholder="Teléfono" class="inp px-3 py-2 rounded-xl text-xs font-bold">
@@ -1284,36 +1400,36 @@ window.abrirDetalle = function(id, silencioso){
         </div>
       </div>
       <div class="flex gap-2">
-        <button onclick="guardarDatos('${v.id}')" class="btn-p px-4 py-2 rounded-xl text-[10px] uppercase">Guardar cambios</button>
-        <button onclick="toggleEditar()" class="btn-g px-4 py-2 rounded-xl text-[10px] uppercase">Cancelar</button>
+        <button onclick="guardarDatos('${v.id}')" class="btn-p px-4 py-2">Guardar cambios</button>
+        <button onclick="toggleEditar()" class="btn-g px-4 py-2">Cancelar</button>
       </div>
     </div>`
   : ((sinCarro || (sinCliente && !enc)) ? `
     <div class="deep rounded-2xl p-4 flex items-center gap-3" style="border-color:var(--warn)">
-      <span class="text-xl">${sinCarro?'🔎':'👤'}</span>
+      <span style="color:var(--warn)">${sinCarro?ico("buscar",20):ico("usuario",20)}</span>
       <div class="flex-1 min-w-0">
         <p class="text-[12px] font-bold" style="color:var(--warn)">${sinCarro?'Todavía sin carro asignado':'Todavía sin cliente asignado'}</p>
-        <p class="text-[10px] mt-0.5" style="color:var(--txt-soft)">${sinCarro
+        <p class="text-[10px] mt-0.5" style="color:var(--t3)">${sinCarro
           ? (v.deseoCliente ? "Busca: "+esc(v.deseoCliente) : "Cuando ganes la subasta, asígnale el vehículo aquí.")
           : "Cuando lo vendas, agrega los datos del cliente aquí."}</p>
       </div>
-      <button onclick="toggleEditar()" class="btn-p px-4 py-2 rounded-xl text-[10px] uppercase flex-shrink-0">${sinCarro?'Asignar carro':'Asignar cliente'}</button>
+      <button onclick="toggleEditar()" class="btn-p px-4 py-2 flex-shrink-0">${sinCarro?'Asignar carro':'Asignar cliente'}</button>
     </div>` : "");
 
   m.innerHTML = `<div class="glass rounded-3xl w-full max-w-3xl my-4 relative" style="border-top:2px solid ${enc?'var(--cyan)':'var(--ok)'}" onclick="event.stopPropagation()">
-    <div class="hud tl"></div><div class="hud tr"></div>
+    
     <div class="p-6 border-b flex justify-between items-start gap-3 sticky top-0 rounded-t-3xl z-10" style="border-color:var(--line);background:var(--panel-hi)">
       <div class="min-w-0">
         <div class="flex items-center gap-2 flex-wrap">
           <h2 class="font-display text-xl font-bold truncate" style="color:${v.vehiculo?'#fff':'var(--warn)'}">${esc(v.vehiculo) || (v.nombreCliente ? "Carro por asignar" : "Unidad sin datos")}</h2>
-          <span class="chip ${enc?'chip-cy':'chip-ok'}">${enc?'🤝 Encargo':'📦 Stock'}</span>
+          <span class="chip ${enc?'chip-cy':'chip-ok'}">${enc?'Encargo':'Stock'}</span>
         </div>
-        <p class="font-mono text-[10px] mt-1" style="color:var(--txt-soft)">${v.vehiculo?`${esc(v.plataforma)} · ${esc(v.vin)||"sin VIN"}`:"Sin vehículo asignado"}${v.nombreCliente?` · 👤 ${esc(v.nombreCliente)} ${v.telefonoCliente?"· "+esc(v.telefonoCliente):""}`:""}</p>
+        <p class="t-xs mt-1" style="color:var(--t3)">${v.vehiculo?`${esc(v.plataforma)} · ${esc(v.vin)||"sin VIN"}`:"Sin vehículo asignado"}${v.nombreCliente?` · ${esc(v.nombreCliente)} ${v.telefonoCliente?"· "+esc(v.telefonoCliente):""}`:""}</p>
         ${v.deseoCliente ? `<p class="text-[10px] mt-0.5" style="color:var(--cyan)">🔎 Busca: ${esc(v.deseoCliente)}</p>`:""}
       </div>
       <div class="flex gap-1.5 flex-shrink-0">
-        <button onclick="toggleEditar()" class="btn-g px-3 py-1.5 rounded-xl text-xs" title="Editar datos">✏️</button>
-        <button onclick="cerrar()" class="btn-g px-3 py-1.5 rounded-xl text-xs">✕</button>
+        <button onclick="toggleEditar()" class="btn-g px-2.5 py-2 rounded-lg" title="Editar datos">${ico("editar",15)}</button>
+        <button onclick="cerrar()" class="btn-g px-2.5 py-2 rounded-lg" title="Cerrar">${ico("cerrar",15)}</button>
       </div>
     </div>
 
@@ -1322,42 +1438,48 @@ window.abrirDetalle = function(id, silencioso){
       <div class="flex items-center gap-5 deep rounded-2xl p-4">
         ${anillo(p, 104, 9, "avance")}
         <div class="flex-1 min-w-0 grid grid-cols-2 gap-3">
-          <div><p class="font-mono text-[8px] uppercase font-bold" style="color:var(--txt-soft)">Ya cobrado</p><p class="font-mono text-base font-bold" style="color:var(--ok)">${money(pagado(v))}</p></div>
-          <div><p class="font-mono text-[8px] uppercase font-bold" style="color:var(--txt-soft)">Falta cobrar</p><p class="font-mono text-base font-bold" style="color:var(--warn)">${money(saldo(v))}</p></div>
-          <div><p class="font-mono text-[8px] uppercase font-bold" style="color:var(--txt-soft)">Ganancia proyectada</p><p class="font-mono text-base font-bold" style="color:${(Number(v.precio_venta||0)-Number(v.costo_subasta||0))>=0?'var(--brand)':'var(--danger)'}">${money(Number(v.precio_venta||0)-Number(v.costo_subasta||0))}</p></div>
-          <div><p class="font-mono text-[8px] uppercase font-bold" style="color:var(--txt-soft)">Fase</p><p class="font-mono text-[11px] font-bold truncate" style="color:var(--cyan)">${esc(fases[faseActual(v)])}</p></div>
+          <div><p class="t-lbl">Ya cobrado</p><p class="num text-base font-semibold" style="color:var(--ok)">${money(pagado(v))}</p></div>
+          <div><p class="t-lbl">Falta cobrar</p><p class="num text-base font-semibold" style="color:var(--warn)">${money(saldo(v))}</p></div>
+          <div><p class="t-lbl">Ganancia proyectada</p><p class="num text-base font-semibold" style="color:${(Number(v.precio_venta||0)-Number(v.costo_subasta||0))>=0?'var(--brand)':'var(--danger)'}">${money(Number(v.precio_venta||0)-Number(v.costo_subasta||0))}</p></div>
+          <div><p class="t-lbl">Fase</p><p class="t-sm font-medium truncate" style="color:var(--cyan)">${esc(fases[faseActual(v)])}</p></div>
         </div>
       </div>
 
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <div class="deep rounded-xl p-3"><p class="font-mono text-[8px] uppercase font-bold" style="color:var(--txt-soft)">Costo</p><p class="font-mono text-lg font-black text-white">${money(v.costo_subasta)}</p></div>
-        <div class="deep rounded-xl p-3"><p class="font-mono text-[8px] uppercase font-bold" style="color:var(--txt-soft)">Precio venta</p>
-          <input type="number" value="${Number(v.precio_venta||0)}" onchange="setVenta('${v.id}',this.value)" class="inp w-full mt-1 px-2 py-1 rounded-lg text-sm font-black" style="color:var(--brand)"></div>
+        <div class="deep rounded-xl p-3.5"><p class="t-lbl">Costo</p><p class="num text-lg font-semibold mt-1">${money(v.costo_subasta)}</p></div>
+        <div class="deep rounded-xl p-3.5"><p class="t-lbl">Precio venta</p>
+          <div class="campo-num mt-1"><span>$</span>
+            <input type="number" value="${Number(v.precio_venta||0)}" onchange="setVenta('${v.id}',this.value)" class="num"></div>
+        </div>
+        <div class="deep rounded-xl p-3.5"><p class="t-lbl">Ganancia</p>
+          <p class="num text-lg font-semibold mt-1" style="color:${(Number(v.precio_venta||0)-Number(v.costo_subasta||0))>=0?'var(--ok)':'var(--danger)'}">${money(Number(v.precio_venta||0)-Number(v.costo_subasta||0))}</p></div>
+        <div class="deep rounded-xl p-3.5"><p class="t-lbl">Registrada</p>
+          <p class="t-sm mt-1.5" style="color:var(--t1)">${fch(v.fecha_registro)||"—"}</p></div>
       </div>
 
       <div class="deep rounded-2xl p-4">
         <div class="flex justify-between items-center mb-2">
-          <p class="font-mono text-[10px] font-black uppercase tracking-wider" style="color:var(--cyan)">💰 Abonos del cliente</p>
-          <span class="font-mono text-[11px] font-bold" style="color:var(--ok)">Pagado ${money(pagado(v))}</span>
+          <p class="t-lbl" style="color:var(--cyan)">Abonos del cliente</p>
+          <span class="t-sm" style="color:var(--ok)">Pagado ${money(pagado(v))}</span>
         </div>
         ${abonos}
         ${puede('finanzas') ? `<div class="flex gap-2 mt-3">
           <input type="number" id="abMonto" placeholder="Monto $" class="inp flex-1 px-3 py-2 rounded-xl text-xs font-bold">
           <input type="text" id="abNota" placeholder="Nota (opcional)" class="inp flex-1 px-3 py-2 rounded-xl text-xs font-bold">
-          <button onclick="addAbono('${v.id}')" class="btn-p px-4 py-2 rounded-xl text-[10px] uppercase">Abonar</button>
-        </div>` : `<p class="font-mono text-[9px] mt-2" style="color:var(--txt-soft)">🔒 Solo Finanzas puede registrar abonos.</p>`}
+          <button onclick="addAbono('${v.id}')" class="btn-p px-4 py-2">Abonar</button>
+        </div>` : `<p class="t-xs mt-2">Solo Finanzas puede registrar abonos.</p>`}
       </div>
 
       <div>${bloques}</div>
 
       <div class="flex flex-wrap gap-2 pt-3 border-t" style="border-color:var(--line)">
-        ${v.archivado ? `<button onclick="archivar('${v.id}',false)" class="btn-g px-4 py-2.5 rounded-xl text-[10px] uppercase">↩ Reactivar unidad</button>`
-                      : `<button onclick="archivar('${v.id}',true)" class="btn-g px-4 py-2.5 rounded-xl text-[10px] uppercase">📂 Archivar unidad</button>`}
-        ${v.telefonoCliente ? `<a href="https://wa.me/503${String(v.telefonoCliente).replace(/\\D/g,'')}" target="_blank" class="btn-g px-4 py-2.5 rounded-xl text-[10px] uppercase inline-block">💬 Escribir al cliente</a>`:""}
+        ${v.archivado ? `<button onclick="archivar('${v.id}',false)" class="btn-g px-4 py-2.5 rounded-xl flex items-center gap-2">${ico("flecha",14)} Reactivar</button>`
+                      : `<button onclick="archivar('${v.id}',true)" class="btn-g px-4 py-2.5 rounded-xl flex items-center gap-2">${ico("archivo",14)} Archivar</button>`}
+        ${v.telefonoCliente ? `<a href="https://wa.me/503${String(v.telefonoCliente).replace(/\\D/g,'')}" target="_blank" class="btn-g px-4 py-2.5 inline-flex items-center gap-2">${ico("chat",14)} Escribir al cliente</a>`:""}
         ${yo?.admin
-          ? `<button onclick="eliminar('${v.id}')" class="px-4 py-2.5 rounded-xl text-[10px] uppercase font-mono font-bold cursor-pointer"
-               style="background:rgba(251,113,133,.14);color:var(--danger);border:1px solid rgba(251,113,133,.5)">🗑 Eliminar para siempre</button>`
-          : `<span class="font-mono text-[9px] self-center" style="color:var(--txt-soft)">🔒 Solo un admin puede eliminar</span>`}
+          ? `<button onclick="eliminar('${v.id}')" class="px-4 py-2.5 rounded-xl t-sm font-medium cursor-pointer"
+               class="btn-g btn-d px-4 py-2.5 rounded-xl flex items-center gap-2">${ico("basura",14)} Eliminar</button>`
+          : `<span class="t-xs self-center" style="color:var(--t3)">🔒 Solo un admin puede eliminar</span>`}
       </div>
     </div>
   </div>`;
@@ -1383,7 +1505,7 @@ window.guardarDatos = async function(id){
     await updateDoc(doc(db,"vehiculos",id), datos);
     editando = false;
     const v = autos.find(a=>a.id===id);
-    toast(veh && !v?.vehiculo ? "✓ Carro asignado a la unidad." : cli && !v?.nombreCliente ? "✓ Cliente asignado." : "✓ Datos actualizados.");
+    toast(veh && !v?.vehiculo ? "Carro asignado a la unidad." : cli && !v?.nombreCliente ? "Cliente asignado." : "Datos actualizados.");
     abrirDetalle(id, true);
   }catch(e){ toast("No se pudo guardar: "+(e.code||e.message),"err"); }
 };
@@ -1402,7 +1524,7 @@ window.marcar = async function(id, k, ok){
   // (el esquema permite efectivo confirmado de recibido).
   if(!ok && def.foto && !(st.fotos||[]).length){
     const motivo = prompt(
-      "⚠️ Esta tarea pide comprobante y todavía no hay ninguna foto.\n\n"+
+      "Esta tarea pide comprobante y todavía no hay ninguna foto.\n\n"+
       def.t+"\n\n"+
       "Si el pago fue en EFECTIVO o no hay comprobante, escribe aquí quién lo recibió\n"+
       "y quedará registrado. Si no, cancela y sube la foto primero.",
@@ -1419,7 +1541,7 @@ window.marcar = async function(id, k, ok){
     : { ...st, ok:true, por:yo.usuario, fecha:new Date().toISOString(), ...(sinComprobante?{sinComprobante}:{}) };
   try{
     await updateDoc(doc(db,"vehiculos",id), { tareas });
-    if(!ok){ celebrar(); toast("✓ "+def.t); } else toast("Tarea reabierta.");
+    if(!ok){ celebrar(); toast(""+def.t); } else toast("Tarea reabierta.");
   }catch(e){ toast("No se pudo guardar: "+e.code,"err"); }
 };
 
@@ -1445,7 +1567,7 @@ window.subirFoto = async function(id, k){
     tareas[k] = { ...st, fotos };
     await updateDoc(doc(db,"vehiculos",id), { tareas });
     inp.value = "";
-    toast("✓ Comprobante guardado.");
+    toast("Comprobante guardado.");
   }catch(e){
     toast(e.code==="storage/unauthorized"
       ? "Storage sin permisos. Revisa las reglas en Firebase."
@@ -1480,7 +1602,7 @@ window.marcarMulti = async function(id, k, yaHecho){
     await updateDoc(doc(db,"vehiculos",id), { tareas });
     const req = respons(def.a), listos = req.filter(u=>marcas[u]).length;
     if(!yaHecho) celebrar();
-    toast(yaHecho ? "Quitaste tu marca." : `✓ Tu parte lista (${listos}/${req.length})`);
+    toast(yaHecho ? "Quitaste tu marca." : `Tu parte lista (${listos}/${req.length})`);
   }catch(e){ toast("No se pudo guardar: "+e.code,"err"); }
 };
 
@@ -1516,7 +1638,7 @@ window.eliminar = async function(id){
   if(!yo?.admin){ toast("Solo un administrador puede eliminar unidades.","err"); return; }
   const v = autos.find(a=>a.id===id); if(!v) return;
   const ok = confirm(
-    "⚠️ ELIMINAR PARA SIEMPRE\n\n"+
+    "ELIMINAR PARA SIEMPRE\n\n"+
     (v.vehiculo||"Sin nombre")+(v.vin?" ("+v.vin+")":"")+"\n"+
     (v.tipoProceso==="Encargo" ? "Cliente: "+(v.nombreCliente||"—")+"\n" : "")+
     "\nSe borra el vehículo con todo su historial de tareas y abonos.\nEsto NO se puede deshacer.\n\n"+
@@ -1566,7 +1688,7 @@ window.crearUnidad = async function(){
   };
   try{
     await addDoc(collection(db,"vehiculos"), nuevo);
-    toast(veh ? "✓ Unidad registrada con su checklist." : "✓ Cliente registrado. Asígnale el carro cuando lo ganes.");
+    toast(veh ? "Unidad registrada con su checklist." : "Cliente registrado. Asígnale el carro cuando lo ganes.");
     ["fVeh","fVin","fCosto","fVenta","nCli","tCli","dCli"].forEach(i=> document.getElementById(i).value="");
     document.getElementById('aCli').value = "100";
     ir('flota');
@@ -1621,7 +1743,7 @@ window.guardarTokenTG = async function(){
     const d = await r.json();
     if(!d.ok){ toast("Telegram rechazó ese token.","err"); return; }
     await setDoc(doc(db,"config","telegram"), { token:t, bot:d.result.username }, { merge:true });
-    toast(`✓ Bot @${d.result.username} conectado.`);
+    toast(`Bot @${d.result.username} conectado.`);
   }catch(e){ toast("No se pudo verificar el token.","err"); }
 };
 
@@ -1660,7 +1782,7 @@ window.vincularTG = async function(){
       telegram: String(hit.message.chat.id),
       telegramNombre: hit.message.from?.first_name || ""
     });
-    toast("✓ Telegram vinculado correctamente.");
+    toast("Telegram vinculado correctamente.");
   }catch(e){ toast("No se pudo vincular: "+e.message,"err"); }
 };
 
@@ -1734,14 +1856,14 @@ function bannerAviso(titulo, cuerpo){
   const d = document.createElement('div');
   d.id = "bannerNoti";
   d.style.cssText = "position:fixed;top:0;left:0;right:0;z-index:300;padding:14px 16px;cursor:pointer;"+
-    "background:linear-gradient(90deg,var(--brand),#ff5fa3);color:#05070c;box-shadow:0 8px 26px -6px rgba(255,46,136,.7);"+
+    "background:var(--s2);color:var(--t1);border-bottom:1px solid var(--line-2);box-shadow:0 10px 30px -12px rgba(0,0,0,.8);"+
     "display:flex;align-items:center;gap:12px;animation:slideIn .3s ease";
-  d.innerHTML = `<span style="font-size:22px">🔔</span>
+  d.innerHTML = `<span style="color:var(--brand);display:flex">${ico("campana",20,1.7)}</span>
     <div style="flex:1;min-width:0">
-      <p style="font-family:'JetBrains Mono',monospace;font-weight:800;font-size:12px;text-transform:uppercase;margin:0">${esc(titulo)}</p>
-      <p style="font-size:12px;font-weight:600;margin:2px 0 0;white-space:pre-line">${esc(cuerpo)}</p>
+      <p style="font-weight:600;font-size:13.5px;letter-spacing:-0.015em;margin:0">${esc(titulo)}</p>
+      <p style="font-size:12px;color:var(--t2);margin:3px 0 0;white-space:pre-line">${esc(cuerpo)}</p>
     </div>
-    <span style="font-family:'JetBrains Mono',monospace;font-weight:800;font-size:11px;opacity:.7">VER ✕</span>`;
+    <span style="font-weight:500;font-size:12px;opacity:.55">Ver</span>`;
   d.onclick = ()=>{ ir('mias'); d.remove(); };
   document.body.appendChild(d);
   setTimeout(()=>d.remove(), 25000);
@@ -1839,125 +1961,126 @@ function pintarCfgNotis(){
   let nota = "";
   if(!ncfg.on) nota = "";
   else if(sistemaOk) nota = swReg
-      ? "✅ Avisos completos: te llegan aunque estés en otra app o con la pantalla apagada (mientras la página siga abierta en el navegador)."
-      : "✅ Avisos del sistema activos. Deja esta página abierta en una pestaña.";
-  else if(sop==="ios") nota = "📱 <b>iPhone:</b> toca el botón <b>Compartir</b> ⬆️ de Safari y elige <b>“Añadir a pantalla de inicio”</b>. Abre la app desde ese ícono y vuelve a activar los avisos: así te llegarán como los de WhatsApp. Mientras tanto verás el aviso dentro de la página, con sonido y vibración.";
-  else if(permiso==="denied") nota = "🔕 Bloqueaste los avisos en este navegador. Actívalos desde el candado 🔒 de la barra de dirección → Notificaciones → Permitir. Mientras tanto te aviso dentro de la página, con sonido y vibración.";
-  else nota = "🔔 Este navegador no da avisos del sistema, así que te aviso <b>dentro de la página</b> con sonido y vibración. Déjala abierta durante el día.";
+      ? "Avisos completos: te llegan aunque estés en otra app, mientras la página siga abierta en el navegador."
+      : "Avisos del sistema activos. Deja esta página abierta en una pestaña.";
+  else if(sop==="ios") nota = "<b style='color:var(--t1)'>iPhone:</b> toca Compartir en Safari y elige “Añadir a pantalla de inicio”. Abre la app desde ese ícono y vuelve a activar los avisos.";
+  else if(permiso==="denied") nota = "Bloqueaste los avisos en este navegador. Actívalos desde el candado de la barra de dirección → Notificaciones → Permitir.";
+  else nota = "Este navegador no da avisos del sistema; te aviso dentro de la página, con sonido y vibración.";
 
   const chatTG = miChatTG(), codeTG = miCodigoTG();
   const botName = cfgRemota.botName || "";
+
+  const aviso = (color, texto) => `
+    <div class="nota" style="--c:${color}">
+      <span style="color:${color}">${ico('alerta',14,1.8)}</span>
+      <p class="t-sm" style="line-height:1.55">${texto}</p>
+    </div>`;
+
   const pushBox = `
-    <div class="deep rounded-2xl p-4 mt-3" style="border-color:var(--brand)">
-      <div class="flex items-center justify-between gap-2 flex-wrap mb-2">
-        <p class="font-mono text-[10px] font-black uppercase tracking-wider" style="color:var(--brand)">✈️ Avisos por Telegram · aunque tengas todo cerrado</p>
-        <span class="chip ${chatTG?'chip-ok':'chip-wn'}">${chatTG?'vinculado':'sin vincular'}</span>
+    <div class="deep rounded-2xl p-4 mt-3">
+      <div class="flex items-center justify-between gap-2 flex-wrap mb-3">
+        <p class="t-md">Telegram</p>
+        <span class="chip ${chatTG?'chip-ok':'chip-wn'}">${chatTG?'Vinculado':'Sin vincular'}</span>
       </div>
 
-      ${!tgToken ? `
-        <p class="text-[11px] leading-relaxed mb-2" style="color:var(--warn)">
-          ⚠️ El bot todavía no está conectado.${yo?.admin?' Pégale abajo el token que te dio BotFather.':' Pídeselo al administrador.'}
-        </p>` : ""}
+      ${!tgToken ? aviso('var(--warn)', `El bot todavía no está conectado.${yo?.admin?' Pega abajo el token que te dio BotFather.':' Pídeselo al administrador.'}`) : ""}
 
       ${chatTG ? `
-        <p class="text-[11px] leading-relaxed mb-2" style="color:var(--ok)">
-          ✅ Tu Telegram está vinculado${usersData[yo.usuario]?.telegramNombre?` como <b>${esc(usersData[yo.usuario].telegramNombre)}</b>`:""}.
-          Los avisos te llegarán ahí aunque tengas todo cerrado.
-        </p>
+        <p class="t-sm mb-3" style="line-height:1.55">Los avisos te llegan a Telegram${usersData[yo.usuario]?.telegramNombre?` como <b style="color:var(--t1)">${esc(usersData[yo.usuario].telegramNombre)}</b>`:""}, aunque tengas todo cerrado.</p>
         <div class="flex gap-2 flex-wrap">
-          <button onclick="probarTG()" class="btn-p text-[9px] uppercase px-4 py-2 rounded-xl">Probar aviso</button>
-          <button onclick="desvincularTG()" class="btn-g text-[9px] uppercase px-3 py-2 rounded-xl">Desvincular</button>
+          <button onclick="probarTG()" class="btn-p px-4 py-2">Probar aviso</button>
+          <button onclick="desvincularTG()" class="btn-g px-3 py-2">Desvincular</button>
         </div>`
       : `
-        <ol class="text-[11px] leading-relaxed mb-2 pl-4 space-y-1" style="color:var(--txt-soft);list-style:decimal">
+        <ol class="pasos">
           <li>Abre Telegram y busca el bot${botName?` <b style="color:var(--cyan)">@${esc(botName)}</b>`:" del negocio"}.</li>
-          <li>Dale a <b style="color:var(--txt)">Iniciar</b> (o escribe /start).</li>
-          <li>Genera tu código aquí abajo y envíaselo como mensaje al bot.</li>
-          <li>Vuelve y dale a <b style="color:var(--txt)">"Ya lo envié"</b>.</li>
+          <li>Dale a <b style="color:var(--t1)">Iniciar</b> (o escribe /start).</li>
+          <li>Genera tu código aquí abajo y envíaselo al bot.</li>
+          <li>Vuelve y presiona <b style="color:var(--t1)">Ya lo envié</b>.</li>
         </ol>
         ${codeTG ? `
           <div class="flex gap-2 items-center mb-2 flex-wrap">
-            <code class="font-mono text-[11px] px-3 py-2 rounded-lg flex-1 min-w-[170px] break-all" style="background:var(--bg);color:var(--cyan);border:1px solid var(--line-strong)">${esc(codeTG)}</code>
-            <button onclick="copiarCodigoTG()" class="btn-g text-[9px] uppercase px-3 py-2 rounded-lg">Copiar</button>
+            <code class="mono px-3 py-2 rounded-lg flex-1 min-w-[180px] break-all" style="background:var(--bg);color:var(--cyan);border:1px solid var(--line-2)">${esc(codeTG)}</code>
+            <button onclick="copiarCodigoTG()" class="btn-g px-3 py-2 rounded-lg">Copiar</button>
           </div>
-          <button onclick="vincularTG()" class="btn-p text-[9px] uppercase px-4 py-2 rounded-xl">Ya lo envié · Vincular</button>`
-        : `<button onclick="crearCodigoTG()" class="btn-p text-[9px] uppercase px-4 py-2 rounded-xl">Generar mi código</button>`}`}
+          <button onclick="vincularTG()" class="btn-p px-4 py-2">Ya lo envié · Vincular</button>`
+        : `<button onclick="crearCodigoTG()" class="btn-p px-4 py-2">Generar mi código</button>`}`}
 
       ${yo?.admin ? `
-        <div class="mt-3 pt-3 border-t space-y-2" style="border-color:var(--line)">
+        <div class="mt-4 pt-3.5 border-t space-y-2.5" style="border-color:var(--line)">
           <div class="flex items-center gap-2 flex-wrap">
-            <span class="chip ${robotVivo()?'chip-ok':'chip-wn'}"><span class="dot"></span>🤖 Robot ${robotVivo()?'funcionando':'sin señal'}</span>
-            <span class="font-mono text-[9px]" style="color:var(--txt-soft)">${textoRobot()}</span>
+            <span class="chip ${robotVivo()?'chip-ok':'chip-wn'}"><span class="dot"></span>Robot ${robotVivo()?'en línea':'sin señal'}</span>
+            <span class="t-xs">${textoRobot()}</span>
           </div>
-          ${!robotVivo() && minutosDesdeRevision()!==null ? `
-            <p class="text-[10px] leading-relaxed mt-1.5 p-2 rounded-lg" style="color:var(--warn);background:rgba(251,191,36,.08)">
-              ⚠️ GitHub se está saltando corridas (les da baja prioridad a los repos gratuitos).
-              Para que los avisos salgan puntuales, conecta el disparador externo de cron-job.org.
-            </p>`:""}
+          ${!robotVivo() && minutosDesdeRevision()!==null
+            ? aviso('var(--warn)','GitHub está saltando corridas (da baja prioridad a los repos gratuitos). Conecta el disparador externo de cron-job.org para que los avisos salgan puntuales.')
+            : ""}
           <details>
-            <summary class="font-mono text-[9px] uppercase cursor-pointer" style="color:var(--txt-soft)">⚙️ Token del bot ${tgToken?'(conectado)':'(falta)'}</summary>
-            <div class="flex gap-2 mt-2 flex-wrap">
-              <input id="tgTok" type="password" placeholder="1234567890:AAxx…" class="inp flex-1 min-w-[180px] px-3 py-2 rounded-xl text-xs font-bold">
-              <button onclick="guardarTokenTG()" class="btn-g text-[9px] uppercase px-3 py-2 rounded-xl">Guardar</button>
+            <summary class="t-xs cursor-pointer">Token del bot · ${tgToken?'conectado':'falta'}</summary>
+            <div class="flex gap-2 mt-2.5 flex-wrap">
+              <input id="tgTok" type="password" placeholder="1234567890:AAxx…" class="inp flex-1 min-w-[180px] px-3 py-2 rounded-xl text-xs">
+              <button onclick="guardarTokenTG()" class="btn-g px-3 py-2">Guardar</button>
             </div>
-            <p class="text-[9px] mt-1.5" style="color:var(--txt-soft)">Te lo da @BotFather al crear el bot. Solo se pone una vez, sirve para todo el equipo.</p>
+            <p class="t-xs mt-2">Te lo da @BotFather al crear el bot. Se pone una sola vez y sirve para todo el equipo.</p>
           </details>
         </div>`:""}
     </div>`;
 
   c.innerHTML = `
-    <div class="flex items-center gap-2 flex-wrap mb-1">
+    <div class="flex items-center gap-2 flex-wrap">
       <span class="chip ${chatTG?'chip-ok':'chip-wn'}"><span class="dot"></span>${chatTG?'Telegram activo':'Telegram sin vincular'}</span>
-      ${chatTG && !enHorario() ? `<span class="chip chip-wn">en pausa hasta las ${ncfg.hIni}:00</span>`:""}
+      ${chatTG && !enHorario() ? `<span class="chip chip-wn">En pausa hasta las ${ncfg.hIni}:00</span>`:""}
     </div>
     ${pushBox}
-    <details class="mt-3">
-      <summary class="font-mono text-[10px] uppercase cursor-pointer px-3 py-2 rounded-xl deep" style="color:var(--txt-soft)">
-        ${ncfg.on?'🔔':'🔕'} Avisos dentro del navegador (opcional) — ${ncfg.on?'encendidos':'apagados'}
-      </summary>
-      <div class="mt-2 deep rounded-xl p-3">
-        <p class="text-[11px] leading-relaxed mb-2" style="color:var(--txt-soft)">
-          Esto es <b style="color:var(--txt)">aparte de Telegram</b>: son avisos que salen solo mientras tengas esta página abierta.
-          No hace falta encenderlos — con Telegram basta.
-        </p>
-        <div class="flex gap-2 flex-wrap">
-          ${ncfg.on ? `<button onclick="probarNoti()" class="btn-g text-[9px] uppercase px-3 py-2 rounded-xl">Probar</button>
-                       <button onclick="apagarNotis()" class="btn-g text-[9px] uppercase px-3 py-2 rounded-xl">Apagar</button>`
-                    : `<button onclick="activarNotis()" class="btn-g text-[9px] uppercase px-3 py-2 rounded-xl">Encender de todos modos</button>`}
-        </div>
-        ${nota?`<p class="text-[10px] mt-2 leading-relaxed" style="color:var(--txt-soft)">${nota}</p>`:""}
-      </div>
-    </details>
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
-      <div class="deep rounded-xl p-3">
-        <label class="font-mono text-[9px] font-bold uppercase block mb-1.5" style="color:var(--txt-soft)">Repetir tareas pendientes cada</label>
-        <div class="flex items-center gap-2">
-          <input type="number" min="1" value="${ncfg.minTareas}" onchange="setCfg('minTareas',this.value)" class="inp w-20 px-2.5 py-1.5 rounded-lg text-xs font-bold">
-          <span class="font-mono text-[10px]" style="color:var(--txt-soft)">minutos</span>
+
+    <div class="space-y-2.5 mt-3">
+      <div class="deep rounded-2xl p-3.5">
+        <p class="t-sm" style="color:var(--t1)">Repetir tareas pendientes</p>
+        <div class="flex items-center gap-2 mt-2">
+          <span class="t-xs">cada</span>
+          <input type="number" min="1" value="${ncfg.minTareas}" onchange="setCfg('minTareas',this.value)" class="inp w-16 px-2.5 py-1.5 rounded-lg text-xs num">
+          <span class="t-xs">minutos</span>
         </div>
       </div>
-      <div class="deep rounded-xl p-3">
-        <label class="flex items-center gap-2 font-mono text-[9px] font-bold uppercase mb-1.5 cursor-pointer" style="color:var(--txt-soft)">
-          <input type="checkbox" ${ncfg.clientesOn?'checked':''} onchange="setCfg('clientesOn',this.checked)" class="w-3.5 h-3.5 accent-cyan-400 rounded">
-          Recordar contestar clientes cada
+
+      <div class="deep rounded-2xl p-3.5">
+        <label class="sw">
+          <input type="checkbox" ${ncfg.clientesOn?'checked':''} onchange="setCfg('clientesOn',this.checked)">
+          <span class="t-sm" style="color:var(--t1)">Recordar contestar clientes</span>
         </label>
-        <div class="flex items-center gap-2">
-          <input type="number" min="1" value="${ncfg.minClientes}" onchange="setCfg('minClientes',this.value)" ${ncfg.clientesOn?'':'disabled'} class="inp w-20 px-2.5 py-1.5 rounded-lg text-xs font-bold">
-          <span class="font-mono text-[10px]" style="color:var(--txt-soft)">minutos</span>
+        <div class="flex items-center gap-2 mt-2">
+          <span class="t-xs">cada</span>
+          <input type="number" min="1" value="${ncfg.minClientes}" onchange="setCfg('minClientes',this.value)" ${ncfg.clientesOn?'':'disabled'} class="inp w-16 px-2.5 py-1.5 rounded-lg text-xs num">
+          <span class="t-xs">minutos</span>
         </div>
       </div>
-      <div class="deep rounded-xl p-3 sm:col-span-2">
-        <label class="flex items-center gap-2 font-mono text-[9px] font-bold uppercase mb-1.5 cursor-pointer" style="color:var(--txt-soft)">
-          <input type="checkbox" ${ncfg.soloHorario?'checked':''} onchange="setCfg('soloHorario',this.checked)" class="w-3.5 h-3.5 accent-cyan-400 rounded">
-          Solo avisar en horario de trabajo (no molestar de noche)
+
+      <div class="deep rounded-2xl p-3.5">
+        <label class="sw">
+          <input type="checkbox" ${ncfg.soloHorario?'checked':''} onchange="setCfg('soloHorario',this.checked)">
+          <span class="t-sm" style="color:var(--t1)">Solo en horario de trabajo</span>
         </label>
-        <div class="flex items-center gap-2">
-          <input type="number" min="0" max="23" value="${ncfg.hIni}" onchange="setCfg('hIni',this.value)" ${ncfg.soloHorario?'':'disabled'} class="inp w-16 px-2.5 py-1.5 rounded-lg text-xs font-bold">
-          <span class="font-mono text-[10px]" style="color:var(--txt-soft)">a</span>
-          <input type="number" min="1" max="24" value="${ncfg.hFin}" onchange="setCfg('hFin',this.value)" ${ncfg.soloHorario?'':'disabled'} class="inp w-16 px-2.5 py-1.5 rounded-lg text-xs font-bold">
-          <span class="font-mono text-[10px]" style="color:var(--txt-soft)">horas</span>
+        <div class="flex items-center gap-2 mt-2">
+          <span class="t-xs">de</span>
+          <input type="number" min="0" max="23" value="${ncfg.hIni}" onchange="setCfg('hIni',this.value)" ${ncfg.soloHorario?'':'disabled'} class="inp w-14 px-2.5 py-1.5 rounded-lg text-xs num">
+          <span class="t-xs">a</span>
+          <input type="number" min="1" max="24" value="${ncfg.hFin}" onchange="setCfg('hFin',this.value)" ${ncfg.soloHorario?'':'disabled'} class="inp w-14 px-2.5 py-1.5 rounded-lg text-xs num">
+          <span class="t-xs">horas</span>
         </div>
       </div>
+
+      <details>
+        <summary class="t-xs cursor-pointer px-3.5 py-2.5 rounded-2xl deep">Avisos dentro del navegador — ${ncfg.on?'encendidos':'apagados'}</summary>
+        <div class="mt-2 deep rounded-2xl p-3.5">
+          <p class="t-sm mb-2.5" style="line-height:1.55">Esto es aparte de Telegram: solo salen mientras tengas esta página abierta. Con Telegram basta.</p>
+          <div class="flex gap-2 flex-wrap">
+            ${ncfg.on ? `<button onclick="probarNoti()" class="btn-g px-3 py-2">Probar</button>
+                         <button onclick="apagarNotis()" class="btn-g px-3 py-2">Apagar</button>`
+                      : `<button onclick="activarNotis()" class="btn-g px-3 py-2">Encender de todos modos</button>`}
+          </div>
+          ${nota?`<p class="t-xs mt-2.5" style="line-height:1.55">${nota}</p>`:""}
+        </div>
+      </details>
     </div>`;
 }
 
@@ -1971,6 +2094,19 @@ reiniciarTimers();
 setTimeout(()=>{ if(puedeAvisar()) avisoTareas(); }, 10000);
 
 setTipo("Encargo");
+
+// Íconos del riel y la barra superior
+(function(){
+  const map = { icAvisos:'campana', icNuevaH:'nueva', icAlertaH:'alerta', icFinH:'finanzas', icDirH:'direccion', icArchH:'archivo', icEqH1:'equipo', icEqH2:'equipo', icFlota:'flota', icTareas:'tareas', icNueva:'nueva', icFin:'finanzas',
+                icArch:'archivo', icEquipo:'equipo' };
+  Object.keys(map).forEach(id=>{ const e=document.getElementById(id); if(e) e.innerHTML = ico(map[id], 19, 1.6); });
+  const k = { kiUnidades:'flota', kiAvance:'direccion', kiCobrar:'reloj', kiMias:'tareas' };
+  Object.keys(k).forEach(id=>{ const e=document.getElementById(id); if(e) e.innerHTML = ico(k[id],16); });
+  const be=document.getElementById('icEnc'); if(be) be.innerHTML = ico('apreton',16);
+  const bs=document.getElementById('icStk'); if(bs) bs.innerHTML = ico('caja',16);
+  const f = document.getElementById('icFecha'); if(f) f.innerHTML = ico('reloj', 14, 1.7);
+  const s = document.getElementById('icSalir'); if(s) s.innerHTML = ico('salir', 15, 1.7);
+})();
 document.getElementById('fechaHoy').innerText =
   new Date().toLocaleDateString('es-SV',{ weekday:'short', day:'numeric', month:'short' });
 </script>

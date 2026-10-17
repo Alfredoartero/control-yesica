@@ -26,6 +26,7 @@ const T_ENC = [
   {k:"e12",f:1,a:"finanzas", t:"Facturar el abono del 50%"},
   {k:"e13",f:1,a:"legal",    t:"Crear promesa de venta"},
   {k:"e14",f:2,a:"aduana",   t:"Marcar llegada del vehículo al país"},
+  {k:"e24",f:2,a:"ventas",   t:"Avisar al cliente que su vehículo llegó al país", d:"Mensaje al cliente apenas arriba, con los siguientes pasos y lo que falta pagar"},
   {k:"e15",f:2,a:"marketing",t:"Subir el carro como publicidad", d:"Cada quien en su canal (Facebook, grupo de WhatsApp, etc.)", multi:true},
   {k:"e16",f:2,a:"finanzas", t:"Pagar a la naviera", d:"Adjuntar comprobante del pago", foto:true},
   {k:"e17",f:2,a:"aduana",   t:"Cancelar impuestos de aduana", d:"Adjuntar comprobante / DUCA", foto:true},
@@ -33,7 +34,8 @@ const T_ENC = [
   {k:"e19",f:2,a:"finanzas", t:"Cliente cancela el restante", d:"Siempre con comprobante", pago:true, foto:true},
   {k:"e20",f:2,a:"finanzas", t:"Facturar el monto pagado"},
   {k:"e21",f:2,a:"aduana",   t:"Liberación del vehículo"},
-  {k:"e22",f:2,a:"legal",    t:"Crear compraventa y entregar vehículo", d:"Adjuntar foto del contrato firmado", foto:true},
+  {k:"e22",f:2,a:"legal",    t:"Crear compraventa y firmar contrato", d:"Adjuntar foto del contrato firmado por ambas partes", foto:true},
+  {k:"e25",f:2,a:"ventas",   t:"Entregar el vehículo al cliente", d:"Coordinar la entrega y dejar constancia con foto", foto:true},
   {k:"e23",f:2,a:"legal",    t:"Hacer prórroga de compraventa", opc:true},
 ];
 const T_STK = [
@@ -48,12 +50,14 @@ const T_STK = [
   {k:"s09",f:2,a:"legal",    t:"Creación de promesa de venta"},
   {k:"s10",f:2,a:"naviera",  t:"Control de estatus al cliente", d:"Semanal hasta que llegue", repetible:true},
   {k:"s11",f:3,a:"aduana",   t:"Arribo al país"},
+  {k:"s19",f:3,a:"ventas",   t:"Avisar al cliente que el vehículo llegó", d:"Solo si ya está asignado a un cliente"},
   {k:"s12",f:3,a:"aduana",   t:"Pago de impuestos en aduana", d:"Adjuntar comprobante / DUCA", foto:true},
   {k:"s13",f:3,a:"aduana",   t:"Revisión mecánica", d:"Subir fotos del estado del vehículo", foto:true},
   {k:"s14",f:3,a:"aduana",   t:"Liberación del vehículo"},
   {k:"s15",f:3,a:"finanzas", t:"Facturación del restante"},
   {k:"s16",f:3,a:"finanzas", t:"Cancelación total (pago final)", d:"Adjuntar comprobante del pago final", pago:true, foto:true},
   {k:"s17",f:3,a:"legal",    t:"Compraventa (firma contrato final)", d:"Adjuntar foto del contrato firmado", foto:true},
+  {k:"s20",f:3,a:"ventas",   t:"Entregar el vehículo al cliente", d:"Coordinar la entrega y dejar constancia con foto", foto:true},
   {k:"s18",f:3,a:"legal",    t:"Crear prórroga de compraventa", opc:true},
 ];
 
