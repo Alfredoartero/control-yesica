@@ -4,7 +4,22 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Centro de Control · Importaciones Yesica</title>
-<meta name="theme-color" content="#070b14">
+<meta name="theme-color" content="#09090B">
+<script>
+/* Tema: auto (según el teléfono), claro u oscuro. Se recuerda por dispositivo. */
+(function(){
+  var pref='auto'; try{ pref=localStorage.getItem('tema')||'auto'; }catch(e){}
+  var mq=window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)');
+  function aplicar(){
+    var t = pref==='auto' ? (mq&&mq.matches?'light':'dark') : pref;
+    document.documentElement.setAttribute('data-theme', t);
+    var m=document.querySelector('meta[name=theme-color]'); if(m) m.content = t==='light'?'#F2F2F5':'#09090B';
+  }
+  window.__tema={ get:function(){return pref;}, set:function(p){ pref=p; try{localStorage.setItem('tema',p);}catch(e){} aplicar(); } };
+  if(mq&&mq.addEventListener) mq.addEventListener('change',function(){ if(pref==='auto') aplicar(); });
+  aplicar();
+})();
+</script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Control Yesica">
@@ -24,8 +39,8 @@
   /* Superficies */
   --bg:#09090B;
   --s1:#131316;  --s2:#1A1A1E;  --s3:#232328;
-  --line:rgba(255,255,255,.07);
-  --line-2:rgba(255,255,255,.13);
+  --line:rgba(var(--fg),.07);
+  --line-2:rgba(var(--fg),.13);
 
   /* Texto */
   --t1:#F7F7F8; --t2:#A0A0A8; --t3:#6B6B73;
@@ -35,7 +50,50 @@
   --sh1:0 1px 3px rgba(0,0,0,.3);
   --sh2:0 8px 24px -8px rgba(0,0,0,.55);
   --sh3:0 24px 60px -20px rgba(0,0,0,.8);
+
+  --fg:255,255,255;                 /* base de los blancos translúcidos */
+  --bar-bg:rgba(9,9,11,.76);
+  --rail-bg:rgba(19,19,22,.92);
+  --scrim:rgba(0,0,0,.62);
+  --hero-tint:rgba(255,46,136,.07);
+  color-scheme:dark;
+
+  /* alias de versiones anteriores */
+  --txt-soft:var(--t3); --panel-hi:var(--s1); --line-strong:var(--line-2); --cyan-soft:var(--cyan-dim);
 }
+
+/* ═══ MODO CLARO ═══ mismos tonos de marca, oscurecidos para que se lean sobre blanco */
+:root[data-theme="light"]{
+  --brand:#E0186F; --brand-2:#F0408A; --brand-dim:rgba(224,24,111,.09);
+  --cyan:#077A80;  --cyan-dim:rgba(7,122,128,.09);
+  --ok:#14843A;    --ok-dim:rgba(20,132,58,.10);
+  --warn:#B45309;  --warn-dim:rgba(180,83,9,.10);
+  --danger:#D70015;--danger-dim:rgba(215,0,21,.08);
+
+  --bg:#F2F2F5;
+  --s1:#FFFFFF; --s2:#F7F7F9; --s3:#ECECF0;
+  --line:rgba(0,0,0,.075);
+  --line-2:rgba(0,0,0,.14);
+  --t1:#1D1D1F; --t2:#515158; --t3:#86868B;
+
+  --sh1:0 1px 2px rgba(16,16,24,.05),0 2px 8px rgba(16,16,24,.04);
+  --sh2:0 10px 30px -10px rgba(16,16,24,.18);
+  --sh3:0 30px 70px -20px rgba(16,16,24,.28);
+
+  --fg:0,0,0;
+  --bar-bg:rgba(242,242,245,.8);
+  --rail-bg:rgba(255,255,255,.92);
+  --scrim:rgba(20,20,28,.32);
+  --hero-tint:rgba(224,24,111,.06);
+  color-scheme:light;
+}
+:root[data-theme="light"] .deep{background:var(--s2)}
+:root[data-theme="light"] .hero-sig{border-color:rgba(224,24,111,.22)}
+:root[data-theme="light"] .tbox.on,:root[data-theme="light"] .task-check.on{color:#fff}
+:root[data-theme="light"] .perm.on .perm-box{color:#fff}
+:root[data-theme="light"] .fase-lista .fase-dot,:root[data-theme="light"] .hero-ok .hero-ico{color:#fff}
+:root[data-theme="light"] .rail{box-shadow:1px 0 0 var(--line)}
+:root[data-theme="light"] .glass{box-shadow:var(--sh1)}
 *{box-sizing:border-box}
 html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
 body{
@@ -45,8 +103,8 @@ body{
 }
 ::-webkit-scrollbar{width:10px;height:10px}
 ::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:rgba(255,255,255,.11);border-radius:99px;border:3px solid var(--bg)}
-::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.2)}
+::-webkit-scrollbar-thumb{background:rgba(var(--fg),.11);border-radius:99px;border:3px solid var(--bg)}
+::-webkit-scrollbar-thumb:hover{background:rgba(var(--fg),.2)}
 ::selection{background:var(--brand);color:#fff}
 
 /* ── Tipografía ── */
@@ -90,8 +148,8 @@ h1,h2,h3,h4{margin:0;letter-spacing:-0.022em;font-weight:600}
   transition:color .18s,background .18s;position:relative;
 }
 .rail-btn small{font-size:9.5px;font-weight:550;letter-spacing:-0.005em;line-height:1}
-.rail-btn:hover{color:var(--t2);background:rgba(255,255,255,.04)}
-.rail-btn.on{color:var(--t1);background:rgba(255,255,255,.07)}
+.rail-btn:hover{color:var(--t2);background:rgba(var(--fg),.04)}
+.rail-btn.on{color:var(--t1);background:rgba(var(--fg),.07)}
 .rail-btn.on::after{content:"";position:absolute;left:-9px;top:50%;transform:translateY(-50%);
   width:3px;height:22px;border-radius:0 3px 3px 0;background:var(--brand)}
 .rail-badge{position:absolute;top:0px;right:0px;min-width:16px;height:16px;padding:0 4px;border-radius:99px;
@@ -121,13 +179,13 @@ details[open]>summary::before{transform:rotate(90deg)}
 
 .shell{margin-left:76px;min-height:100vh}
 .topbar{position:sticky;top:0;z-index:50;padding:18px 30px;
-  background:rgba(9,9,11,.76);backdrop-filter:saturate(180%) blur(22px);
+  background:var(--bar-bg);backdrop-filter:saturate(180%) blur(22px);
   -webkit-backdrop-filter:saturate(180%) blur(22px);border-bottom:1px solid var(--line)}
 
 @media(max-width:1023px){
   .rail{top:auto;right:0;bottom:0;width:100%;height:62px;flex-direction:row;justify-content:space-around;
     padding:0 8px;border-right:0;border-top:1px solid var(--line);
-    background:rgba(19,19,22,.92);backdrop-filter:blur(22px)}
+    background:var(--rail-bg);backdrop-filter:blur(22px)}
   .rail-logo{display:none}
   .rail-btn{width:auto;flex:1;height:50px;max-width:76px}
   .rail-btn.on::after{left:50%;top:-1px;transform:translateX(-50%);width:22px;height:3px;border-radius:0 0 3px 3px}
@@ -162,7 +220,7 @@ select.inp option{background:var(--s2);color:var(--t1)}
 .tab{font-family:inherit;font-size:13px;font-weight:500;letter-spacing:-0.012em;padding:7px 14px;
   border-radius:var(--r1);color:var(--t3);background:transparent;border:0;cursor:pointer;
   transition:all .16s;white-space:nowrap}
-.tab:hover{color:var(--t2);background:rgba(255,255,255,.04)}
+.tab:hover{color:var(--t2);background:rgba(var(--fg),.04)}
 .tab.on{background:var(--s3);color:var(--t1);box-shadow:0 1px 2px rgba(0,0,0,.3)}
 /* control segmentado tipo iOS */
 .seg{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:var(--r2);
@@ -183,17 +241,17 @@ select.inp option{background:var(--s2);color:var(--t1)}
 .chip-cy{background:var(--cyan-dim);color:var(--cyan)}
 .chip-ok{background:var(--ok-dim);color:var(--ok)}
 .chip-wn{background:var(--warn-dim);color:var(--warn)}
-.chip-gr{background:rgba(255,255,255,.06);color:var(--t3)}
+.chip-gr{background:rgba(var(--fg),.06);color:var(--t3)}
 
 /* ── Estadísticas ── */
 .stat{background:var(--s1);border:1px solid var(--line);border-radius:var(--r3);padding:18px 20px;position:relative}
 .ico-box{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;
-  background:rgba(255,255,255,.055);color:var(--t2);flex-shrink:0}
+  background:rgba(var(--fg),.055);color:var(--t2);flex-shrink:0}
 .icon-badge{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;
-  background:rgba(255,255,255,.055);color:var(--t2);flex-shrink:0}
+  background:rgba(var(--fg),.055);color:var(--t2);flex-shrink:0}
 
 /* ── Barras y anillos ── */
-.bar{height:5px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden}
+.bar{height:5px;border-radius:99px;background:rgba(var(--fg),.08);overflow:hidden}
 .bar>i{display:block;height:100%;border-radius:99px;background:var(--brand);
   transition:width .55s cubic-bezier(.3,.8,.4,1)}
 .ring-wrap{position:relative;display:inline-flex;align-items:center;justify-content:center}
@@ -217,7 +275,7 @@ select.inp option{background:var(--s2);color:var(--t1)}
 .task-meta{font-size:12px;color:var(--t3);margin-top:2px;letter-spacing:-0.004em}
 .group-head{display:flex;align-items:center;gap:9px;margin:24px 0 10px}
 .group-head .gh-ico{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;
-  justify-content:center;background:rgba(255,255,255,.055);color:var(--t2)}
+  justify-content:center;background:rgba(var(--fg),.055);color:var(--t2)}
 .group-head .gh-line{display:none}
 @keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.18)}100%{transform:scale(1)}}
 .pop{animation:pop .32s cubic-bezier(.3,1.3,.5,1)}
@@ -248,7 +306,7 @@ select.inp option{background:var(--s2);color:var(--t1)}
 /* permisos por area */
 .perm{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--r1);cursor:pointer;
   color:var(--t3);font-size:13px;transition:background .15s,color .15s;border:1px solid transparent}
-.perm:hover{background:rgba(255,255,255,.035);color:var(--t2)}
+.perm:hover{background:rgba(var(--fg),.035);color:var(--t2)}
 .perm input{display:none}
 .perm-box{width:19px;height:19px;border-radius:6px;border:1.6px solid var(--line-2);flex-shrink:0;
   display:flex;align-items:center;justify-content:center;color:transparent;transition:all .15s}
@@ -258,12 +316,12 @@ select.inp option{background:var(--s2);color:var(--t1)}
 .perm.on .perm-ico{opacity:1;color:var(--cyan)}
 .perm-n{font-weight:450;letter-spacing:-0.01em}
 /* siguiente paso */
-.hero-sig{padding:20px;border-radius:var(--r3);background:linear-gradient(180deg,rgba(255,46,136,.07),rgba(255,46,136,0) 70%),var(--s2);
+.hero-sig{padding:20px;border-radius:var(--r3);background:linear-gradient(180deg,var(--hero-tint),transparent 70%),var(--s2);
   border:1px solid rgba(255,46,136,.2)}
 .hero-ok{display:flex;align-items:center;gap:14px;background:linear-gradient(180deg,rgba(48,209,88,.08),transparent 70%),var(--s2);border-color:rgba(48,209,88,.22)}
 .hero-ico{width:42px;height:42px;border-radius:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .hero-t{font-size:20px;font-weight:600;letter-spacing:-0.024em;line-height:1.25;color:var(--t1)}
-.hero-bar{height:5px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden}
+.hero-bar{height:5px;border-radius:99px;background:rgba(var(--fg),.07);overflow:hidden}
 .hero-bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--brand),var(--brand-2));transition:width .5s}
 .btn-lg{padding:12px 18px!important;font-size:14px!important;display:inline-flex;align-items:center;gap:8px;border-radius:12px}
 .hero-mia{display:flex;align-items:center;gap:10px;width:100%;margin-top:14px;padding:11px 13px;border-radius:var(--r2);
@@ -284,7 +342,7 @@ select.inp option{background:var(--s2);color:var(--t1)}
 .fase-n{display:block;font-size:14px;font-weight:550;letter-spacing:-0.014em;color:var(--t1)}
 .fase-s{display:block;font-size:12px;color:var(--t3);margin-top:1px}
 .fase-luego .fase-n{color:var(--t2)}
-.fase-bar{width:64px;height:4px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden;flex-shrink:0}
+.fase-bar{width:64px;height:4px;border-radius:99px;background:rgba(var(--fg),.07);overflow:hidden;flex-shrink:0}
 .fase-bar i{display:block;height:100%;background:var(--cyan)}
 .fase-lista .fase-bar i{background:var(--ok)}
 .fase-chev{color:var(--t3);transition:transform .2s;display:flex}
@@ -292,10 +350,18 @@ details[open]>summary .fase-chev{transform:rotate(90deg)}
 .fase-body{padding:0 10px 10px;display:flex;flex-direction:column;gap:6px}
 .tarea-ok{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:var(--r1);font-size:13px;color:var(--t3)}
 .tarea-ok .tbox{width:18px;height:18px}
-.tarea-ok:hover{background:rgba(255,255,255,.03)}
+.tarea-ok:hover{background:rgba(var(--fg),.03)}
 .hoy-box{text-align:center;min-width:80px;padding:10px 14px;align-self:center;border-radius:var(--r2);background:var(--s2);border:1px solid var(--line)}
 .hoy-box .num{font-size:30px;font-weight:600;color:var(--ok);line-height:1}
 .hoy-box .t-xs{margin-top:4px}
+.veh-ico{width:38px;height:38px;border-radius:11px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.veh-ico.enc{background:var(--cyan-dim);color:var(--cyan)}
+.veh-ico.stk{background:var(--ok-dim);color:var(--ok)}
+.sig-row{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:var(--r1);background:var(--s2);border:1px solid var(--line);min-width:0}
+.ico-btn{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;
+  background:transparent;border:1px solid var(--line);color:var(--t2);transition:all .15s}
+.ico-btn:hover{background:rgba(var(--fg),.05);color:var(--t1);border-color:var(--line-2)}
+.stat{padding:16px 18px!important}
 .ver-mas{display:block;width:100%;padding:9px;margin-top:2px;border-radius:var(--r2);background:transparent;border:1px dashed var(--line-2);
   color:var(--t3);font-size:12.5px;cursor:pointer}
 .ver-mas:hover{color:var(--t1);border-color:var(--t3)}
@@ -314,7 +380,7 @@ details[open]>summary .fase-chev{transform:rotate(90deg)}
 @keyframes fadeUp{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
 .glow,.glow-txt{animation:none;box-shadow:none;text-shadow:none}
 
-.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.62);backdrop-filter:blur(16px);
+.modal-bg{position:fixed;inset:0;background:var(--scrim);backdrop-filter:blur(16px);
   -webkit-backdrop-filter:blur(16px);z-index:80;display:flex;align-items:flex-start;
   justify-content:center;padding:22px;overflow-y:auto}
 #toaster{position:fixed;bottom:22px;right:22px;z-index:200;display:flex;flex-direction:column;gap:9px;max-width:340px}
@@ -331,7 +397,7 @@ thead th{font-size:11.5px;font-weight:550;color:var(--t3);letter-spacing:0;text-
   padding:13px 16px;border-bottom:1px solid var(--line)}
 tbody td{padding:14px 16px;font-size:13.5px;letter-spacing:-0.008em}
 tbody tr{border-bottom:1px solid var(--line);transition:background .15s}
-tbody tr:hover{background:rgba(255,255,255,.025)}
+tbody tr:hover{background:rgba(var(--fg),.025)}
 tbody tr:last-child{border-bottom:0}
 
 </style>
@@ -394,13 +460,14 @@ tbody tr:last-child{border-bottom:0}
         <span style="color:var(--t3)" id="icFecha"></span>
         <span id="fechaHoy" class="t-xs"></span>
       </div>
-      <div class="flex items-center gap-2.5 pl-2.5 pr-2 py-1.5 pill">
+      <div class="flex items-center gap-1.5">
         <span id="avatarYo" class="avatar" style="background:var(--brand)">A</span>
-        <div class="hidden sm:block leading-tight">
+        <div class="hidden sm:block leading-tight mr-2 ml-1">
           <p id="dMe" class="text-[13px] font-medium" style="letter-spacing:-0.01em">&mdash;</p>
           <p id="dRol" class="t-xs" style="font-size:11px">equipo</p>
         </div>
-        <button onclick="salir()" class="btn-g px-2 py-1.5 rounded-lg" title="Cerrar sesi&oacute;n"><span id="icSalir"></span></button>
+        <button onclick="cambiarTema()" id="btnTema" class="ico-btn" title="Tema"></button>
+        <button onclick="salir()" class="ico-btn" title="Cerrar sesi&oacute;n"><span id="icSalir"></span></button>
       </div>
     </div>
   </header>
@@ -410,27 +477,23 @@ tbody tr:last-child{border-bottom:0}
   <!-- ═══ RESUMEN ═══ -->
   <div id="statsRow" class="grid grid-cols-2 lg:grid-cols-4 gap-4 fade-up">
     <div class="stat lift">
-      <div class="ico-box" id="kiUnidades"></div>
-      <p id="sTot" class="num text-[28px] font-semibold mt-1">0</p>
-      <p class="t-lbl mt-0.5">Unidades activas</p>
+      <div class="flex items-center justify-between"><p class="t-lbl">Unidades activas</p><div class="ico-box" id="kiUnidades"></div></div>
+      <p id="sTot" class="num text-[28px] font-semibold mt-2.5">0</p>
       <p id="sMix" class="t-xs mt-1.5">&mdash;</p>
     </div>
     <div class="stat lift">
-      <div class="ico-box" id="kiAvance"></div>
-      <p id="sPro" class="num text-[28px] font-semibold mt-1" style="color:var(--cyan)">0%</p>
-      <p class="t-lbl mt-0.5">Avance promedio</p>
+      <div class="flex items-center justify-between"><p class="t-lbl">Avance promedio</p><div class="ico-box" id="kiAvance"></div></div>
+      <p id="sPro" class="num text-[28px] font-semibold mt-2.5" style="color:var(--cyan)">0%</p>
       <div class="bar mt-2.5"><i id="sProBar" style="width:0%;background:var(--cyan)"></i></div>
     </div>
     <div class="stat lift">
-      <div class="ico-box" id="kiCobrar"></div>
-      <p id="sSal" class="num text-[28px] font-semibold mt-1" style="color:var(--warn)">$0</p>
-      <p class="t-lbl mt-0.5">Por cobrar</p>
+      <div class="flex items-center justify-between"><p class="t-lbl">Por cobrar</p><div class="ico-box" id="kiCobrar"></div></div>
+      <p id="sSal" class="num text-[28px] font-semibold mt-2.5" style="color:var(--warn)">$0</p>
       <p id="sCobrado" class="t-xs mt-1.5">&mdash;</p>
     </div>
     <div class="stat lift">
-      <div class="ico-box" id="kiMias"></div>
-      <p id="sMias" class="num text-[28px] font-semibold mt-1" style="color:var(--brand)">0</p>
-      <p class="t-lbl mt-0.5">Tus pendientes</p>
+      <div class="flex items-center justify-between"><p class="t-lbl">Tus pendientes</p><div class="ico-box" id="kiMias"></div></div>
+      <p id="sMias" class="num text-[28px] font-semibold mt-2.5" style="color:var(--brand)">0</p>
       <p class="t-xs mt-1.5">tareas asignadas a ti</p>
     </div>
   </div>
@@ -456,8 +519,8 @@ tbody tr:last-child{border-bottom:0}
     <div class="grid grid-cols-1 xl:grid-cols-[1fr_330px] gap-5 items-start">
 
       <div class="space-y-4">
-        <div class="glass rounded-3xl p-6 fade-up">
-          <div class="flex items-center justify-between gap-4 flex-wrap mb-1">
+        <div class="px-1 pt-1 pb-2 fade-up">
+          <div class="flex items-center justify-between gap-4">
             <div>
               <p class="t-lbl">Tu jornada</p>
               <h2 id="miasTitulo" class="t-xl mt-1.5">Todo listo</h2>
@@ -784,6 +847,9 @@ const ICO = {
   foto:     '<rect x="3.5" y="6.5" width="17" height="13" rx="3"/><circle cx="12" cy="13" r="3.2"/><path d="M8.5 6.5l1.2-2h4.6l1.2 2"/>',
   candado:  '<rect x="5.5" y="10.5" width="13" height="9" rx="2.5"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/>',
   flecha:   '<path d="M5 12h13M13 7l5 5-5 5"/>',
+  sol:'<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4L6 18M18 6l1.4-1.4"/>',
+  luna:'<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>',
+  auto:'<circle cx="12" cy="12" r="8.5"/><path d="M12 3.5v17a8.5 8.5 0 0 0 0-17z" fill="currentColor" stroke="none"/>',
   salir:    '<path d="M14 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-2"/><path d="M18 12H9M15.5 9l3 3-3 3"/>',
 };
 function ico(n, s=18, w=1.6){
@@ -797,7 +863,7 @@ function anillo(pct, size=120, grosor=9, etiqueta=""){
   const r = (size/2) - grosor - 2, circ = 2*Math.PI*r, off = circ - (pct/100)*circ;
   return `<div class="ring-wrap" style="width:${size}px;height:${size}px">
     <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" style="transform:rotate(-90deg)">
-      <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="${grosor}"/>
+      <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="rgba(var(--fg),.06)" stroke-width="${grosor}"/>
       <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="var(--cyan)" stroke-width="${grosor}"
         stroke-linecap="round" stroke-dasharray="${circ}" stroke-dashoffset="${off}"
         style="filter:drop-shadow(0 0 6px rgba(34,226,226,.8));transition:stroke-dashoffset .6s ease"/>
@@ -1108,34 +1174,37 @@ function pintarFlota(){
     return `<div class="glass lift fade-up p-5 cursor-pointer" onclick="abrirDetalle('${v.id}')"
       style="animation-delay:${Math.min(idx,8)*35}ms">
 
-      <div class="flex justify-between items-start gap-3 mb-4">
-        <div class="min-w-0">
-          <h3 class="t-md truncate" style="color:${v.vehiculo?'var(--t1)':'var(--warn)'}">${esc(v.vehiculo) || "Carro por asignar"}</h3>
-          <p class="t-xs mt-1 truncate">${v.vehiculo?`${esc(v.plataforma)} · ${esc(v.vin)||"sin VIN"}`:(v.deseoCliente?`Busca: ${esc(v.deseoCliente)}`:"Sin vehículo todavía")}</p>
+      <div class="flex items-start gap-3 mb-4">
+        <div class="veh-ico ${enc?'enc':'stk'}">${ico(enc?'apreton':'caja',18,1.6)}</div>
+        <div class="min-w-0 flex-1">
+          <div class="flex items-center gap-2">
+            <h3 class="t-md truncate" style="color:${v.vehiculo?'var(--t1)':'var(--warn)'}">${esc(v.vehiculo) || "Carro por asignar"}</h3>
+            <span class="chip ${enc?'chip-cy':'chip-ok'} flex-shrink-0 ml-auto">${enc?'Encargo':'Stock'}</span>
+          </div>
+          <p class="t-xs mt-0.5 truncate">${[
+              v.nombreCliente ? esc(v.nombreCliente) : (enc ? "" : "Sin cliente"),
+              v.vehiculo ? esc(v.plataforma) : (v.deseoCliente ? "Busca: "+esc(v.deseoCliente) : "Sin vehículo todavía"),
+              v.vehiculo && v.vin ? esc(v.vin) : ""
+            ].filter(Boolean).join(" · ")}</p>
         </div>
-        <span class="chip ${enc?'chip-cy':'chip-ok'} flex-shrink-0">${enc?'Encargo':'Stock'}</span>
       </div>
 
-      <div class="flex items-center gap-2 mb-4">
-        <span style="color:var(--t3)">${ico("usuario",14)}</span>
-        <p class="t-sm truncate" style="color:${v.nombreCliente?'var(--t2)':'var(--t3)'}">${esc(v.nombreCliente) || "Sin cliente asignado"}</p>
-      </div>
-
-      <div class="mb-4">
-        <div class="flex justify-between items-baseline mb-2">
-          <span class="t-xs truncate">${esc(defF(v)[fa])}</span>
+      <div class="mb-3.5">
+        <div class="flex justify-between items-baseline mb-1.5">
+          <span class="t-xs truncate">${esc(defF(v)[fa].replace(/^\d+\s*·\s*/,''))}</span>
           <span class="num text-[13px] font-semibold flex-shrink-0" style="color:var(--cyan)">${p}%</span>
         </div>
         <div class="bar"><i style="width:${p}%;background:var(--cyan)"></i></div>
       </div>
 
-      ${sig ? `<div class="raised flex items-center gap-2.5 p-2.5 mb-4 min-w-0">
-        <span class="flex-shrink-0" style="color:var(--t3)">${areaI(sig.a,15)}</span>
+      ${sig ? `<div class="sig-row mb-3.5">
+        <span class="t-lbl flex-shrink-0">Sigue</span>
+        <span class="flex-shrink-0" style="color:var(--t3)">${areaI(sig.a,14)}</span>
         <p class="text-[13px] truncate flex-1" style="letter-spacing:-0.01em">${esc(sig.t)}</p>
       </div>`
       : `<div class="mb-4"><span class="chip chip-ok"><span class="dot"></span>Proceso completo</span></div>`}
 
-      <div class="flex justify-between items-center pt-3.5 gap-2" style="border-top:1px solid var(--line)">
+      <div class="flex justify-between items-center pt-3 gap-2" style="border-top:1px solid var(--line)">
         <span class="t-xs truncate">
           <b class="num" style="color:var(--ok)">${money(cob)}</b> de <span class="num">${money(vta)}</span>
         </span>
@@ -1182,7 +1251,7 @@ function pintarMias(){
   if(!items.length){
     cont.innerHTML = `<div class="glass rounded-3xl p-14 text-center fade-up">
       <div class="flex justify-center mb-3" style="color:${hechasHoy?'var(--ok)':'var(--t3)'}">${ico(hechasHoy?"ok":"tareas",38,1.3)}</div>
-      <p class="font-display text-lg font-bold text-white">${hechasHoy?"Terminaste todo":"Sin pendientes"}</p>
+      <p class="t-lg">${hechasHoy?"Terminaste todo":"Sin pendientes"}</p>
       <p class="text-xs mt-1.5" style="color:var(--t3)">${hechasHoy?"Puedes tomarte un respiro.":"Cuando te asignen algo aparecerá aquí."}</p>
     </div>`;
     return;
@@ -1215,7 +1284,7 @@ function pintarMias(){
   resto.forEach(it => (grupos[it.t.a] ||= []).push(it));
   const MAX = 4;
 
-  cont.innerHTML = foco + (resto.length ? `<p class="t-lbl mt-6 mb-1">También pendiente · ${resto.length}</p>` : "") + Object.keys(grupos).map(a=>`
+  cont.innerHTML = foco + (resto.length ? `<p class="t-lbl" style="margin:26px 0 4px 2px!important">También pendiente · ${resto.length}</p>` : "") + Object.keys(grupos).map(a=>`
     <div class="group-head">
       <span class="gh-ico">${areaI(a)}</span>
       <span class="t-md">${esc(areaN(a))}</span>
@@ -1303,7 +1372,7 @@ function pintarFinanzas(){
   t.innerHTML = act.map(v=>{
     const g = Number(v.precio_venta||0) - Number(v.costo_subasta||0);
     return `<tr class="border-b hover:bg-white/5 cursor-pointer" style="border-color:var(--line)" onclick="abrirDetalle('${v.id}')">
-      <td class="p-4 font-bold text-white">${esc(v.vehiculo)||"Por asignar"}</td>
+      <td class="p-4 font-semibold" style="color:var(--t1)">${esc(v.vehiculo)||"Por asignar"}</td>
       <td class="p-4" style="color:var(--cyan)">${esc(v.nombreCliente)||"—"}</td>
       <td class="p-4 text-right num">${money(v.costo_subasta)}</td>
       <td class="p-4 text-right num" style="color:var(--info)">${money(v.precio_venta)}</td>
@@ -1321,7 +1390,7 @@ function pintarArchivo(){
   if(!ls.length){ t.innerHTML = `<tr><td colspan="7" class="p-14 text-center t-md" style="color:var(--t3)"><div class="flex justify-center mb-2" style="color:var(--t3)">${ico("archivo",30,1.3)}</div>Nada archivado todavía.</td></tr>`; return; }
   t.innerHTML = ls.map(v=>`<tr class="border-b hover:bg-white/5" style="border-color:var(--line)">
     <td class="p-4 t-xs" style="color:var(--t3)">${v.fecha_registro? fch(v.fecha_registro):"—"}</td>
-    <td class="p-4 font-bold text-white">${esc(v.vehiculo)||"—"}</td>
+    <td class="p-4 font-semibold" style="color:var(--t1)">${esc(v.vehiculo)||"—"}</td>
     <td class="p-4" style="color:var(--cyan)">${esc(v.nombreCliente)||"—"}</td>
     <td class="p-4 t-xs" style="color:var(--t3)">${esc(v.vin)}</td>
     <td class="p-4 text-center num font-semibold" style="color:var(--cyan)">${progreso(v)}%</td>
@@ -1586,7 +1655,7 @@ window.abrirDetalle = function(id, silencioso){
     <div class="p-6 border-b flex justify-between items-start gap-3 sticky top-0 rounded-t-3xl z-10" style="border-color:var(--line);background:var(--panel-hi)">
       <div class="min-w-0">
         <div class="flex items-center gap-2 flex-wrap">
-          <h2 class="font-display text-xl font-bold truncate" style="color:${v.vehiculo?'#fff':'var(--warn)'}">${esc(v.vehiculo) || (v.nombreCliente ? "Carro por asignar" : "Unidad sin datos")}</h2>
+          <h2 class="font-display text-xl font-bold truncate" style="color:${v.vehiculo?'var(--t1)':'var(--warn)'}">${esc(v.vehiculo) || (v.nombreCliente ? "Carro por asignar" : "Unidad sin datos")}</h2>
           <span class="chip ${enc?'chip-cy':'chip-ok'}">${enc?'Encargo':'Stock'}</span>
         </div>
         <p class="t-xs mt-1" style="color:var(--t3)">${v.vehiculo?`${esc(v.plataforma)} · ${esc(v.vin)||"sin VIN"}`:"Sin vehículo asignado"}${v.nombreCliente?` · ${esc(v.nombreCliente)} ${v.telefonoCliente?"· "+esc(v.telefonoCliente):""}`:""}</p>
@@ -2269,6 +2338,19 @@ setTipo("Encargo");
   const f = document.getElementById('icFecha'); if(f) f.innerHTML = ico('reloj', 14, 1.7);
   const s = document.getElementById('icSalir'); if(s) s.innerHTML = ico('salir', 15, 1.7);
 })();
+// Tema: auto → claro → oscuro
+function pintarBtnTema(){
+  const b=document.getElementById('btnTema'); if(!b) return;
+  const p=window.__tema?.get()||'auto';
+  b.innerHTML = ico(p==='light'?'sol':p==='dark'?'luna':'auto', 15, 1.7);
+  b.title = p==='light'?'Tema: claro':p==='dark'?'Tema: oscuro':'Tema: automático (según tu teléfono)';
+}
+window.cambiarTema = function(){
+  const orden=['auto','light','dark']; const p=window.__tema.get();
+  const sig=orden[(orden.indexOf(p)+1)%3]; window.__tema.set(sig); pintarBtnTema();
+  toast(sig==='auto'?'Tema automático, según tu teléfono':sig==='light'?'Modo claro':'Modo oscuro');
+};
+pintarBtnTema();
 document.getElementById('fechaHoy').innerText =
   new Date().toLocaleDateString('es-SV',{ weekday:'short', day:'numeric', month:'short' });
 </script>
