@@ -257,6 +257,50 @@ select.inp option{background:var(--s2);color:var(--t1)}
 .perm-ico{display:flex;opacity:.55}
 .perm.on .perm-ico{opacity:1;color:var(--cyan)}
 .perm-n{font-weight:450;letter-spacing:-0.01em}
+/* siguiente paso */
+.hero-sig{padding:20px;border-radius:var(--r3);background:linear-gradient(180deg,rgba(255,46,136,.07),rgba(255,46,136,0) 70%),var(--s2);
+  border:1px solid rgba(255,46,136,.2)}
+.hero-ok{display:flex;align-items:center;gap:14px;background:linear-gradient(180deg,rgba(48,209,88,.08),transparent 70%),var(--s2);border-color:rgba(48,209,88,.22)}
+.hero-ico{width:42px;height:42px;border-radius:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.hero-t{font-size:20px;font-weight:600;letter-spacing:-0.024em;line-height:1.25;color:var(--t1)}
+.hero-bar{height:5px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden}
+.hero-bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--brand),var(--brand-2));transition:width .5s}
+.btn-lg{padding:12px 18px!important;font-size:14px!important;display:inline-flex;align-items:center;gap:8px;border-radius:12px}
+.hero-mia{display:flex;align-items:center;gap:10px;width:100%;margin-top:14px;padding:11px 13px;border-radius:var(--r2);
+  background:var(--s1);border:1px solid var(--line);color:var(--t3);cursor:pointer;transition:border-color .15s}
+.hero-mia:hover{border-color:var(--line-2)}
+.dinero{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;border-radius:var(--r2);overflow:hidden;background:var(--line);border:1px solid var(--line)}
+.dinero>div{background:var(--s1);padding:12px 14px}
+/* fases plegables */
+.fase,.plegable{border:1px solid var(--line);border-radius:var(--r2);background:var(--s1);overflow:hidden}
+.fase>summary,.plegable>summary{display:flex;align-items:center;gap:12px;padding:13px 14px;cursor:pointer;user-select:none}
+.fase>summary::before,.plegable>summary::before{display:none!important}
+.plegable>summary{font-size:13px;font-weight:500;color:var(--t1)}
+.fase-dot{width:24px;height:24px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  font-size:11.5px;font-weight:600;background:var(--s3);color:var(--t2)}
+.fase-lista .fase-dot{background:var(--ok);color:#04150a}
+.fase-actual .fase-dot{background:var(--brand);color:#fff}
+.fase-atras .fase-dot{background:var(--warn);color:#1a1000}
+.fase-n{display:block;font-size:14px;font-weight:550;letter-spacing:-0.014em;color:var(--t1)}
+.fase-s{display:block;font-size:12px;color:var(--t3);margin-top:1px}
+.fase-luego .fase-n{color:var(--t2)}
+.fase-bar{width:64px;height:4px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden;flex-shrink:0}
+.fase-bar i{display:block;height:100%;background:var(--cyan)}
+.fase-lista .fase-bar i{background:var(--ok)}
+.fase-chev{color:var(--t3);transition:transform .2s;display:flex}
+details[open]>summary .fase-chev{transform:rotate(90deg)}
+.fase-body{padding:0 10px 10px;display:flex;flex-direction:column;gap:6px}
+.tarea-ok{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:var(--r1);font-size:13px;color:var(--t3)}
+.tarea-ok .tbox{width:18px;height:18px}
+.tarea-ok:hover{background:rgba(255,255,255,.03)}
+.hoy-box{text-align:center;min-width:80px;padding:10px 14px;align-self:center;border-radius:var(--r2);background:var(--s2);border:1px solid var(--line)}
+.hoy-box .num{font-size:30px;font-weight:600;color:var(--ok);line-height:1}
+.hoy-box .t-xs{margin-top:4px}
+.ver-mas{display:block;width:100%;padding:9px;margin-top:2px;border-radius:var(--r2);background:transparent;border:1px dashed var(--line-2);
+  color:var(--t3);font-size:12.5px;cursor:pointer}
+.ver-mas:hover{color:var(--t1);border-color:var(--t3)}
+.tarea.flash{border-color:var(--brand)!important;box-shadow:0 0 0 3px rgba(255,46,136,.18);opacity:1!important}
+@media(max-width:640px){ #miasAnillo{display:none} .modal-bg{padding:0!important} .modal-bg>div{margin:0!important;border-radius:0!important;min-height:100vh;max-width:none!important} .fase-bar{display:none} .hero-t{font-size:18px} .dinero>div{padding:10px 11px} }
 .fase-h{display:flex;align-items:center;gap:9px;font-size:11.5px;font-weight:600;color:var(--t3);
   margin:22px 0 9px;letter-spacing:0}
 .fase-h::after{content:"";flex:1;height:1px;background:var(--line)}
@@ -963,7 +1007,7 @@ function progreso(v){
 function pendientesMias(v){
   if(!yo) return [];
   return defT(v).filter(t=>{
-    if(tareaOk(v,t) || !puede(t.a)) return false;
+    if(t.opc || tareaOk(v,t) || !puede(t.a)) return false;
     if(t.multi){
       const req = respons(t.a);
       if(req.length) return req.includes(yo.usuario) && !miMarca(v,t);
@@ -1122,17 +1166,17 @@ function pintarMias(){
   const totalDia = hechasHoy + totalMias;
   const pctDia = totalDia ? Math.round((hechasHoy/totalDia)*100) : 100;
 
-  document.getElementById('miasAnillo').innerHTML = anillo(pctDia, 96, 8, "hoy");
+  document.getElementById('miasAnillo').innerHTML = `<div class="hoy-box"><p class="num">${hechasHoy}</p><p class="t-xs">hecha${hechasHoy===1?'':'s'} hoy</p></div>`;
   const tit = document.getElementById('miasTitulo');
   const sub = document.getElementById('miasSub');
+  const h = new Date().getHours();
+  const saludo = (h<12?"Buenos días":h<19?"Buenas tardes":"Buenas noches") + ", " + (yo.nombre||"").split(" ")[0];
+  tit.innerText = saludo;
   if(!items.length){
-    tit.innerText = hechasHoy ? "¡Día limpio!" : "Nada pendiente";
-    sub.innerText = hechasHoy ? `Completaste ${hechasHoy} tarea${hechasHoy>1?"s":""} hoy. Bien ahí.` : "No tienes tareas asignadas por ahora.";
+    sub.innerText = hechasHoy ? `Completaste ${hechasHoy} tarea${hechasHoy>1?"s":""} hoy. Día limpio.` : "No tienes nada pendiente por ahora.";
   } else {
-    tit.innerText = `${items.length} pendiente${items.length>1?"s":""}`;
-    sub.innerText = hechasHoy
-      ? `Ya completaste ${hechasHoy} hoy · te ${items.length>1?"quedan":"queda"} ${items.length}`
-      : (yo.admin ? "Eres administrador: ves todas tus áreas." : "Áreas: " + ((yo.areas||[]).map(areaN).join(", ") || "ninguna todavía"));
+    sub.innerText = (hechasHoy ? `Llevas ${hechasHoy} hecha${hechasHoy>1?"s":""} hoy · ` : "") +
+      `${items.length} pendiente${items.length>1?"s":""} en ${new Set(items.map(i=>i.v.id)).size} unidad${new Set(items.map(i=>i.v.id)).size>1?"es":""}`;
   }
 
   if(!items.length){
@@ -1144,18 +1188,41 @@ function pintarMias(){
     return;
   }
 
-  // Agrupar por área
-  const grupos = {};
-  items.forEach(it => (grupos[it.t.a] ||= []).push(it));
+  // Tarea en foco: la primera de la lista, grande y con su botón
+  const f0 = items[0];
+  const accionFoco = f0.t.multi && respons(f0.t.a).length
+      ? `<button onclick="event.stopPropagation();marcarMulti('${f0.v.id}','${f0.t.k}',false)" class="btn-p btn-lg">${ico("ok",16,2.4)} Marcar mi parte</button>`
+      : f0.t.foto
+        ? `<button onclick="event.stopPropagation();abrirDetalle('${f0.v.id}');setTimeout(()=>irATarea('${f0.v.id}','${f0.t.k}'),80)" class="btn-p btn-lg">${ico("foto",16,2)} Subir comprobante</button>`
+        : `<button onclick="event.stopPropagation();marcarDesdeLista('${f0.v.id}','${f0.t.k}')" class="btn-p btn-lg">${ico("ok",16,2.4)} Marcar como hecha</button>`;
+  const foco = `<div class="hero-sig fade-up" id="tc-${f0.v.id}-${f0.t.k}">
+      <div class="flex items-center justify-between gap-2">
+        <p class="t-lbl" style="color:var(--brand)">Empieza por aquí</p>
+        <span class="chip chip-gr">${areaI(f0.t.a,13)} ${esc(areaN(f0.t.a))}</span>
+      </div>
+      <p class="hero-t mt-3">${esc(f0.t.t)}</p>
+      <p class="t-sm mt-1.5">${esc(f0.v.vehiculo)||"Carro por asignar"}${f0.v.nombreCliente?` · ${esc(f0.v.nombreCliente)}`:""}</p>
+      ${f0.t.d?`<p class="t-xs mt-2" style="line-height:1.5">${esc(f0.t.d)}</p>`:""}
+      <div class="flex items-center gap-2 mt-4 flex-wrap">
+        ${accionFoco}
+        <button onclick="abrirDetalle('${f0.v.id}')" class="btn-g px-4 py-2.5">Ver unidad</button>
+      </div>
+      <span id="chk-${f0.v.id}-${f0.t.k}" class="hidden"></span>
+    </div>`;
 
-  cont.innerHTML = Object.keys(grupos).map(a=>`
+  const resto = items.slice(1);
+  const grupos = {};
+  resto.forEach(it => (grupos[it.t.a] ||= []).push(it));
+  const MAX = 4;
+
+  cont.innerHTML = foco + (resto.length ? `<p class="t-lbl mt-6 mb-1">También pendiente · ${resto.length}</p>` : "") + Object.keys(grupos).map(a=>`
     <div class="group-head">
       <span class="gh-ico">${areaI(a)}</span>
       <span class="t-md">${esc(areaN(a))}</span>
       <span class="t-xs">${grupos[a].length}</span>
       <span class="gh-line"></span>
     </div>
-    ${grupos[a].map(({v,t},i)=>`
+    ${grupos[a].slice(0, verMas.has(a)?999:MAX).map(({v,t},i)=>`
       <div class="task-card fade-up" id="tc-${v.id}-${t.k}" style="animation-delay:${Math.min(i,8)*35}ms"
            onclick="${t.foto?`abrirDetalle('${v.id}')`:`marcarDesdeLista('${v.id}','${t.k}')`}">
         <div class="task-check" id="chk-${v.id}-${t.k}">${t.foto?ico("clip",13,2):ico("ok",14,2.4)}</div>
@@ -1166,8 +1233,11 @@ function pintarMias(){
         ${t.foto?`<span class="chip chip-wn flex-shrink-0">comprobante</span>`:""}
         <button onclick="event.stopPropagation();abrirDetalle('${v.id}')" class="btn-g px-2.5 py-1.5 rounded-lg flex-shrink-0">Ver</button>
       </div>`).join("")}
+    ${grupos[a].length>MAX ? `<button onclick="verMasArea('${a}')" class="ver-mas">${verMas.has(a)?'Ver menos':`Ver ${grupos[a].length-MAX} más`}</button>`:""}
   `).join("");
 }
+const verMas = new Set();
+window.verMasArea = function(a){ verMas.has(a)?verMas.delete(a):verMas.add(a); pintarMias(); };
 
 // Marcar desde la lista con animación antes de guardar
 window.marcarDesdeLista = function(id, k){
@@ -1289,6 +1359,73 @@ function pintarUsers(){
 }
 
 /* ════════ DETALLE ════════ */
+/* ── Detalle: siguiente paso + fases plegables ── */
+const faseOpen = {};
+window.faseTog = function(id, fi, abierta){ (faseOpen[id] ||= {})[fi] = abierta; };
+window.irATarea = function(id, k){
+  const v = autos.find(a=>a.id===id); if(!v) return;
+  const t = defT(v).find(x=>x.k===k); if(!t) return;
+  (faseOpen[id] ||= {})[t.f] = true;
+  abrirDetalle(id, true);
+  setTimeout(()=>{ const e=document.getElementById('tk-'+k); if(!e) return;
+    e.scrollIntoView({behavior:'smooth', block:'center'}); e.classList.add('flash');
+    setTimeout(()=>e.classList.remove('flash'), 1600); }, 60);
+};
+function heroSiguiente(v){
+  const ls = tareasDe(v);
+  const pend = ls.filter(t=>!tareaOk(v,t));
+  const pct = progreso(v);
+  const barra = `<div class="hero-bar"><i style="width:${pct}%"></i></div>`;
+  if(!pend.length){
+    return `<div class="hero-sig hero-ok">
+      <div class="hero-ico" style="background:var(--ok);color:#04150a">${ico("ok",20,2.4)}</div>
+      <div class="flex-1 min-w-0">
+        <p class="t-lbl" style="color:var(--ok)">Proceso completo</p>
+        <p class="hero-t">Todo listo con esta unidad</p>
+        <p class="t-sm mt-1">Ya puedes archivarla para que no aparezca en la flota.</p>
+      </div>
+      ${!v.archivado?`<button onclick="archivar('${v.id}',true)" class="btn-p px-4 py-2.5 flex-shrink-0">Archivar</button>`:""}
+    </div>`;
+  }
+  const t = pend[0];
+  const paso = ls.indexOf(t) + 1;
+  const req = t.multi ? respons(t.a) : [];
+  const meToca = t.multi && req.length ? (req.includes(yo.usuario) && !miMarca(v,t)) : puede(t.a);
+  const veh = esc(v.vehiculo).replace(/'/g,""), tt = esc(t.t).replace(/'/g,"");
+  let accion;
+  if(meToca){
+    if(t.multi && req.length) accion = `<button onclick="marcarMulti('${v.id}','${t.k}',false)" class="btn-p btn-lg">${ico("ok",16,2.4)} Marcar mi parte</button>`;
+    else if(t.foto)            accion = `<button onclick="irATarea('${v.id}','${t.k}')" class="btn-p btn-lg">${ico("foto",16,2)} Subir comprobante</button>`;
+    else                       accion = `<button onclick="marcar('${v.id}','${t.k}',false)" class="btn-p btn-lg">${ico("ok",16,2.4)} Marcar como hecha</button>`;
+  } else {
+    accion = `<button onclick="avisarWhats('${t.a}','${tt}','${veh}','${esc(v.vin)}')" class="btn-g btn-lg">${ico("chat",16)} Recordar a ${esc(quienes(t.a))}</button>`;
+  }
+  const mias = pendientesMias(v);
+  const otraMia = !meToca && mias.length ? mias[0] : null;
+  const multiInfo = t.multi && req.length ? ` · ${req.filter(u=>(v.tareas?.[t.k]?.marcas||{})[u]).length} de ${req.length} marcaron` : "";
+  return `<div class="hero-sig">
+    <div class="flex items-center justify-between gap-2 mb-3">
+      <p class="t-lbl" style="color:var(--brand)">Siguiente paso</p>
+      <span class="t-xs num">Paso ${paso} de ${ls.length} · ${pct}%</span>
+    </div>
+    ${barra}
+    <p class="hero-t mt-4">${esc(t.t)}</p>
+    ${t.d?`<p class="t-sm mt-1.5" style="line-height:1.5">${esc(t.d)}</p>`:""}
+    <div class="flex items-center gap-2 mt-3 flex-wrap">
+      <span class="chip chip-gr">${areaI(t.a,13)} ${esc(areaN(t.a))}</span>
+      <span class="t-xs">${meToca?'Te toca a ti':'Le toca a '+esc(quienes(t.a))}${multiInfo}</span>
+    </div>
+    <div class="flex items-center gap-2 mt-4 flex-wrap">
+      ${accion}
+      ${pend.length>1?`<span class="t-xs ml-1">Después: ${esc(pend[1].t)}</span>`:""}
+    </div>
+    ${otraMia?`<button onclick="irATarea('${v.id}','${otraMia.k}')" class="hero-mia">
+        <span class="flex-1 min-w-0 text-left"><span class="t-lbl block">Lo tuyo en esta unidad</span>
+        <span class="t-sm block truncate" style="color:var(--t1)">${esc(otraMia.t)}</span></span>
+        <span class="t-xs">${mias.length>1?`+${mias.length-1} más`:''}</span>${ico("flecha",14,1.8)}</button>`:""}
+  </div>`;
+}
+
 window.abrirDetalle = function(id, silencioso){
   const v = autos.find(a=>a.id===id); if(!v){ cerrar(); return; }
   abiertoId = id;
@@ -1296,9 +1433,24 @@ window.abrirDetalle = function(id, silencioso){
   m.className = "modal-bg";
   const fases = defF(v), p = progreso(v), enc = v.tipoProceso==="Encargo";
 
+  const fAct = faseActual(v);
   let bloques = fases.map((fn,fi)=>{
     const ts = defT(v).filter(t=>t.f===fi);
-    return `<div class="fase-h">${esc(fn)}</div>` + ts.map(t=>{
+    const req_ = ts.filter(t=>!t.opc), hechas_ = req_.filter(t=>tareaOk(v,t)).length;
+    const estado = hechas_===req_.length ? 'lista' : (fi===fAct ? 'actual' : (fi<fAct ? 'atras' : 'luego'));
+    const abierta = (faseOpen[v.id] && faseOpen[v.id][fi]!==undefined) ? faseOpen[v.id][fi] : fi===fAct;
+    const etiqueta = {lista:'Completa', actual:'En curso', atras:'Pendientes atrasadas', luego:'Más adelante'}[estado];
+    return `<details class="fase fase-${estado}" ${abierta?'open':''} ontoggle="faseTog('${v.id}',${fi},this.open)">
+      <summary>
+        <span class="fase-dot">${estado==='lista'?ico("ok",12,2.6):(fi+1)}</span>
+        <span class="flex-1 min-w-0">
+          <span class="fase-n">${esc(fn.replace(/^\d+\s*·\s*/,''))}</span>
+          <span class="fase-s">${etiqueta} · ${hechas_} de ${req_.length}</span>
+        </span>
+        <span class="fase-bar"><i style="width:${req_.length?Math.round(hechas_/req_.length*100):0}%"></i></span>
+        <span class="fase-chev">${ico("flecha",14,1.8)}</span>
+      </summary>
+      <div class="fase-body">` + ts.map(t=>{
       const st = v.tareas?.[t.k], ok = tareaOk(v,t), can = puede(t.a);
       const req = t.multi ? respons(t.a) : [];
 
@@ -1315,7 +1467,11 @@ window.abrirDetalle = function(id, silencioso){
               ${esc(usersData[u]?.nombre||u)}${soyYo?' (tú)':''}${hecho&&marcas[u]?` · ${fch(marcas[u])}`:''}
             </span></div>`;
         }).join("");
-        return `<div class="tarea ${ok?'hecha':''}" style="flex-direction:column;align-items:stretch;gap:6px">
+        if(ok) return `<div id="tk-${t.k}" class="tarea-ok">
+          <div class="tbox on">${ico("ok",11,2.6)}</div>
+          <span class="flex-1 min-w-0 truncate">${esc(t.t)}</span>
+          <span class="t-xs flex-shrink-0">${listos}/${req.length} marcaron</span></div>`;
+        return `<div id="tk-${t.k}" class="tarea" style="flex-direction:column;align-items:stretch;gap:6px">
           <div class="flex items-start gap-2">
             <span class="text-sm mt-0.5">${ok?ico("ok",15,2):ico("equipo",15)}</span>
             <div class="flex-1 min-w-0">
@@ -1349,8 +1505,17 @@ window.abrirDetalle = function(id, silencioso){
           </div>`:""}
         </div>` : "";
 
-      return `<div class="tarea ${ok?'hecha':''} ${!can?'bloq':''}" ${t.foto?'style="flex-direction:column;align-items:stretch;gap:0"':''}>
-        <div class="flex items-start gap-2.5">
+      if(ok){
+        const nf = (st?.fotos||[]).length;
+        return `<div id="tk-${t.k}" class="tarea-ok">
+          <div class="tbox on" ${can?`onclick="marcar('${v.id}','${t.k}',true)" title="Reabrir"`:''}>${ico("ok",11,2.6)}</div>
+          <span class="flex-1 min-w-0 truncate">${esc(t.t)}</span>
+          ${nf?`<a href="${esc(st.fotos[0].url)}" target="_blank" class="t-xs flex items-center gap-1" style="color:var(--cyan)" onclick="event.stopPropagation()">${ico("clip",12)}${nf>1?nf:''}</a>`:""}
+          <span class="t-xs flex-shrink-0">${st?.por?esc(usersData[st.por]?.nombre||st.por)+' · ':''}${fch(st?.fecha)}</span>
+        </div>`;
+      }
+      return `<div id="tk-${t.k}" class="tarea ${ok?'hecha':''} ${!can?'bloq':''}" ${t.foto?'style="flex-direction:column;align-items:stretch;gap:0"':''}>
+        <div class="flex items-start gap-2.5 w-full">
           <div class="tbox ${ok?'on':''} ${!can?'lock':''}" ${can?`onclick="marcar('${v.id}','${t.k}',${ok})"`:'title="No tienes esta área habilitada"'}>${ok?ico("ok",12,2.6):(can?'':ico("candado",11,1.8))}</div>
           <div class="flex-1 min-w-0">
             <p class="text-[13px] font-bold leading-snug ${ok?'line-through opacity-70':''}">${esc(t.t)}${t.opc?' <span class="t-xs">(opcional)</span>':''}${t.foto?' <span class="chip chip-wn" style="vertical-align:middle">comprobante</span>':''}</p>
@@ -1366,7 +1531,7 @@ window.abrirDetalle = function(id, silencioso){
         </div>
         ${bloqueFotos}
       </div>`;
-    }).join("");
+    }).join("") + `</div></details>`;
   }).join("");
 
   const abonos = (v.abonos||[]).map((a,i)=>`<div class="flex justify-between items-center t-sm py-1.5 border-b" style="border-color:var(--line)">
@@ -1416,7 +1581,7 @@ window.abrirDetalle = function(id, silencioso){
       <button onclick="toggleEditar()" class="btn-p px-4 py-2 flex-shrink-0">${sinCarro?'Asignar carro':'Asignar cliente'}</button>
     </div>` : "");
 
-  m.innerHTML = `<div class="glass rounded-3xl w-full max-w-3xl my-4 relative" style="border-top:2px solid ${enc?'var(--cyan)':'var(--ok)'}" onclick="event.stopPropagation()">
+  m.innerHTML = `<div class="glass rounded-3xl w-full max-w-2xl my-4 relative" onclick="event.stopPropagation()">
     
     <div class="p-6 border-b flex justify-between items-start gap-3 sticky top-0 rounded-t-3xl z-10" style="border-color:var(--line);background:var(--panel-hi)">
       <div class="min-w-0">
@@ -1425,7 +1590,7 @@ window.abrirDetalle = function(id, silencioso){
           <span class="chip ${enc?'chip-cy':'chip-ok'}">${enc?'Encargo':'Stock'}</span>
         </div>
         <p class="t-xs mt-1" style="color:var(--t3)">${v.vehiculo?`${esc(v.plataforma)} · ${esc(v.vin)||"sin VIN"}`:"Sin vehículo asignado"}${v.nombreCliente?` · ${esc(v.nombreCliente)} ${v.telefonoCliente?"· "+esc(v.telefonoCliente):""}`:""}</p>
-        ${v.deseoCliente ? `<p class="text-[10px] mt-0.5" style="color:var(--cyan)">🔎 Busca: ${esc(v.deseoCliente)}</p>`:""}
+        ${v.deseoCliente ? `<p class="t-xs mt-1" style="color:var(--cyan)">Busca: ${esc(v.deseoCliente)}</p>`:""}
       </div>
       <div class="flex gap-1.5 flex-shrink-0">
         <button onclick="toggleEditar()" class="btn-g px-2.5 py-2 rounded-lg" title="Editar datos">${ico("editar",15)}</button>
@@ -1435,51 +1600,45 @@ window.abrirDetalle = function(id, silencioso){
 
     <div class="p-6 space-y-5">
       ${panelDatos}
-      <div class="flex items-center gap-5 deep rounded-2xl p-4">
-        ${anillo(p, 104, 9, "avance")}
-        <div class="flex-1 min-w-0 grid grid-cols-2 gap-3">
-          <div><p class="t-lbl">Ya cobrado</p><p class="num text-base font-semibold" style="color:var(--ok)">${money(pagado(v))}</p></div>
-          <div><p class="t-lbl">Falta cobrar</p><p class="num text-base font-semibold" style="color:var(--warn)">${money(saldo(v))}</p></div>
-          <div><p class="t-lbl">Ganancia proyectada</p><p class="num text-base font-semibold" style="color:${(Number(v.precio_venta||0)-Number(v.costo_subasta||0))>=0?'var(--brand)':'var(--danger)'}">${money(Number(v.precio_venta||0)-Number(v.costo_subasta||0))}</p></div>
-          <div><p class="t-lbl">Fase</p><p class="t-sm font-medium truncate" style="color:var(--cyan)">${esc(fases[faseActual(v)])}</p></div>
-        </div>
+      ${heroSiguiente(v)}
+
+      <div class="dinero">
+        <div><p class="t-lbl">Cobrado</p><p class="num text-[17px] font-semibold mt-0.5" style="color:var(--ok)">${money(pagado(v))}</p></div>
+        <div><p class="t-lbl">Falta cobrar</p><p class="num text-[17px] font-semibold mt-0.5" style="color:${saldo(v)>0?'var(--warn)':'var(--t2)'}">${money(saldo(v))}</p></div>
+        <div><p class="t-lbl">Ganancia</p><p class="num text-[17px] font-semibold mt-0.5" style="color:${(Number(v.precio_venta||0)-Number(v.costo_subasta||0))>=0?'var(--brand)':'var(--danger)'}">${money(Number(v.precio_venta||0)-Number(v.costo_subasta||0))}</p></div>
       </div>
 
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <div class="deep rounded-xl p-3.5"><p class="t-lbl">Costo</p><p class="num text-lg font-semibold mt-1">${money(v.costo_subasta)}</p></div>
-        <div class="deep rounded-xl p-3.5"><p class="t-lbl">Precio venta</p>
-          <div class="campo-num mt-1"><span>$</span>
-            <input type="number" value="${Number(v.precio_venta||0)}" onchange="setVenta('${v.id}',this.value)" class="num"></div>
+      <details class="plegable">
+        <summary><span class="flex-1">Pagos, costo y precio</span><span class="t-xs">${(v.abonos||[]).length} abono${(v.abonos||[]).length===1?'':'s'}</span><span class="fase-chev">${ico("flecha",14,1.8)}</span></summary>
+        <div class="pt-3 space-y-3">
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+            <div class="deep rounded-xl p-3"><p class="t-lbl">Costo</p><p class="num text-base font-semibold mt-1">${money(v.costo_subasta)}</p></div>
+            <div class="deep rounded-xl p-3"><p class="t-lbl">Precio venta</p>
+              <div class="campo-num mt-1"><span>$</span><input type="number" value="${Number(v.precio_venta||0)}" onchange="setVenta('${v.id}',this.value)" class="num"></div></div>
+            <div class="deep rounded-xl p-3"><p class="t-lbl">Registrada</p><p class="t-sm mt-1.5" style="color:var(--t1)">${fch(v.fecha_registro)||"—"}</p></div>
+          </div>
+          <div>${abonos}</div>
+          ${puede('finanzas') ? `<div class="flex gap-2 flex-wrap">
+            <input type="number" id="abMonto" placeholder="Monto $" class="inp flex-1 min-w-[110px] px-3 py-2 rounded-xl text-xs">
+            <input type="text" id="abNota" placeholder="Nota (opcional)" class="inp flex-1 min-w-[140px] px-3 py-2 rounded-xl text-xs">
+            <button onclick="addAbono('${v.id}')" class="btn-p px-4 py-2">Abonar</button>
+          </div>` : `<p class="t-xs">Solo Finanzas puede registrar abonos.</p>`}
         </div>
-        <div class="deep rounded-xl p-3.5"><p class="t-lbl">Ganancia</p>
-          <p class="num text-lg font-semibold mt-1" style="color:${(Number(v.precio_venta||0)-Number(v.costo_subasta||0))>=0?'var(--ok)':'var(--danger)'}">${money(Number(v.precio_venta||0)-Number(v.costo_subasta||0))}</p></div>
-        <div class="deep rounded-xl p-3.5"><p class="t-lbl">Registrada</p>
-          <p class="t-sm mt-1.5" style="color:var(--t1)">${fch(v.fecha_registro)||"—"}</p></div>
+      </details>
+
+      <div>
+        <p class="t-lbl mb-2.5">Proceso completo</p>
+        <div class="space-y-2">${bloques}</div>
       </div>
 
-      <div class="deep rounded-2xl p-4">
-        <div class="flex justify-between items-center mb-2">
-          <p class="t-lbl" style="color:var(--cyan)">Abonos del cliente</p>
-          <span class="t-sm" style="color:var(--ok)">Pagado ${money(pagado(v))}</span>
-        </div>
-        ${abonos}
-        ${puede('finanzas') ? `<div class="flex gap-2 mt-3">
-          <input type="number" id="abMonto" placeholder="Monto $" class="inp flex-1 px-3 py-2 rounded-xl text-xs font-bold">
-          <input type="text" id="abNota" placeholder="Nota (opcional)" class="inp flex-1 px-3 py-2 rounded-xl text-xs font-bold">
-          <button onclick="addAbono('${v.id}')" class="btn-p px-4 py-2">Abonar</button>
-        </div>` : `<p class="t-xs mt-2">Solo Finanzas puede registrar abonos.</p>`}
-      </div>
-
-      <div>${bloques}</div>
 
       <div class="flex flex-wrap gap-2 pt-3 border-t" style="border-color:var(--line)">
         ${v.archivado ? `<button onclick="archivar('${v.id}',false)" class="btn-g px-4 py-2.5 rounded-xl flex items-center gap-2">${ico("flecha",14)} Reactivar</button>`
                       : `<button onclick="archivar('${v.id}',true)" class="btn-g px-4 py-2.5 rounded-xl flex items-center gap-2">${ico("archivo",14)} Archivar</button>`}
         ${v.telefonoCliente ? `<a href="https://wa.me/503${String(v.telefonoCliente).replace(/\\D/g,'')}" target="_blank" class="btn-g px-4 py-2.5 inline-flex items-center gap-2">${ico("chat",14)} Escribir al cliente</a>`:""}
         ${yo?.admin
-          ? `<button onclick="eliminar('${v.id}')" class="px-4 py-2.5 rounded-xl t-sm font-medium cursor-pointer"
-               class="btn-g btn-d px-4 py-2.5 rounded-xl flex items-center gap-2">${ico("basura",14)} Eliminar</button>`
-          : `<span class="t-xs self-center" style="color:var(--t3)">🔒 Solo un admin puede eliminar</span>`}
+          ? `<button onclick="eliminar('${v.id}')" class="btn-g btn-d px-4 py-2.5 flex items-center gap-2 ml-auto">${ico("basura",14)} Eliminar</button>`
+          : `<span class="t-xs self-center flex items-center gap-1.5">${ico("candado",12)} Solo un admin puede eliminar</span>`}
       </div>
     </div>
   </div>`;
@@ -2031,6 +2190,8 @@ function pintarCfgNotis(){
       <span class="chip ${chatTG?'chip-ok':'chip-wn'}"><span class="dot"></span>${chatTG?'Telegram activo':'Telegram sin vincular'}</span>
       ${chatTG && !enHorario() ? `<span class="chip chip-wn">En pausa hasta las ${ncfg.hIni}:00</span>`:""}
     </div>
+    ${chatTG ? `<p class="t-sm mt-3" style="line-height:1.5">Te avisamos cada ${ncfg.minTareas} min lo que tengas pendiente${ncfg.soloHorario?`, de ${ncfg.hIni}:00 a ${ncfg.hFin}:00`:''}.</p>` : ""}
+    ${chatTG ? `<details class="plegable mt-3"><summary><span class="flex-1">Ajustes de avisos</span><span class="fase-chev">${ico("flecha",14,1.8)}</span></summary><div class="px-3 pb-3">` : ""}
     ${pushBox}
 
     <div class="space-y-2.5 mt-3">
@@ -2081,7 +2242,8 @@ function pintarCfgNotis(){
           ${nota?`<p class="t-xs mt-2.5" style="line-height:1.55">${nota}</p>`:""}
         </div>
       </details>
-    </div>`;
+    </div>
+    ${chatTG ? `</div></details>` : ""}`;
 }
 
 // El número de pendientes también se ve en el título de la pestaña
