@@ -466,10 +466,10 @@ function pintarStats(){
 function ponTitulo(el, base, acento){
   if(!el) return;
   const clave = base+'|'+acento; if(el.dataset.clave===clave) return; el.dataset.clave = clave;
-  const palabras = (s, cls='') => s.split(/\s+/).filter(Boolean).map((w,i)=>`<span class="w"><span style="transition-delay:${i*70}ms">${esc(w)}</span></span>`).join(' ');
-  const nBase = base.split(/\s+/).filter(Boolean).length;
-  el.innerHTML = palabras(base) + ' <em>' + acento.split(/\s+/).filter(Boolean).map((w,i)=>`<span class="w"><span style="transition-delay:${(nBase+i)*70}ms">${esc(w)}</span></span>`).join(' ') + '</em>';
-  el.classList.remove('listo'); void el.offsetWidth; requestAnimationFrame(()=>el.classList.add('listo'));
+  // Texto normal + palabra en rosa. La entrada es una sola animación del título completo
+  // (las animaciones palabra por palabra con texto degradado se trababan en Chrome/Safari).
+  el.innerHTML = esc(base) + ' <em>' + esc(acento) + '</em>';
+  el.classList.remove('entra-t'); void el.offsetWidth; el.classList.add('entra-t');
 }
 const _valores = {};
 const quietos = () => window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;

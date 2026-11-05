@@ -816,3 +816,9 @@ body{font-family:'Inter',system-ui,sans-serif;font-size:15px;line-height:1.55;le
 .estado,.tag{font-weight:700;font-size:10px;letter-spacing:.08em}
 /* la "g", la "y" y la "p" de los títulos ya no se cortan abajo */
 .h-web .w{padding-bottom:.2em;margin-bottom:-.2em}
+
+/* título: entrada única y segura (reemplaza la de palabra por palabra) */
+.h-web .w,.h-web .w>span{display:inline;transform:none!important;transition:none!important;padding:0;margin:0;overflow:visible}
+.h-web.entra-t{animation:titulo-entra .7s var(--ease) both}
+@keyframes titulo-entra{from{opacity:0;transform:translateY(18px)}}
+.h-web em{display:inline-block;padding-bottom:.06em}
