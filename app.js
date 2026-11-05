@@ -334,20 +334,30 @@ window.setF = function(f){
   moverPastilla();
   pintarFlota();
 };
+let vehAbierto = false;
 window.setTipo = function(t){
   tipoNuevo=t;
   document.getElementById('btEnc').classList.toggle('on', t==="Encargo");
   document.getElementById('btStk').classList.toggle('on', t==="Stock");
   const enc = t==="Encargo";
-  document.getElementById('camposCli').style.display = enc ? "block" : "none";
-  document.getElementById('avisoVeh').style.display  = enc ? "flex"  : "none";
-  document.getElementById('lbVeh').innerHTML = enc
-    ? 'Vehículo <span style="color:var(--t3)">(opcional — se asigna al ganarlo)</span>'
-    : 'Vehículo (año marca modelo)';
-  document.getElementById('tipoAyuda').innerText = enc
-    ? "El cliente pide un carro específico y se lo buscamos. Al inicio basta con registrar al cliente y lo que busca."
-    : "Vehículo comprado por nosotros para stock. Al venderlo le agregas los datos del cliente desde la unidad.";
+  document.getElementById('camposCli').style.display = enc ? "" : "none";
+  vehAbierto = !enc || !!document.getElementById('fVeh').value.trim();
+  pintarBloqueVeh();
+  document.getElementById('btnCrear').textContent = enc ? "Registrar cliente" : "Registrar carro";
+  document.getElementById('tipoAyuda').textContent = enc
+    ? "Su lista de tareas se abre sola. El carro se le asigna cuando se gane en subasta."
+    : "Su lista de tareas se abre sola. Al venderlo le agregas el cliente desde la ficha.";
 };
+function pintarBloqueVeh(){
+  const enc = tipoNuevo==="Encargo";
+  document.getElementById('camposVeh').style.display = vehAbierto ? "" : "none";
+  document.getElementById('toggleVeh').disabled = !enc;
+  document.getElementById('lbVeh').textContent = enc ? "¿Ya se ganó el carro?" : "Vehículo";
+  document.getElementById('lbVehNota').textContent = enc ? (vehAbierto ? "Llena lo que tengas" : "Opcional · se puede asignar después") : "";
+  document.getElementById('chevVeh').textContent = enc ? (vehAbierto ? "–" : "+") : "";
+}
+window.verVehiculo = function(){ if(tipoNuevo!=="Encargo") return; vehAbierto = !vehAbierto; pintarBloqueVeh(); if(vehAbierto) document.getElementById('fVeh').focus(); };
+
 
 /* ════════ CÁLCULOS ════════ */
 function respons(area){ return Object.keys(usersData).filter(u => (usersData[u].areas||[]).includes(area)); }
@@ -523,7 +533,7 @@ function pintarFlota(){
   const vistos = (window.__vistos ||= new Set()); let n = 0;
   cont.innerHTML = ls.map(v=>{
     const nueva = !vistos.has(v.id); vistos.add(v.id);
-    const retraso = nueva ? (n++)*80 : 0;
+    const retraso = nueva ? Math.min(n++,5)*60 : 0;
     const mias = pendientesMias(v).length;
     const enc = v.tipoProceso==="Encargo";
     const sig = tareasDe(v).find(t=> !tareaOk(v,t));
@@ -537,8 +547,8 @@ function pintarFlota(){
     return `<article class="vcard${nueva?' pop':''}" style="${nueva?`animation-delay:${retraso}ms;--d:${retraso}ms`:''}" onclick="abrirDetalle('${v.id}')">
       <div class="vc-top">
         <div class="min-w-0">
-          <h3 class="vc-t" style="${v.vehiculo?'':'color:var(--warn)'}">${esc(v.vehiculo) || "Carro por asignar"}</h3>
-          <p class="vc-precio">Venta <b>${vta?money(vta):'por definir'}</b></p>
+          <h3 class="vc-t">${esc(v.vehiculo) || (v.nombreCliente ? "Encargo de "+esc(v.nombreCliente.split(" ")[0]) : "Carro por asignar")}</h3>
+          <p class="vc-precio">${v.vehiculo ? `Venta <b>${vta?money(vta):'por definir'}</b>` : `Busca <b>${esc(v.deseoCliente||"por definir")}</b>`}</p>
         </div>
         ${pillEstado(v)}
       </div>
@@ -954,55 +964,55 @@ window.abrirDetalle = function(id, silencioso){
   // ── Panel editable: asignar carro (encargo) o asignar cliente (stock) ──
   const sinCarro   = !v.vehiculo;
   const sinCliente = !v.nombreCliente;
-  const panelDatos = editando ? `
-    <div class="deep rounded-2xl p-4 space-y-3" style="border-color:var(--cyan)">
-      <p class="t-lbl" style="color:var(--cyan)">Editar datos de la unidad</p>
-      <div>
-        <p class="t-lbl mb-2" style="color:var(--t3)">Vehículo asignado</p>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          <input id="edVeh"  value="${esc(v.vehiculo)}"    placeholder="2018 Toyota Corolla" class="inp px-3 py-2 rounded-xl text-xs font-bold">
-          <input id="edVin"  value="${esc(v.vin)}"         placeholder="VIN / Lote" class="inp px-3 py-2 rounded-xl text-xs" style="text-transform:uppercase">
-          <select id="edPlat" class="inp px-3 py-2 rounded-xl text-xs font-bold">
-            ${["Copart","IAAI","ADESA","Manheim","Otro"].map(p=>`<option ${v.plataforma===p?'selected':''}>${p}</option>`).join("")}
-          </select>
-          <input id="edCosto" type="number" value="${Number(v.costo_subasta||0)}" placeholder="Costo $" class="inp px-3 py-2 rounded-xl text-xs font-bold">
-        </div>
+  const opcPlat = p => ["Copart","IAAI","ADESA","Manheim","Otro"].map(x=>`<option ${p===x?'selected':''}>${x}</option>`).join("");
+  const camposCarro = `
+      <div class="rejilla">
+        <div class="campo col-2"><label for="edVeh">Año, marca y modelo</label><input id="edVeh" class="inp" value="${esc(v.vehiculo)}" placeholder="2019 Toyota Corolla"></div>
+        <div class="campo"><label for="edVin">VIN o lote</label><input id="edVin" class="inp" value="${esc(v.vin)}" style="text-transform:uppercase" autocomplete="off"></div>
+        <div class="campo"><label for="edPlat">Subasta</label><select id="edPlat" class="inp">${opcPlat(v.plataforma||"Copart")}</select></div>
+        <div class="campo"><label for="edCosto">Costo de compra ($)</label><input id="edCosto" type="number" inputmode="decimal" class="inp" value="${Number(v.costo_subasta||0)||""}" placeholder="0"></div>
+        <div class="campo"><label for="edVenta">Precio de venta ($)</label><input id="edVenta" type="number" inputmode="decimal" class="inp" value="${Number(v.precio_venta||0)||""}" placeholder="0"></div>
+      </div>`;
+  const camposCli = `
+      <div class="rejilla">
+        <div class="campo"><label for="edCli">Nombre del cliente</label><input id="edCli" class="inp" value="${esc(v.nombreCliente)}"></div>
+        <div class="campo"><label for="edTel">Teléfono</label><input id="edTel" class="inp" inputmode="tel" value="${esc(v.telefonoCliente)}" placeholder="7777-7777"></div>
+        <div class="campo col-2"><label for="edDeseo">Qué busca y presupuesto</label><input id="edDeseo" class="inp" value="${esc(v.deseoCliente)}"></div>
+      </div>`;
+  let panelDatos = "";
+  if(editando){
+    const modo = sinCarro ? "carro" : (sinCliente && !enc ? "cliente" : "todo");
+    panelDatos = `<div class="editor-web">
+      <div class="editor-h">
+        <div><p class="t-md">${modo==="carro" ? "Asignar el carro ganado" : modo==="cliente" ? "Asignar el cliente" : "Editar datos de la unidad"}</p>
+          <p class="t-xs mt-1">${modo==="carro" ? (v.deseoCliente ? "El cliente busca: "+esc(v.deseoCliente) : "Llena los datos del carro que se ganó en subasta.") : modo==="cliente" ? "Datos de la persona que compró este carro." : "Cambia lo que necesites y guarda."}</p></div>
       </div>
-      <div>
-        <p class="t-lbl mb-2" style="color:var(--t3)">Cliente</p>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          <input id="edCli"  value="${esc(v.nombreCliente)}"   placeholder="Nombre del cliente" class="inp px-3 py-2 rounded-xl text-xs font-bold">
-          <input id="edTel"  value="${esc(v.telefonoCliente)}" placeholder="Teléfono" class="inp px-3 py-2 rounded-xl text-xs font-bold">
-          <input id="edDeseo" value="${esc(v.deseoCliente)}"   placeholder="Qué busca / presupuesto" class="inp px-3 py-2 rounded-xl text-xs font-bold sm:col-span-2">
-        </div>
+      ${modo==="carro" ? camposCarro : modo==="cliente" ? camposCli : `<p class="bloque-t">Vehículo</p>${camposCarro}<p class="bloque-t mt-2">Cliente</p>${camposCli}`}
+      <div class="flex gap-2 flex-wrap">
+        <button onclick="guardarDatos('${v.id}')" class="btn-p px-5 py-2.5">${modo==="carro" ? "Asignar carro" : modo==="cliente" ? "Asignar cliente" : "Guardar cambios"}</button>
+        <button onclick="toggleEditar()" class="btn-g px-4 py-2.5">Cancelar</button>
       </div>
-      <div class="flex gap-2">
-        <button onclick="guardarDatos('${v.id}')" class="btn-p px-4 py-2">Guardar cambios</button>
-        <button onclick="toggleEditar()" class="btn-g px-4 py-2">Cancelar</button>
-      </div>
-    </div>`
-  : ((sinCarro || (sinCliente && !enc)) ? `
-    <div class="deep rounded-2xl p-4 flex items-center gap-3" style="border-color:var(--warn)">
-      <span style="color:var(--warn)">${sinCarro?ico("buscar",20):ico("usuario",20)}</span>
+    </div>`;
+  } else if(sinCarro || (sinCliente && !enc)){
+    panelDatos = `<div class="falta-web">
+      <span class="falta-ico">${sinCarro?ico("buscar",20):ico("usuario",20)}</span>
       <div class="flex-1 min-w-0">
-        <p class="text-[12px] font-bold" style="color:var(--warn)">${sinCarro?'Todavía sin carro asignado':'Todavía sin cliente asignado'}</p>
-        <p class="text-[10px] mt-0.5" style="color:var(--t3)">${sinCarro
-          ? (v.deseoCliente ? "Busca: "+esc(v.deseoCliente) : "Cuando ganes la subasta, asígnale el vehículo aquí.")
-          : "Cuando lo vendas, agrega los datos del cliente aquí."}</p>
+        <p class="t-md">${sinCarro?'Todavía sin carro':'Todavía sin cliente'}</p>
+        <p class="t-sm mt-0.5">${sinCarro ? (v.deseoCliente ? "Busca: "+esc(v.deseoCliente) : "Cuando se gane en subasta, asígnale el carro.") : "Cuando lo vendas, agrega aquí al cliente."}</p>
       </div>
-      <button onclick="toggleEditar()" class="btn-p px-4 py-2 flex-shrink-0">${sinCarro?'Asignar carro':'Asignar cliente'}</button>
-    </div>` : "");
+      <button onclick="toggleEditar()" class="btn-p px-4 py-2.5 flex-shrink-0">${sinCarro?'Asignar carro':'Asignar cliente'}</button>
+    </div>`;
+  }
 
   m.innerHTML = `<div class="glass rounded-3xl w-full max-w-2xl my-4 relative" onclick="event.stopPropagation()">
     
     <div class="p-6 border-b flex justify-between items-start gap-3 sticky top-0 rounded-t-3xl z-10" style="border-color:var(--line);background:var(--panel-hi)">
       <div class="min-w-0">
         <div class="flex items-center gap-2 flex-wrap">
-          <h2 class="font-display text-xl font-bold truncate" style="color:${v.vehiculo?'var(--t1)':'var(--warn)'}">${esc(v.vehiculo) || (v.nombreCliente ? "Carro por asignar" : "Unidad sin datos")}</h2>
+          <h2 class="font-display text-xl font-bold truncate" style="color:var(--t1)">${esc(v.vehiculo) || (v.nombreCliente ? "Encargo de "+esc(v.nombreCliente.split(" ")[0]) : "Unidad sin datos")}</h2>
           ${pillEstado(v)}<span class="estado e-neutro">${enc?'Encargo':'Stock'}</span>
         </div>
-        <p class="t-xs mt-1" style="color:var(--t3)">${v.vehiculo?`${esc(v.plataforma)} · ${esc(v.vin)||"sin VIN"}`:"Sin vehículo asignado"}${v.nombreCliente?` · ${esc(v.nombreCliente)} ${v.telefonoCliente?"· "+esc(v.telefonoCliente):""}`:""}</p>
-        ${v.deseoCliente ? `<p class="t-xs mt-1" style="color:var(--cyan)">Busca: ${esc(v.deseoCliente)}</p>`:""}
+        <p class="t-xs mt-1" style="color:var(--t3)">${v.vehiculo?`${esc(v.plataforma)} · ${esc(v.vin)||"sin VIN"}`:(v.deseoCliente?"Busca: "+esc(v.deseoCliente):"Sin vehículo asignado")}${v.nombreCliente?` · ${esc(v.nombreCliente)} ${v.telefonoCliente?"· "+esc(v.telefonoCliente):""}`:""}</p>
       </div>
       <div class="flex gap-1.5 flex-shrink-0">
         <button onclick="toggleEditar()" class="btn-g px-2.5 py-2 rounded-lg" title="Editar datos">${ico("editar",15)}</button>
@@ -1016,8 +1026,10 @@ window.abrirDetalle = function(id, silencioso){
 
       <div class="dinero">
         <div><p class="t-lbl">Cobrado</p><p class="num text-[17px] font-semibold mt-0.5" style="color:var(--ok)">${money(pagado(v))}</p></div>
+        ${Number(v.precio_venta||0) ? `
         <div><p class="t-lbl">Falta cobrar</p><p class="num text-[17px] font-semibold mt-0.5" style="color:${saldo(v)>0?'var(--warn)':'var(--t2)'}">${money(saldo(v))}</p></div>
-        <div><p class="t-lbl">Ganancia</p><p class="num text-[17px] font-semibold mt-0.5" style="color:${(Number(v.precio_venta||0)-Number(v.costo_subasta||0))>=0?'var(--brand)':'var(--danger)'}">${money(Number(v.precio_venta||0)-Number(v.costo_subasta||0))}</p></div>
+        <div><p class="t-lbl">Ganancia</p><p class="num text-[17px] font-semibold mt-0.5" style="color:${(Number(v.precio_venta||0)-Number(v.costo_subasta||0))>=0?'var(--brand-light)':'var(--danger)'}">${money(Number(v.precio_venta||0)-Number(v.costo_subasta||0))}</p></div>`
+        : `<div style="grid-column:span 2"><p class="t-lbl">Precio de venta</p><p class="t-sm mt-1" style="color:var(--t2)">Por definir · se pone al asignar el carro</p></div>`}
       </div>
 
       <details class="plegable">
@@ -1060,26 +1072,27 @@ window.cerrar = function(){ abiertoId=null; editando=false; const m=document.get
 
 window.toggleEditar = function(){ editando = !editando; if(abiertoId) abrirDetalle(abiertoId, true); };
 
-window.guardarDatos = async function(id){
+window.guardarDatos = function(id){
   const g = i => (document.getElementById(i)?.value || "").trim();
-  const veh = g('edVeh'), cli = g('edCli');
-  const datos = {
-    vehiculo: veh,
-    vin: g('edVin').toUpperCase(),
-    plataforma: g('edPlat'),
-    costo_subasta: Number(document.getElementById('edCosto')?.value)||0,
-    nombreCliente: cli,
-    telefonoCliente: g('edTel'),
-    deseoCliente: g('edDeseo'),
-  };
-  try{
-    await updateDoc(doc(db,"vehiculos",id), datos);
-    editando = false;
-    const v = autos.find(a=>a.id===id);
-    toast(veh && !v?.vehiculo ? "Carro asignado a la unidad." : cli && !v?.nombreCliente ? "Cliente asignado." : "Datos actualizados.");
-    abrirDetalle(id, true);
-  }catch(e){ toast("No se pudo guardar: "+(e.code||e.message),"err"); }
+  const v = autos.find(a=>a.id===id) || {};
+  const datos = {};
+  if(document.getElementById('edVeh')){
+    datos.vehiculo = g('edVeh'); datos.vin = g('edVin').toUpperCase(); datos.plataforma = g('edPlat') || "Copart";
+    datos.costo_subasta = Number(g('edCosto'))||0; datos.precio_venta = Number(g('edVenta'))||0;
+  }
+  if(document.getElementById('edCli')){
+    datos.nombreCliente = g('edCli'); datos.telefonoCliente = g('edTel'); datos.deseoCliente = g('edDeseo');
+  }
+  const asignaCarro = datos.vehiculo && !v.vehiculo, asignaCli = datos.nombreCliente && !v.nombreCliente;
+  if(datos.vehiculo===""&&v.vehiculo){ toast("Escribe el vehículo.","warn"); return; }
+  updateDoc(doc(db,"vehiculos",id), datos).catch(e=> toast("No se pudo guardar en el servidor: "+(e.code||e.message),"err"));
+  Object.assign(v, datos);            // la ficha cambia al instante
+  editando = false;
+  toast(asignaCarro ? "Carro asignado a "+(v.nombreCliente||"la unidad")+"." : asignaCli ? "Cliente asignado." : "Datos actualizados.");
+  if(asignaCarro || asignaCli) celebrar();
+  abrirDetalle(id, true);
 };
+
 
 /* ════════ ACCIONES ════════ */
 window.marcar = async function(id, k, ok){
@@ -1257,15 +1270,20 @@ window.crearUnidad = async function(){
     creadoPor: yo.usuario,
     fecha_registro: new Date().toISOString()
   };
-  try{
-    await addDoc(collection(db,"vehiculos"), nuevo);
-    toast(veh ? "Unidad registrada con su checklist." : "Cliente registrado. Asígnale el carro cuando lo ganes.");
-    ["fVeh","fVin","fCosto","fVenta","nCli","tCli","dCli"].forEach(i=> document.getElementById(i).value="");
-    document.getElementById('aCli').value = "100";
-    ir('flota');
-  }catch(e){ toast("No se pudo guardar: "+(e.code||e.message),"err"); }
-  finally{ b.disabled=false; b.innerText="Registrar unidad"; }
+  // Firestore guarda primero en el teléfono y luego sincroniza: no hay que esperar al servidor
+  const ref = doc(collection(db,"vehiculos"));
+  setDoc(ref, nuevo).catch(e=> toast("No se pudo guardar en el servidor: "+(e.code||e.message)+". Revisa tu internet.","err"));
+  toast(veh ? "Carro registrado con su lista de tareas." : "Cliente registrado. Asígnale el carro cuando se gane.");
+  ["fVeh","fVin","fCosto","fVenta","nCli","tCli","dCli"].forEach(i=> document.getElementById(i).value="");
+  document.getElementById('aCli').value = "100";
+  b.disabled = false; setTipo(tipoNuevo);
+  ir('flota');
+  abrirCuandoExista(ref.id);
 };
+function abrirCuandoExista(id, intentos=20){
+  if(autos.some(a=>a.id===id)) { abrirDetalle(id); return; }
+  if(intentos>0) setTimeout(()=>abrirCuandoExista(id, intentos-1), 100);
+}
 
 /* ════════ AVISOS POR TELEGRAM ════════
    Llegan aunque la persona tenga todo cerrado. Los envía el robot de GitHub Actions. */

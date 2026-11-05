@@ -28,7 +28,7 @@ try{ history.scrollRestoration='manual'; }catch(e){}
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=7">
+<link rel="stylesheet" href="styles.css?v=8">
 </head>
 <body class="min-h-screen pb-20 selection:bg-pink-600 selection:text-white">
 
@@ -176,65 +176,41 @@ try{ history.scrollRestoration='manual'; }catch(e){}
 
   <!-- ══ NUEVA UNIDAD ══ -->
   <section id="pgNuevo" class="hidden">
-    <div class="max-w-2xl mx-auto glass rounded-3xl p-6 md:p-8 space-y-5 relative" >
-      
-      <div class="flex items-center gap-3 border-b pb-4" style="border-color:var(--line)">
-        <div class="icon-badge"><span id="icNuevaH"></span></div>
-        <div>
-          <h2 class="t-md">Ingresar nueva unidad</h2>
-          <p class="t-sm mt-0.5">Se abre su checklist automáticamente</p>
+    <div class="form-web">
+
+      <div class="campo">
+        <span class="lbl">¿Qué vas a registrar?</span>
+        <div class="seg tipo-seg">
+          <button type="button" onclick="setTipo('Encargo')" id="btEnc" class="tab on"><span id="icEnc"></span><span><b>Por encargo</b><small>Un cliente nos pide un carro</small></span></button>
+          <button type="button" onclick="setTipo('Stock')"   id="btStk" class="tab"><span id="icStk"></span><span><b>Stock</b><small>Carro que ya compramos</small></span></button>
         </div>
       </div>
 
-      <div>
-        <label class="block t-lbl mb-2" style="color:var(--t3)">Modalidad</label>
-        <div class="seg">
-          <button type="button" onclick="setTipo('Encargo')" id="btEnc" class="tab on flex items-center justify-center gap-2"><span id="icEnc"></span> Por encargo</button>
-          <button type="button" onclick="setTipo('Stock')"   id="btStk" class="tab flex items-center justify-center gap-2"><span id="icStk"></span> Stock</button>
-        </div>
-        <p id="tipoAyuda" class="t-xs mt-2 leading-relaxed">El cliente pide un carro específico y se lo buscamos. Arranca con los $100 de abono.</p>
-      </div>
-
-      <div id="camposCli" class="space-y-3 p-4 rounded-2xl" style="background:var(--cyan-soft);border:1px solid var(--line)">
-        <p class="t-lbl" style="color:var(--cyan)">Datos del cliente</p>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div><label class="t-lbl block mb-1.5">Nombre completo</label>
-            <input id="nCli" class="inp w-full px-3.5 py-2.5"></div>
-          <div><label class="t-lbl block mb-1.5">Teléfono</label>
-            <input id="tCli" class="inp w-full px-3.5 py-2.5" placeholder="7777-7777"></div>
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div><label class="t-lbl block mb-1.5" style="color:var(--cyan)">Carro deseado / presupuesto</label>
-            <input id="dCli" class="inp w-full px-3.5 py-2.5" placeholder="Ej: Kia Rio 2018-2020, hasta $9,000"></div>
-          <div><label class="t-lbl block mb-1.5">Abono inicial ($)</label>
-            <input type="number" id="aCli" value="100" class="inp w-full px-3.5 py-2.5"></div>
+      <div id="camposCli" class="bloque">
+        <p class="bloque-t">Cliente</p>
+        <div class="rejilla">
+          <div class="campo"><label for="nCli">Nombre completo</label><input id="nCli" class="inp" autocomplete="off"></div>
+          <div class="campo"><label for="tCli">Teléfono</label><input id="tCli" class="inp" placeholder="7777-7777" inputmode="tel"></div>
+          <div class="campo col-2"><label for="dCli">Qué carro busca y presupuesto</label><input id="dCli" class="inp" placeholder="Ej.: Kia Rio 2018-2020, hasta $9,000"></div>
+          <div class="campo"><label for="aCli">Abono de inicio ($)</label><input type="number" id="aCli" value="100" class="inp" inputmode="decimal"></div>
         </div>
       </div>
 
-      <div id="avisoVeh" class="deep rounded-xl p-3 flex gap-2.5">
-        <span style="color:var(--cyan)"><span id="icAlertaH"></span></span>
-        <p class="t-sm leading-relaxed">
-          Si todavía <b style="color:var(--t1)">no se ha ganado el carro</b>, deja estos campos vacíos. Registra solo al cliente y lo que busca —
-          después, al ganar la subasta, abres la unidad y le asignas el vehículo real con su VIN y costo.
-        </p>
+      <div id="bloqueVeh" class="bloque">
+        <button type="button" id="toggleVeh" class="bloque-t bloque-toggle" onclick="verVehiculo()">
+          <span id="lbVeh">Vehículo</span><span id="lbVehNota" class="t-xs"></span><span class="chev" id="chevVeh">+</span>
+        </button>
+        <div id="camposVeh" class="rejilla">
+          <div class="campo col-2"><label for="fVeh">Año, marca y modelo</label><input id="fVeh" class="inp" placeholder="2019 Toyota Corolla"></div>
+          <div class="campo"><label for="fVin">VIN o lote</label><input id="fVin" class="inp" style="text-transform:uppercase" autocomplete="off"></div>
+          <div class="campo"><label for="fPlat">Subasta</label><select id="fPlat" class="inp"><option>Copart</option><option>IAAI</option><option>ADESA</option><option>Manheim</option><option>Otro</option></select></div>
+          <div class="campo"><label for="fCosto">Costo de compra ($)</label><input type="number" id="fCosto" class="inp" placeholder="0" inputmode="decimal"></div>
+          <div class="campo"><label for="fVenta">Precio de venta ($)</label><input type="number" id="fVenta" class="inp" placeholder="0" inputmode="decimal"></div>
+        </div>
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div><label id="lbVeh" class="t-lbl block mb-2">Vehículo (año marca modelo)</label>
-          <input id="fVeh" class="inp w-full px-4 py-3" placeholder="2018 Toyota Corolla"></div>
-        <div><label class="t-lbl block mb-2">VIN / Lote</label>
-          <input id="fVin" class="inp w-full px-4 py-3" style="text-transform:uppercase"></div>
-      </div>
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div><label class="t-lbl block mb-2">Plataforma</label>
-          <select id="fPlat" class="inp w-full px-4 py-3"><option>Copart</option><option>IAAI</option><option>ADESA</option><option>Manheim</option><option>Otro</option></select></div>
-        <div><label class="t-lbl block mb-2">Costo ($)</label>
-          <input type="number" id="fCosto" class="inp w-full px-4 py-3" placeholder="0"></div>
-        <div><label class="t-lbl block mb-2" style="color:var(--brand)">Precio venta ($)</label>
-          <input type="number" id="fVenta" class="inp w-full px-4 py-3" style="border-color:rgba(255,46,136,.4)" placeholder="0"></div>
-      </div>
-
-      <button onclick="crearUnidad()" id="btnCrear" class="btn-p w-full py-3.5">Registrar unidad</button>
+      <button onclick="crearUnidad()" id="btnCrear" class="btn-p btn-grande">Registrar cliente</button>
+      <p id="tipoAyuda" class="t-xs text-center">Su lista de tareas se abre sola. El carro se le asigna cuando se gane en subasta.</p>
     </div>
   </section>
 
@@ -328,6 +304,6 @@ try{ history.scrollRestoration='manual'; }catch(e){}
 
 <div id="modal" class="hidden"></div>
 
-<script type="module" src="app.js?v=7"></script>
+<script type="module" src="app.js?v=8"></script>
 </body>
 </html>
