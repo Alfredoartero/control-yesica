@@ -28,11 +28,17 @@ try{ history.scrollRestoration='manual'; }catch(e){}
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=6">
+<link rel="stylesheet" href="styles.css?v=7">
 </head>
 <body class="min-h-screen pb-20 selection:bg-pink-600 selection:text-white">
 
 <div id="toaster"></div>
+
+<!-- ══════════ CARGA (como la web) ══════════ -->
+<div id="cargador" aria-hidden="true">
+  <div class="cg-logo"><span>IMPORTACIONES</span> <span><b>YESICA</b></span></div>
+  <div class="cg-bar"><span></span></div>
+</div>
 
 <!-- ══════════ LOGIN ══════════ -->
 <div id="login" class="fixed inset-0 z-[100] flex items-center justify-center p-4" style="background:var(--bg)">
@@ -123,6 +129,7 @@ try{ history.scrollRestoration='manual'; }catch(e){}
     <div class="filtros-bar flex flex-wrap items-center gap-3">
       <input id="buscar" oninput="pintarFlota()" placeholder="Buscar vehículo, cliente, VIN…" class="inp flex-1 min-w-[200px] px-4 py-2.5" style="background:var(--s1)">
       <div class="filtros seg-f">
+        <span class="seg-pill" aria-hidden="true"></span>
         <button onclick="setF('todos')"   id="fTodos" class="tab on">Todos <i id="cTodos"></i></button>
         <button onclick="setF('Encargo')" id="fEnc"   class="tab">Encargo <i id="cEnc"></i></button>
         <button onclick="setF('Stock')"   id="fStk"   class="tab">Stock <i id="cStk"></i></button>
@@ -321,6 +328,6 @@ try{ history.scrollRestoration='manual'; }catch(e){}
 
 <div id="modal" class="hidden"></div>
 
-<script type="module" src="app.js?v=6"></script>
+<script type="module" src="app.js?v=7"></script>
 </body>
 </html>

@@ -317,8 +317,10 @@ window.ir = function(p){
   const t = TITULOS[p];
   if(t){
     document.getElementById('cejaPagina').textContent = t[0];
-    document.getElementById('tituloPagina').innerHTML = esc(t[1]) + ' <em>' + esc(t[2]) + '</em>';
+    ponTitulo(document.getElementById('tituloPagina'), t[1], t[2]);
     document.getElementById('subPagina').textContent = t[3];
+    const sec = document.getElementById(PGS[p][0]); if(sec){ sec.classList.remove('entra'); void sec.offsetWidth; sec.classList.add('entra'); }
+    window.__vistos = new Set();  // al cambiar de página las tarjetas vuelven a entrar
     const ph = document.getElementById('pageHead'); if(ph) ph.classList.toggle('hidden', p==='mias');
   }
   const sr = document.getElementById('statsRow');
@@ -329,6 +331,7 @@ window.setF = function(f){
   filtro=f;
   [["todos","fTodos"],["Encargo","fEnc"],["Stock","fStk"],["mios","fMios"]].forEach(([k,id])=>
     document.getElementById(id).classList.toggle('on', k===f));
+  moverPastilla();
   pintarFlota();
 };
 window.setTipo = function(t){
@@ -432,15 +435,34 @@ function pintarStats(){
   const enc = act.filter(a=>a.tipoProceso==="Encargo").length;
   const stk = act.length - enc;
 
-  document.getElementById('sTot').innerText = act.length;
+  contar('sTot', act.length, n=>String(Math.round(n)));
   document.getElementById('sEnc').innerText = enc;
   document.getElementById('sStk').innerText = stk;
   document.getElementById('sMix').innerText = act.length ? `${enc} por encargo · ${stk} en stock` : "sin unidades";
-  document.getElementById('sPro').innerText = avance + "%";
+  contar('sPro', avance, n=>Math.round(n)+"%");
   document.getElementById('sProBar').style.width = avance + "%";
-  document.getElementById('sSal').innerText = money(porCobrar);
+  contar('sSal', porCobrar, n=>money(Math.round(n)));
   document.getElementById('sCobrado').innerText = venta ? `cobrado ${money(cobrado)} de ${money(venta)}` : "—";
-  document.getElementById('sMias').innerText = yo ? contarMias() : 0;
+  contar('sMias', yo ? contarMias() : 0, n=>String(Math.round(n)));
+}
+function ponTitulo(el, base, acento){
+  if(!el) return;
+  const clave = base+'|'+acento; if(el.dataset.clave===clave) return; el.dataset.clave = clave;
+  const palabras = (s, cls='') => s.split(/\s+/).filter(Boolean).map((w,i)=>`<span class="w"><span style="transition-delay:${i*70}ms">${esc(w)}</span></span>`).join(' ');
+  const nBase = base.split(/\s+/).filter(Boolean).length;
+  el.innerHTML = palabras(base) + ' <em>' + acento.split(/\s+/).filter(Boolean).map((w,i)=>`<span class="w"><span style="transition-delay:${(nBase+i)*70}ms">${esc(w)}</span></span>`).join(' ') + '</em>';
+  el.classList.remove('listo'); void el.offsetWidth; requestAnimationFrame(()=>el.classList.add('listo'));
+}
+const _valores = {};
+const quietos = () => window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+function contar(id, destino, fmt){
+  const el = document.getElementById(id); if(!el) return;
+  const desde = _valores[id] ?? 0; _valores[id] = destino;
+  if(desde===destino || quietos()){ el.textContent = fmt(destino); return; }
+  const t0 = performance.now(), dur = 1100;
+  const paso = t => { const k = Math.min(1,(t-t0)/dur), e = 1-Math.pow(1-k,3);
+    el.textContent = fmt(desde + (destino-desde)*e); if(k<1) requestAnimationFrame(paso); };
+  requestAnimationFrame(paso);
 }
 
 /* La ruta del carro: un punto por fase, la línea se llena con el avance real */
@@ -498,7 +520,10 @@ function pintarFlota(){
     return;
   }
 
+  const vistos = (window.__vistos ||= new Set()); let n = 0;
   cont.innerHTML = ls.map(v=>{
+    const nueva = !vistos.has(v.id); vistos.add(v.id);
+    const retraso = nueva ? (n++)*80 : 0;
     const mias = pendientesMias(v).length;
     const enc = v.tipoProceso==="Encargo";
     const sig = tareasDe(v).find(t=> !tareaOk(v,t));
@@ -509,7 +534,7 @@ function pintarFlota(){
       v.vehiculo ? `<span>${esc(v.plataforma)}</span>` : `<span>${v.deseoCliente ? "Busca "+esc(v.deseoCliente) : "Sin vehículo"}</span>`,
       v.vehiculo && v.vin ? `<span class="mono">${esc(v.vin)}</span>` : ""
     ].join("");
-    return `<article class="vcard" onclick="abrirDetalle('${v.id}')">
+    return `<article class="vcard${nueva?' pop':''}" style="${nueva?`animation-delay:${retraso}ms;--d:${retraso}ms`:''}" onclick="abrirDetalle('${v.id}')">
       <div class="vc-top">
         <div class="min-w-0">
           <h3 class="vc-t" style="${v.vehiculo?'':'color:var(--warn)'}">${esc(v.vehiculo) || "Carro por asignar"}</h3>
@@ -528,6 +553,7 @@ function pintarFlota(){
       <button class="vc-btn ${mias?'p':''}" onclick="event.stopPropagation();abrirDetalle('${v.id}')">Ver detalles <span aria-hidden="true">→</span></button>
     </article>`;
   }).join("");
+  requestAnimationFrame(moverPastilla);
 }
 window.pintarFlota = pintarFlota;   // el buscador lo llama desde el HTML
 
@@ -556,7 +582,7 @@ function pintarMias(){
   const sub = document.getElementById('miasSub');
   const h = new Date().getHours();
   const saludo = (h<12?"Buenos días":h<19?"Buenas tardes":"Buenas noches") + ", " + (yo.nombre||"").split(" ")[0];
-  tit.innerHTML = esc(saludo.split(", ")[0]) + ', <em>' + esc((yo.nombre||"").split(" ")[0]) + '</em>';
+  ponTitulo(tit, saludo.split(", ")[0] + ",", (yo.nombre||"").split(" ")[0]);
   if(!items.length){
     sub.innerText = hechasHoy ? `Completaste ${hechasHoy} tarea${hechasHoy>1?"s":""} hoy. Día limpio.` : "No tienes nada pendiente por ahora.";
   } else {
@@ -816,7 +842,7 @@ window.abrirDetalle = function(id, silencioso){
   const v = autos.find(a=>a.id===id); if(!v){ cerrar(); return; }
   abiertoId = id;
   const m = document.getElementById('modal');
-  m.className = "modal-bg";
+  m.className = "modal-bg" + (silencioso ? "" : " modal-anim");
   const fases = defF(v), p = progreso(v), enc = v.tipoProceso==="Encargo";
 
   const fAct = faseActual(v);
@@ -1679,4 +1705,41 @@ document.getElementById('fechaHoy').innerText =
     if(!on && y > 24){ on = true; tb.classList.add('scrolled'); }
     else if(on && y < 8){ on = false; tb.classList.remove('scrolled'); } };
   window.addEventListener('scroll', revisar, { passive:true }); revisar();
+})();
+
+// Pastilla rosa que se desliza al filtro activo (como el selector de /inventario)
+function moverPastilla(){
+  const cont = document.querySelector('.seg-f'); const on = cont && cont.querySelector('.tab.on');
+  const p = cont && cont.querySelector('.seg-pill'); if(!p || !on) return;
+  p.style.width = on.offsetWidth + 'px'; p.style.transform = `translateX(${on.offsetLeft}px)`;
+}
+window.addEventListener('resize', moverPastilla);
+setTimeout(moverPastilla, 60);
+
+// Brillo del borde que sigue al mouse en las tarjetas (solo compu)
+if(window.matchMedia && matchMedia('(hover: hover) and (pointer: fine)').matches){
+  document.addEventListener('pointermove', e=>{
+    const c = e.target.closest && e.target.closest('.vcard, .hero-sig'); if(!c) return;
+    const r = c.getBoundingClientRect();
+    c.style.setProperty('--mx', (e.clientX-r.left)+'px'); c.style.setProperty('--my', (e.clientY-r.top)+'px');
+  }, { passive:true });
+  const g = document.createElement('div'); g.className = 'cursor-glow'; document.body.appendChild(g);
+  let gx=0, gy=0, tx=0, ty=0, vivo=false;
+  document.addEventListener('pointermove', e=>{ tx=e.clientX; ty=e.clientY; g.style.opacity='1'; if(!vivo){ vivo=true; requestAnimationFrame(seguir); } }, { passive:true });
+  document.addEventListener('pointerleave', ()=> g.style.opacity='0');
+  function seguir(){ gx+=(tx-gx)*.12; gy+=(ty-gy)*.12; g.style.transform=`translate(${gx}px,${gy}px)`;
+    if(Math.abs(tx-gx)+Math.abs(ty-gy) > .5) requestAnimationFrame(seguir); else vivo=false; }
+}
+
+// Pantalla de carga: se va en cuanto el sistema está listo (nunca más de ~1.5 s)
+(function(){
+  const l = document.getElementById('cargador'); if(!l) return;
+  const quitar = () => { l.classList.add('fuera'); setTimeout(()=>l.remove(), 700); };
+  const t0 = performance.now();
+  const listo = () => setTimeout(quitar, Math.max(0, 700 - (performance.now()-t0)));
+  const obs = new MutationObserver(()=>{
+    if(!document.getElementById('app').classList.contains('hidden') || !document.getElementById('login').classList.contains('hidden')){ obs.disconnect(); listo(); }
+  });
+  obs.observe(document.body, { subtree:true, attributes:true, attributeFilter:['class'] });
+  setTimeout(quitar, 1600);
 })();
