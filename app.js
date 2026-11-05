@@ -300,10 +300,10 @@ onAuthStateChanged(auth, async user=>{
 
 /* ════════ NAVEGACIÓN ════════ */
 const PGS = { flota:["pgFlota","tbFlota"], mias:["pgMias","tbMias"], nuevo:["pgNuevo","tbNuevo"], finanzas:["pgFin","tbFin"], archivo:["pgArch","tbArch"], usuarios:["pgUsers","tbUsers"] };
-const TITULOS = {   // [ceja, título, palabra en rosa, subtítulo]
+let TITULOS = {   // [ceja, título, palabra en rosa, subtítulo]
   flota:    ["Flota activa",  "Tu flota",     "en proceso",  "Cada carro con su ruta, lo cobrado y lo que te toca."],
   mias:     ["Tu día",        "Mis",          "tareas",      "Lo que te toca a ti, empezando por lo más próximo."],
-  nuevo:    ["Nueva unidad",  "Registra un",  "vehículo",    "Encargo para un cliente o carro de stock. Su lista de tareas se abre sola."],
+  nuevo:    ["Nueva unidad",  "Registra un",  "cliente",     "Una búsqueda personalizada: el carro se le asigna cuando se gane en subasta."],
   finanzas: ["Finanzas",      "Panel",        "financiero",  "Inversión, cobros y ganancia de las unidades activas."],
   archivo:  ["Archivo",       "Unidades",     "terminadas",  "Lo que ya completó su proceso o se archivó."],
   usuarios: ["Equipo",        "Equipo y",     "permisos",    "Marca qué áreas puede tocar cada persona."],
@@ -344,6 +344,14 @@ window.setTipo = function(t){
   vehAbierto = !enc || !!document.getElementById('fVeh').value.trim();
   pintarBloqueVeh();
   document.getElementById('btnCrear').textContent = enc ? "Registrar cliente" : "Registrar carro";
+  TITULOS.nuevo = enc
+    ? ["Nueva unidad", "Registra un", "cliente",  "Una búsqueda personalizada: el carro se le asigna cuando se gane en subasta."]
+    : ["Nueva unidad", "Registra un", "vehículo", "Un carro que ya compramos para stock. Al venderlo le agregas el cliente."];
+  const pg = document.getElementById('pgNuevo');
+  if(pg && !pg.classList.contains('hidden')){
+    ponTitulo(document.getElementById('tituloPagina'), TITULOS.nuevo[1], TITULOS.nuevo[2]);
+    document.getElementById('subPagina').textContent = TITULOS.nuevo[3];
+  }
   document.getElementById('tipoAyuda').textContent = enc
     ? "Su lista de tareas se abre sola. El carro se le asigna cuando se gane en subasta."
     : "Su lista de tareas se abre sola. Al venderlo le agregas el cliente desde la ficha.";
