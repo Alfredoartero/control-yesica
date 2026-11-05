@@ -28,7 +28,7 @@ try{ history.scrollRestoration='manual'; }catch(e){}
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=5">
+<link rel="stylesheet" href="styles.css?v=6">
 </head>
 <body class="min-h-screen pb-20 selection:bg-pink-600 selection:text-white">
 
@@ -81,11 +81,11 @@ try{ history.scrollRestoration='manual'; }catch(e){}
 <div class="shell">
   <header class="topbar">
     <div class="max-w-[1500px] mx-auto flex items-center gap-4">
-      <div class="min-w-0 flex-1">
-        <h1 id="tituloPagina" class="t-lg truncate">Flota activa</h1>
-        <p id="subPagina" class="t-sm mt-0.5 truncate">Todo lo que est&aacute; en proceso ahora</p>
+      <div class="min-w-0 flex-1 flex items-center gap-3">
+        <span class="marca">IMPORTACIONES <b>YESICA</b></span>
+        <span class="marca-tag">Control</span>
       </div>
-      <div class="hidden md:flex items-center gap-2 px-3.5 py-2 pill">
+      <div class="fecha-pill items-center gap-2 px-3.5 py-2 pill">
         <span style="color:var(--t3)" id="icFecha"></span>
         <span id="fechaHoy" class="t-xs"></span>
       </div>
@@ -102,29 +102,34 @@ try{ history.scrollRestoration='manual'; }catch(e){}
   </header>
 
   <main class="max-w-[1500px] mx-auto px-4 lg:px-7 py-7 space-y-6">
+  <div class="page-head" id="pageHead">
+    <p class="ceja"><span id="cejaPagina">Flota activa</span></p>
+    <h1 id="tituloPagina" class="h-web">Tu flota <em>en proceso</em></h1>
+    <p id="subPagina" class="sub-web">Cada carro con su ruta, lo cobrado y lo que te toca.</p>
+  </div>
 
   <!-- ═══ RESUMEN ═══ -->
-  <div id="statsRow" class="resumen">
-    <div><p class="t-sm">Unidades activas</p><p id="sTot" class="res-n">0</p><p id="sMix" class="t-xs">&mdash;</p></div>
-    <div><p class="t-sm">Avance promedio</p><p id="sPro" class="res-n">0%</p><div class="bar mt-2"><i id="sProBar" style="width:0%;background:var(--cyan)"></i></div></div>
-    <div><p class="t-sm">Por cobrar</p><p id="sSal" class="res-n">$0</p><p id="sCobrado" class="t-xs">&mdash;</p></div>
-    <div><p class="t-sm">Tus pendientes</p><p id="sMias" class="res-n" style="color:var(--brand)">0</p><p class="t-xs">en todas las unidades</p></div>
+  <div id="statsRow" class="stats-web">
+    <div><p id="sTot" class="sw-n">0</p><p class="sw-l">unidades activas</p><p id="sMix" class="sw-s">&mdash;</p></div>
+    <div><p id="sPro" class="sw-n">0%</p><p class="sw-l">avance promedio</p><div class="bar mt-2 mx-auto" style="max-width:140px"><i id="sProBar" style="width:0%"></i></div></div>
+    <div><p id="sSal" class="sw-n">$0</p><p class="sw-l">por cobrar</p><p id="sCobrado" class="sw-s">&mdash;</p></div>
+    <div><p id="sMias" class="sw-n rosa">0</p><p class="sw-l">tareas tuyas</p><p class="sw-s">en todas las unidades</p></div>
   </div>
 
   <div class="hidden"><span id="sEnc">0</span><span id="sStk">0</span></div>
 
   <!-- ══ FLOTA ══ -->
   <section id="pgFlota" class="space-y-4">
-    <div class="flex flex-wrap items-center gap-3">
+    <div class="filtros-bar flex flex-wrap items-center gap-3">
       <input id="buscar" oninput="pintarFlota()" placeholder="Buscar vehículo, cliente, VIN…" class="inp flex-1 min-w-[200px] px-4 py-2.5" style="background:var(--s1)">
       <div class="filtros seg-f">
-        <button onclick="setF('todos')"   id="fTodos" class="tab on">Todos</button>
-        <button onclick="setF('Encargo')" id="fEnc"   class="tab">Encargo</button>
-        <button onclick="setF('Stock')"   id="fStk"   class="tab">Stock</button>
-        <button onclick="setF('mios')"    id="fMios"  class="tab">Con tarea mía</button>
+        <button onclick="setF('todos')"   id="fTodos" class="tab on">Todos <i id="cTodos"></i></button>
+        <button onclick="setF('Encargo')" id="fEnc"   class="tab">Encargo <i id="cEnc"></i></button>
+        <button onclick="setF('Stock')"   id="fStk"   class="tab">Stock <i id="cStk"></i></button>
+        <button onclick="setF('mios')"    id="fMios"  class="tab">Con tarea mía <i id="cMios"></i></button>
       </div>
     </div>
-    <div id="flota" class="lista"></div>
+    <div id="flota" class="vgrid"></div>
   </section>
 
   <!-- ══ MIS TAREAS ══ -->
@@ -135,8 +140,9 @@ try{ history.scrollRestoration='manual'; }catch(e){}
         <div class="px-1 pt-1 pb-2 fade-up">
           <div class="flex items-center justify-between gap-4">
             <div>
-              <h2 id="miasTitulo" class="t-xl mt-1.5">Todo listo</h2>
-              <p id="miasSub" class="t-sm mt-1">Solo lo que te toca a ti.</p>
+              <p class="ceja"><span>Tu día</span></p>
+              <h1 id="miasTitulo" class="h-web">Todo listo</h1>
+              <p id="miasSub" class="sub-web">Solo lo que te toca a ti.</p>
             </div>
             <div id="miasAnillo"></div>
           </div>
@@ -315,6 +321,6 @@ try{ history.scrollRestoration='manual'; }catch(e){}
 
 <div id="modal" class="hidden"></div>
 
-<script type="module" src="app.js?v=5"></script>
+<script type="module" src="app.js?v=6"></script>
 </body>
 </html>

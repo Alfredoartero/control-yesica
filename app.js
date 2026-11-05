@@ -300,13 +300,13 @@ onAuthStateChanged(auth, async user=>{
 
 /* ════════ NAVEGACIÓN ════════ */
 const PGS = { flota:["pgFlota","tbFlota"], mias:["pgMias","tbMias"], nuevo:["pgNuevo","tbNuevo"], finanzas:["pgFin","tbFin"], archivo:["pgArch","tbArch"], usuarios:["pgUsers","tbUsers"] };
-const TITULOS = {
-  flota:    ["Flota activa",      "Todo lo que está en proceso ahora"],
-  mias:     ["Mis tareas",        "Lo que te toca a ti, agrupado por área"],
-  nuevo:    ["Nueva unidad",      "Registra un vehículo o un cliente"],
-  finanzas: ["Panel financiero",  "Inversión, cobros y ganancia proyectada"],
-  archivo:  ["Archivo",           "Unidades finalizadas o archivadas"],
-  usuarios: ["Equipo y permisos", "Define qué puede tocar cada persona"],
+const TITULOS = {   // [ceja, título, palabra en rosa, subtítulo]
+  flota:    ["Flota activa",  "Tu flota",     "en proceso",  "Cada carro con su ruta, lo cobrado y lo que te toca."],
+  mias:     ["Tu día",        "Mis",          "tareas",      "Lo que te toca a ti, empezando por lo más próximo."],
+  nuevo:    ["Nueva unidad",  "Registra un",  "vehículo",    "Encargo para un cliente o carro de stock. Su lista de tareas se abre sola."],
+  finanzas: ["Finanzas",      "Panel",        "financiero",  "Inversión, cobros y ganancia de las unidades activas."],
+  archivo:  ["Archivo",       "Unidades",     "terminadas",  "Lo que ya completó su proceso o se archivó."],
+  usuarios: ["Equipo",        "Equipo y",     "permisos",    "Marca qué áreas puede tocar cada persona."],
 };
 window.ir = function(p){
   if(p==='finanzas') pintarFinanzas();
@@ -316,8 +316,10 @@ window.ir = function(p){
   });
   const t = TITULOS[p];
   if(t){
-    document.getElementById('tituloPagina').innerText = t[0];
-    document.getElementById('subPagina').innerText = t[1];
+    document.getElementById('cejaPagina').textContent = t[0];
+    document.getElementById('tituloPagina').innerHTML = esc(t[1]) + ' <em>' + esc(t[2]) + '</em>';
+    document.getElementById('subPagina').textContent = t[3];
+    const ph = document.getElementById('pageHead'); if(ph) ph.classList.toggle('hidden', p==='mias');
   }
   const sr = document.getElementById('statsRow');
   if(sr) sr.classList.toggle('hidden', p!=='flota');
@@ -480,6 +482,9 @@ function pintarFlota(){
   const cont = document.getElementById('flota');
   const q = (document.getElementById('buscar').value||"").toLowerCase().trim();
   let ls = autos.filter(a=>!a.archivado);
+  const cuenta = (id,n) => { const e=document.getElementById(id); if(e) e.textContent = n; };
+  cuenta('cTodos', ls.length); cuenta('cEnc', ls.filter(a=>a.tipoProceso==="Encargo").length);
+  cuenta('cStk', ls.filter(a=>a.tipoProceso!=="Encargo").length); cuenta('cMios', ls.filter(a=>pendientesMias(a).length>0).length);
   if(filtro==="Encargo") ls = ls.filter(a=>a.tipoProceso==="Encargo");
   if(filtro==="Stock")   ls = ls.filter(a=>a.tipoProceso!=="Encargo");
   if(filtro==="mios")    ls = ls.filter(a=> pendientesMias(a).length>0);
@@ -493,40 +498,35 @@ function pintarFlota(){
     return;
   }
 
-  cont.innerHTML = `<div class="fila fila-head">
-      <span></span><span>Unidad</span><span>Avance</span><span class="text-right">Cobrado</span><span class="text-right">Tuyas</span><span></span>
-    </div>` + ls.map(v=>{
-    const p = progreso(v), mias = pendientesMias(v).length;
+  cont.innerHTML = ls.map(v=>{
+    const mias = pendientesMias(v).length;
     const enc = v.tipoProceso==="Encargo";
-    const e = etapas(v), cur = e.find(x=>x.cur) || e[e.length-1];
     const sig = tareasDe(v).find(t=> !tareaOk(v,t));
-    const cob = pagado(v), vta = Number(v.precio_venta||0);
+    const cob = pagado(v), vta = Number(v.precio_venta||0), falta = saldo(v);
     const meta = [
-      `<span style="color:var(--t2)">${enc?'Encargo':'Stock'}</span>`,
+      `<span>${enc?'Encargo':'Stock'}</span>`,
       v.nombreCliente ? `<span>${esc(v.nombreCliente)}</span>` : (!enc ? `<span style="color:var(--warn)">Sin cliente</span>` : ""),
       v.vehiculo ? `<span>${esc(v.plataforma)}</span>` : `<span>${v.deseoCliente ? "Busca "+esc(v.deseoCliente) : "Sin vehículo"}</span>`,
-      v.vehiculo && v.vin ? `<span class="mono" style="font-size:11.5px">${esc(v.vin)}</span>` : ""
+      v.vehiculo && v.vin ? `<span class="mono">${esc(v.vin)}</span>` : ""
     ].join("");
-    return `<div class="fila" onclick="abrirDetalle('${v.id}')">
-      <div class="veh-ico ${enc?'enc':'stk'}" title="${enc?'Por encargo':'Stock'}">${ico(enc?'apreton':'caja',17,1.6)}</div>
-      <div class="min-w-0 fila-a">
-        <div class="flex items-center gap-2 min-w-0">
-          <p class="fila-t truncate" style="${v.vehiculo?'':'color:var(--warn)'}">${esc(v.vehiculo) || "Carro por asignar"}</p>
-          ${pillEstado(v)}
+    return `<article class="vcard" onclick="abrirDetalle('${v.id}')">
+      <div class="vc-top">
+        <div class="min-w-0">
+          <h3 class="vc-t" style="${v.vehiculo?'':'color:var(--warn)'}">${esc(v.vehiculo) || "Carro por asignar"}</h3>
+          <p class="vc-precio">Venta <b>${vta?money(vta):'por definir'}</b></p>
         </div>
-        <div class="meta mt-1">${meta}</div>
+        ${pillEstado(v)}
       </div>
-      <div class="min-w-0 fila-r">
-        <div class="flex items-center gap-3">${ruta(v)}<span class="num t-sm flex-shrink-0" style="color:var(--t1);min-width:34px;text-align:right">${p}%</span></div>
-        <p class="t-xs mt-1.5 truncate">${sig ? `<span style="color:var(--t2)">${esc(cur.n)}</span><span class="sep"></span>Sigue: ${esc(sig.t)}` : `<span style="color:var(--ok)">Proceso completo</span>`}</p>
+      <div class="meta">${meta}</div>
+      <div class="vc-ruta">${ruta(v,true)}</div>
+      <div class="vc-sig">${sig ? `<span class="vc-sig-l">Sigue</span><span class="truncate">${esc(sig.t)}</span>` : `<span style="color:var(--ok-txt)">Proceso completo</span>`}</div>
+      <div class="vc-specs">
+        <div><b class="num" style="color:var(--ok-txt)">${money(cob)}</b><small>Cobrado</small></div>
+        <div><b class="num" style="color:${falta>0?'var(--warn)':'var(--t1)'}">${money(falta)}</b><small>Falta</small></div>
+        <div><b class="num" style="color:${mias?'var(--brand-light)':'var(--t1)'}">${mias}</b><small>Tus tareas</small></div>
       </div>
-      <div class="fila-m text-right">
-        <p class="num t-sm" style="color:var(--t1);font-weight:550">${money(cob)}</p>
-        <p class="t-xs num">de ${money(vta)}</p>
-      </div>
-      <div class="fila-b text-right">${mias ? `<span class="cuenta">${mias}</span>` : `<span class="t-xs">—</span>`}</div>
-      <span class="fila-c">${ico("flecha",15,1.7)}</span>
-    </div>`;
+      <button class="vc-btn ${mias?'p':''}" onclick="event.stopPropagation();abrirDetalle('${v.id}')">Ver detalles <span aria-hidden="true">→</span></button>
+    </article>`;
   }).join("");
 }
 window.pintarFlota = pintarFlota;   // el buscador lo llama desde el HTML
@@ -556,7 +556,7 @@ function pintarMias(){
   const sub = document.getElementById('miasSub');
   const h = new Date().getHours();
   const saludo = (h<12?"Buenos días":h<19?"Buenas tardes":"Buenas noches") + ", " + (yo.nombre||"").split(" ")[0];
-  tit.innerText = saludo;
+  tit.innerHTML = esc(saludo.split(", ")[0]) + ', <em>' + esc((yo.nombre||"").split(" ")[0]) + '</em>';
   if(!items.length){
     sub.innerText = hechasHoy ? `Completaste ${hechasHoy} tarea${hechasHoy>1?"s":""} hoy. Día limpio.` : "No tienes nada pendiente por ahora.";
   } else {
@@ -1670,3 +1670,13 @@ window.cambiarTema = function(){
 pintarBtnTema();
 document.getElementById('fechaHoy').innerText =
   new Date().toLocaleDateString('es-SV',{ weekday:'short', day:'numeric', month:'short' });
+
+// Menú de arriba: se vuelve vidrio al bajar (con margen, para no reaccionar a cada píxel ni al rebote del iPhone)
+(function(){
+  const tb = document.querySelector('.topbar'); if(!tb) return;
+  let on = false;
+  const revisar = () => { const y = window.scrollY;
+    if(!on && y > 24){ on = true; tb.classList.add('scrolled'); }
+    else if(on && y < 8){ on = false; tb.classList.remove('scrolled'); } };
+  window.addEventListener('scroll', revisar, { passive:true }); revisar();
+})();
