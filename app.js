@@ -647,7 +647,7 @@ function pintarMias(){
   resto.forEach(it => (grupos[it.t.a] ||= []).push(it));
   const MAX = 4;
 
-  cont.innerHTML = foco + (resto.length ? `<p class="t-lbl" style="margin:26px 0 4px 2px!important">También pendiente · ${resto.length}</p>` : "") + Object.keys(grupos).map(a=>`
+  cont.innerHTML = foco + (resto.length ? `<p class="ceja" style="margin:34px 0 6px 2px">También pendiente · ${resto.length}</p>` : "") + Object.keys(grupos).map(a=>`
     <div class="group-head">
       <span class="gh-ico">${areaI(a)}</span>
       <span class="t-md">${esc(areaN(a))}</span>
@@ -734,15 +734,15 @@ function pintarFinanzas(){
   }
   t.innerHTML = act.map(v=>{
     const g = Number(v.precio_venta||0) - Number(v.costo_subasta||0);
-    return `<tr class="border-b hover:bg-white/5 cursor-pointer" style="border-color:var(--line)" onclick="abrirDetalle('${v.id}')">
-      <td class="p-4 font-semibold" style="color:var(--t1)">${esc(v.vehiculo)||"Por asignar"}</td>
-      <td class="p-4" style="color:var(--cyan)">${esc(v.nombreCliente)||"—"}</td>
-      <td class="p-4 text-right num">${money(v.costo_subasta)}</td>
-      <td class="p-4 text-right num" style="color:var(--info)">${money(v.precio_venta)}</td>
-      <td class="p-4 text-right num" style="color:var(--ok)">${money(pagado(v))}</td>
-      <td class="p-4 text-right num" style="color:var(--warn)">${money(saldo(v))}</td>
-      <td class="p-4 text-right num font-semibold" style="color:${g>=0?'var(--brand)':'var(--danger)'}">${money(g)}</td>
-      <td class="p-4 text-center num font-semibold" style="color:var(--cyan)">${progreso(v)}%</td>
+    return `<tr class="fin-fila border-b hover:bg-white/5 cursor-pointer" style="border-color:var(--line)" onclick="abrirDetalle('${v.id}')">
+      <td data-l="Vehículo" class="p-4 font-semibold" style="color:var(--t1)">${esc(v.vehiculo)||"Por asignar"}</td>
+      <td data-l="Cliente" class="p-4" style="color:var(--cyan)">${esc(v.nombreCliente)||"—"}</td>
+      <td data-l="Costo" class="p-4 text-right num">${money(v.costo_subasta)}</td>
+      <td data-l="Venta" class="p-4 text-right num" style="color:var(--info)">${money(v.precio_venta)}</td>
+      <td data-l="Cobrado" class="p-4 text-right num" style="color:var(--ok)">${money(pagado(v))}</td>
+      <td data-l="Saldo" class="p-4 text-right num" style="color:var(--warn)">${money(saldo(v))}</td>
+      <td data-l="Ganancia" class="p-4 text-right num font-semibold" style="color:${g>=0?'var(--brand)':'var(--danger)'}">${money(g)}</td>
+      <td data-l="Avance" class="p-4 text-center num font-semibold" style="color:var(--cyan)">${progreso(v)}%</td>
     </tr>`;
   }).join("");
 }
@@ -751,14 +751,14 @@ function pintarArchivo(){
   const t = document.getElementById('tArch');
   const ls = autos.filter(a=>a.archivado);
   if(!ls.length){ t.innerHTML = `<tr><td colspan="7" class="p-14 text-center t-md" style="color:var(--t3)"><div class="flex justify-center mb-2" style="color:var(--t3)">${ico("archivo",30,1.3)}</div>Nada archivado todavía.</td></tr>`; return; }
-  t.innerHTML = ls.map(v=>`<tr class="border-b hover:bg-white/5" style="border-color:var(--line)">
-    <td class="p-4 t-xs" style="color:var(--t3)">${v.fecha_registro? fch(v.fecha_registro):"—"}</td>
-    <td class="p-4 font-semibold" style="color:var(--t1)">${esc(v.vehiculo)||"—"}</td>
-    <td class="p-4" style="color:var(--cyan)">${esc(v.nombreCliente)||"—"}</td>
-    <td class="p-4 t-xs" style="color:var(--t3)">${esc(v.vin)}</td>
-    <td class="p-4 text-center num font-semibold" style="color:var(--cyan)">${progreso(v)}%</td>
-    <td class="p-4 text-right num font-semibold">${money(v.costo_subasta)} / <span style="color:var(--brand)">${money(v.precio_venta)}</span></td>
-    <td class="p-4 text-right whitespace-nowrap">
+  t.innerHTML = ls.map(v=>`<tr class="fin-fila arch-fila border-b hover:bg-white/5" style="border-color:var(--line)">
+    <td data-l="Fecha" class="p-4 t-xs" style="color:var(--t3)">${v.fecha_registro? fch(v.fecha_registro):"—"}</td>
+    <td data-l="Vehículo" class="p-4 font-semibold" style="color:var(--t1)">${esc(v.vehiculo)||"—"}</td>
+    <td data-l="Cliente" class="p-4" style="color:var(--cyan)">${esc(v.nombreCliente)||"—"}</td>
+    <td data-l="VIN" class="p-4 t-xs" style="color:var(--t3)">${esc(v.vin)}</td>
+    <td data-l="Avance" class="p-4 text-center num font-semibold" style="color:var(--cyan)">${progreso(v)}%</td>
+    <td data-l="Costo / Venta" class="p-4 text-right num font-semibold">${money(v.costo_subasta)} / <span style="color:var(--brand)">${money(v.precio_venta)}</span></td>
+    <td data-l="" class="p-4 text-right whitespace-nowrap">
       <button onclick="archivar('${v.id}',false)" class="btn-g px-2.5 py-1.5 rounded-lg">Reactivar</button>
       ${yo?.admin ? `<button onclick="eliminar('${v.id}')" class="btn-g px-2.5 py-1.5 rounded-lg ml-1.5"
            style="color:var(--danger);border-color:rgba(255,69,58,.3)" title="Eliminar">${ico("basura",14)}</button>`:""}
