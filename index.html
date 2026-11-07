@@ -28,7 +28,7 @@ try{ history.scrollRestoration='manual'; }catch(e){}
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=13">
+<link rel="stylesheet" href="styles.css?v=14">
 </head>
 <body class="min-h-screen pb-20 selection:bg-pink-600 selection:text-white">
 
@@ -132,7 +132,7 @@ try{ history.scrollRestoration='manual'; }catch(e){}
         <button onclick="setF('todos')"   id="fTodos" class="tab on">Todos <i id="cTodos"></i></button>
         <button onclick="setF('Encargo')" id="fEnc"   class="tab">Encargo <i id="cEnc"></i></button>
         <button onclick="setF('Stock')"   id="fStk"   class="tab">Stock <i id="cStk"></i></button>
-        <button onclick="setF('mios')"    id="fMios"  class="tab">Con tarea mía <i id="cMios"></i></button>
+        <button onclick="setF('mios')"    id="fMios"  class="tab"><span class="solo-pc-i">Con tarea mía</span><span class="solo-movil-i">Mías</span> <i id="cMios"></i></button>
       </div>
       <label class="busca-web"><span class="busca-ico" id="icoBuscar" aria-hidden="true"></span>
         <input id="buscar" oninput="pintarFlota()" placeholder="Buscar vehículo, cliente o VIN" class="inp" autocomplete="off"></label>
