@@ -28,7 +28,7 @@ try{ history.scrollRestoration='manual'; }catch(e){}
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=10">
+<link rel="stylesheet" href="styles.css?v=12">
 </head>
 <body class="min-h-screen pb-20 selection:bg-pink-600 selection:text-white">
 
@@ -126,8 +126,7 @@ try{ history.scrollRestoration='manual'; }catch(e){}
 
   <!-- ══ FLOTA ══ -->
   <section id="pgFlota" class="space-y-4">
-    <div class="filtros-bar flex flex-wrap items-center gap-3">
-      <input id="buscar" oninput="pintarFlota()" placeholder="Buscar vehículo, cliente, VIN…" class="inp flex-1 min-w-[200px] px-4 py-2.5" style="background:var(--s1)">
+    <div class="filtros-bar filtros-web">
       <div class="filtros seg-f">
         <span class="seg-pill" aria-hidden="true"></span>
         <button onclick="setF('todos')"   id="fTodos" class="tab on">Todos <i id="cTodos"></i></button>
@@ -135,7 +134,10 @@ try{ history.scrollRestoration='manual'; }catch(e){}
         <button onclick="setF('Stock')"   id="fStk"   class="tab">Stock <i id="cStk"></i></button>
         <button onclick="setF('mios')"    id="fMios"  class="tab">Con tarea mía <i id="cMios"></i></button>
       </div>
+      <label class="busca-web"><span class="busca-ico" id="icoBuscar" aria-hidden="true"></span>
+        <input id="buscar" oninput="pintarFlota()" placeholder="Buscar vehículo, cliente o VIN" class="inp" autocomplete="off"></label>
     </div>
+    <p class="result-line" id="resLinea"></p>
     <div id="flota" class="vgrid"></div>
   </section>
 
@@ -304,6 +306,6 @@ try{ history.scrollRestoration='manual'; }catch(e){}
 
 <div id="modal" class="hidden"></div>
 
-<script type="module" src="app.js?v=11"></script>
+<script type="module" src="app.js?v=12"></script>
 </body>
 </html>

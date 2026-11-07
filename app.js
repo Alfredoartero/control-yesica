@@ -529,6 +529,8 @@ function pintarFlota(){
   if(filtro==="Stock")   ls = ls.filter(a=>a.tipoProceso!=="Encargo");
   if(filtro==="mios")    ls = ls.filter(a=> pendientesMias(a).length>0);
   if(q) ls = ls.filter(a => [a.vehiculo,a.nombreCliente,a.vin,a.plataforma,a.deseoCliente,a.telefonoCliente].join(" ").toLowerCase().includes(q));
+  const rl = document.getElementById('resLinea'); if(rl) rl.innerHTML = `Mostrando <b>${ls.length}</b> ${ls.length===1?'unidad':'unidades'}`;
+  const ib = document.getElementById('icoBuscar'); if(ib && !ib.innerHTML) ib.innerHTML = ico("buscar",16,2);
 
   if(!ls.length){
     cont.innerHTML = `<div class="vacio">
@@ -568,7 +570,7 @@ function pintarFlota(){
         <div><b class="num" style="color:${falta>0?'var(--warn)':'var(--t1)'}">${money(falta)}</b><small>Falta</small></div>
         <div><b class="num" style="color:${mias?'var(--brand-light)':'var(--t1)'}">${mias}</b><small>Tus tareas</small></div>
       </div>
-      <button class="vc-btn ${mias?'p':''}" onclick="event.stopPropagation();abrirDetalle('${v.id}')">Ver detalles <span aria-hidden="true">→</span></button>
+      <button class="vc-btn" onclick="event.stopPropagation();abrirDetalle('${v.id}')">Ver detalles <span aria-hidden="true">→</span></button>
     </article>`;
   }).join("");
   requestAnimationFrame(moverPastilla);
@@ -624,17 +626,18 @@ function pintarMias(){
       : f0.t.foto
         ? `<button onclick="event.stopPropagation();abrirDetalle('${f0.v.id}');setTimeout(()=>irATarea('${f0.v.id}','${f0.t.k}'),80)" class="btn-p btn-lg">${ico("foto",16,2)} Subir comprobante</button>`
         : `<button onclick="event.stopPropagation();marcarDesdeLista('${f0.v.id}','${f0.t.k}')" class="btn-p btn-lg">${ico("ok",16,2.4)} Marcar como hecha</button>`;
-  const foco = `<div class="hero-sig fade-up" id="tc-${f0.v.id}-${f0.t.k}">
+  const foco = `<div class="hero-sig cta-web fade-up" id="tc-${f0.v.id}-${f0.t.k}">
+      <div class="blob b1" aria-hidden="true"></div><div class="blob b2" aria-hidden="true"></div>
       <div class="flex items-center justify-between gap-2">
-        <p class="t-lbl" style="color:var(--brand)">Empieza por aquí</p>
+        <p class="ceja" style="margin:0">Empieza por aquí</p>
         <span class="chip chip-gr">${areaI(f0.t.a,13)} ${esc(areaN(f0.t.a))}</span>
       </div>
-      <p class="hero-t mt-3">${esc(f0.t.t)}</p>
+      <p class="hero-t mt-4">${esc(f0.t.t)}</p>
       <p class="t-sm mt-1.5">${esc(f0.v.vehiculo)||"Carro por asignar"}${f0.v.nombreCliente?` · ${esc(f0.v.nombreCliente)}`:""}</p>
       ${f0.t.d?`<p class="t-xs mt-2" style="line-height:1.5">${esc(f0.t.d)}</p>`:""}
       <div class="flex items-center gap-2 mt-4 flex-wrap">
         ${accionFoco}
-        <button onclick="abrirDetalle('${f0.v.id}')" class="btn-g px-4 py-2.5">Ver unidad</button>
+        <button onclick="abrirDetalle('${f0.v.id}')" class="btn-ghost-web">Ver unidad <span aria-hidden="true">→</span></button>
       </div>
       <span id="chk-${f0.v.id}-${f0.t.k}" class="hidden"></span>
     </div>`;
@@ -832,11 +835,12 @@ function heroSiguiente(v){
   const mias = pendientesMias(v);
   const otraMia = !meToca && mias.length ? mias[0] : null;
   const multiInfo = t.multi && req.length ? ` · ${req.filter(u=>(v.tareas?.[t.k]?.marcas||{})[u]).length} de ${req.length} marcaron` : "";
-  return `<div class="hero-sig">
+  return `<div class="hero-sig cta-web suave">
+    <div class="blob b1" aria-hidden="true"></div><div class="blob b2" aria-hidden="true"></div>
     ${ruta(v,true)}
     <div class="hero-div"></div>
     <div class="flex items-center justify-between gap-2">
-      <p class="t-sm" style="color:var(--brand);font-weight:550">Siguiente paso</p>
+      <p class="ceja" style="margin:0">Siguiente paso</p>
       <span class="t-xs num">Paso ${paso} de ${ls.length}</span>
     </div>
     <p class="hero-t mt-2">${esc(t.t)}</p>
