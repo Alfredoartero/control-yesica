@@ -99,6 +99,29 @@ const T_STK = [
 const defT   = v => v.tipoProceso === "Encargo" ? T_ENC : T_STK;
 const defF   = v => v.tipoProceso === "Encargo" ? FASES_ENC : FASES_STK;
 
+/* Las tareas vienen del tablero ("Tareas del proceso Yesica") a través de proceso.json.
+   Si no se puede leer, se queda con la lista de arriba (o la última que se guardó en el teléfono). */
+let procesoInfo = null;
+function aplicarProceso(p){
+  try{
+    const E = p?.tareas?.Encargo, S = p?.tareas?.Stock;
+    if(!Array.isArray(E) || !E.length || !Array.isArray(S) || !S.length) return false;
+    T_ENC.splice(0, T_ENC.length, ...E);
+    T_STK.splice(0, T_STK.length, ...S);
+    const fe = p.fases?.Encargo, fs = p.fases?.Stock;
+    if(Array.isArray(fe) && fe.length) FASES_ENC.splice(0, FASES_ENC.length, ...fe.map((n,i)=>`${i+1} · ${n}`));
+    if(Array.isArray(fs) && fs.length) FASES_STK.splice(0, FASES_STK.length, ...fs.map((n,i)=>`${i+1} · ${n}`));
+    procesoInfo = { actualizado:p.actualizado, fuente:p.fuente };
+    return true;
+  }catch(e){ return false; }
+}
+try{ const g = JSON.parse(localStorage.getItem('proceso-yesica')||'null'); if(g) aplicarProceso(g); }catch(e){}
+fetch('proceso.json?'+Date.now(), {cache:'no-store'}).then(r=> r.ok ? r.json() : null).then(p=>{
+  if(!p || !aplicarProceso(p)) return;
+  try{ localStorage.setItem('proceso-yesica', JSON.stringify(p)); }catch(e){}
+  if(typeof pintarTodo==='function' && yo){ pintarTodo(); if(abiertoId) abrirDetalle(abiertoId); }
+}).catch(()=>{});
+
 /* ════════ ESTADO ════════ */
 let yo = null, usersData = {}, autos = [], filtro = "todos", tipoNuevo = "Encargo", suscrito = false, abiertoId = null, editando = false;
 
@@ -198,8 +221,9 @@ function toast(msg, tipo="ok"){
 
 /* ════════ PERMISOS ════════ */
 const puede = area => !!yo && (yo.admin || (yo.areas||[]).includes(area));
-function quienes(area){
-  const n = Object.keys(usersData).filter(u => (usersData[u].areas||[]).includes(area)).map(u=>usersData[u].nombre);
+function quienes(x){
+  const n = typeof x==='object' ? resp(x).map(nombreU)
+          : Object.keys(usersData).filter(u => (usersData[u].areas||[]).includes(x)).map(u=>usersData[u].nombre);
   return n.length ? n.join(", ") : "sin asignar";
 }
 
@@ -369,12 +393,20 @@ window.verVehiculo = function(){ if(tipoNuevo!=="Encargo") return; vehAbierto = 
 
 /* ════════ CÁLCULOS ════════ */
 function respons(area){ return Object.keys(usersData).filter(u => (usersData[u].areas||[]).includes(area)); }
+// Quién hace la tarea: las personas que le pusiste en el tablero; si no tiene, la gente de su área
+const personasDe = t => (t.personas||[]).filter(u => usersData[u] || EQUIPO[u]);
+function resp(t){ const p = personasDe(t); return p.length ? p : respons(t.a); }
+// ¿Es mía? Si la tarea tiene personas, solo de ellas; si no, de quien tenga el área (y de los admin)
+function esMia(t){ const p = personasDe(t); return p.length ? (!!yo && p.includes(yo.usuario)) : puede(t.a); }
+// ¿Puedo marcarla? La gente asignada, quien tenga el área, o un admin
+function puedeT(t){ return puede(t.a) || (!!yo && personasDe(t).includes(yo.usuario)); }
+const nombreU = u => usersData[u]?.nombre || EQUIPO[u]?.nombre || u;
 
 // ¿La tarea está completa? En las "multi" solo cuando TODOS los responsables del área marcaron su parte.
 function tareaOk(v, t){
   const st = v.tareas?.[t.k];
   if(!t.multi) return !!st?.ok;
-  const req = respons(t.a);
+  const req = resp(t);
   if(!req.length) return !!st?.ok;          // nadie asignado todavía → funciona como check normal
   const m = st?.marcas || {};
   return req.every(u => !!m[u]);
@@ -389,9 +421,9 @@ function progreso(v){
 function pendientesMias(v){
   if(!yo) return [];
   return defT(v).filter(t=>{
-    if(t.opc || tareaOk(v,t) || !puede(t.a)) return false;
+    if(t.opc || tareaOk(v,t) || !esMia(t)) return false;
     if(t.multi){
-      const req = respons(t.a);
+      const req = resp(t);
       if(req.length) return req.includes(yo.usuario) && !miMarca(v,t);
     }
     return true;
@@ -588,7 +620,7 @@ function pintarHoy(items, hechasHoy){
       ${items.length>top.length?`<button onclick="ir('mias')" class="hoy-link">Ver las ${items.length} <span aria-hidden="true">→</span></button>`:''}
     </div>
     <div class="hoy-lista">${top.map(({v,t})=>{
-      const modo = t.foto ? 'foto' : (t.multi && respons(t.a).length ? 'multi' : 'ok');
+      const modo = t.foto ? 'foto' : (t.multi && resp(t).length ? 'multi' : 'ok');
       return `<div class="hoy-fila" onclick="abrirDetalle('${v.id}')">
         <button class="hoy-ck" title="${modo==='foto'?'Subir comprobante':'Marcar como hecha'}" onclick="event.stopPropagation();hoyMarcar(this,'${v.id}','${t.k}','${modo}')">${modo==='foto'?ico("clip",13,2):ico("ok",13,3)}</button>
         <div class="min-w-0 flex-1"><p class="hoy-t">${esc(t.t)}</p>
@@ -674,7 +706,7 @@ function pintarMias(){
   const hoy = new Date().toDateString();
   let hechasHoy = 0, totalMias = items.length;
   autos.filter(a=>!a.archivado).forEach(v=> defT(v).forEach(t=>{
-    if(t.opc || !puede(t.a)) return;
+    if(t.opc || !esMia(t)) return;
     const st = v.tareas?.[t.k];
     if(st?.ok && st.fecha && new Date(st.fecha).toDateString()===hoy) hechasHoy++;
     if(t.multi){ const m = st?.marcas?.[yo.usuario]; if(m && new Date(m).toDateString()===hoy) hechasHoy++; }
@@ -707,7 +739,7 @@ function pintarMias(){
 
   // Tarea en foco: la primera de la lista, grande y con su botón
   const f0 = items[0];
-  const accionFoco = f0.t.multi && respons(f0.t.a).length
+  const accionFoco = f0.t.multi && resp(f0.t).length
       ? `<button onclick="event.stopPropagation();marcarMulti('${f0.v.id}','${f0.t.k}',false)" class="btn-p btn-lg">${ico("ok",16,2.4)} Marcar mi parte</button>`
       : f0.t.foto
         ? `<button onclick="event.stopPropagation();abrirDetalle('${f0.v.id}');setTimeout(()=>irATarea('${f0.v.id}','${f0.t.k}'),80)" class="btn-p btn-lg">${ico("foto",16,2)} Subir comprobante</button>`
@@ -730,13 +762,13 @@ function pintarMias(){
 
   const resto = items.slice(1);
   const grupos = {};
-  resto.forEach(it => (grupos[it.t.a] ||= []).push(it));
+  resto.forEach(it => (grupos[it.v.id] ||= []).push(it));   // agrupadas por carro
   const MAX = 4;
 
   cont.innerHTML = foco + (resto.length ? `<p class="ceja" style="margin:34px 0 6px 2px">También pendiente · ${resto.length}</p>` : "") + Object.keys(grupos).map(a=>`
-    <div class="group-head">
-      <span class="gh-ico">${areaI(a)}</span>
-      <span class="t-md">${esc(areaN(a))}</span>
+    <div class="group-head" onclick="abrirDetalle('${a}')" style="cursor:pointer">
+      <span class="gh-ico">${ico("flota",16)}</span>
+      <span class="t-md truncate">${(()=>{const v=grupos[a][0].v; return esc(v.vehiculo)||(v.nombreCliente?"Encargo de "+esc(v.nombreCliente.split(" ")[0]):"Carro por asignar");})()}</span>
       <span class="t-xs">${grupos[a].length}</span>
       <span class="gh-line"></span>
     </div>
@@ -746,7 +778,7 @@ function pintarMias(){
         <div class="task-check" id="chk-${v.id}-${t.k}">${t.foto?ico("clip",13,2):ico("ok",14,2.4)}</div>
         <div class="flex-1 min-w-0">
           <p class="task-title truncate">${esc(t.t)}</p>
-          <p class="task-meta truncate">${esc(v.vehiculo)||"Carro por asignar"}${v.nombreCliente?` · ${esc(v.nombreCliente)}`:""}${t.multi&&respons(t.a).length?` · tu parte (${respons(t.a).filter(u=>(v.tareas?.[t.k]?.marcas||{})[u]).length}/${respons(t.a).length})`:""}</p>
+          <p class="task-meta truncate">${esc(areaN(t.a))}${personasDe(t).length?` · ${esc(personasDe(t).map(nombreU).join(", "))}`:""}${t.multi&&resp(t).length?` · tu parte (${resp(t).filter(u=>(v.tareas?.[t.k]?.marcas||{})[u]).length}/${resp(t).length})`:""}</p>
         </div>
         ${t.foto?`<span class="chip chip-wn flex-shrink-0 solo-pc">comprobante</span><span class="solo-movil flex-shrink-0" style="color:var(--warn)" title="Pide comprobante">${ico("clip",15,1.8)}</span>`:""}
         <button onclick="event.stopPropagation();abrirDetalle('${v.id}')" class="btn-g px-2.5 py-1.5 rounded-lg flex-shrink-0">Ver</button>
@@ -907,8 +939,8 @@ function heroSiguiente(v){
   }
   const t = pend[0];
   const paso = ls.indexOf(t) + 1;
-  const req = t.multi ? respons(t.a) : [];
-  const meToca = t.multi && req.length ? (req.includes(yo.usuario) && !miMarca(v,t)) : puede(t.a);
+  const req = t.multi ? resp(t) : [];
+  const meToca = t.multi && req.length ? (req.includes(yo.usuario) && !miMarca(v,t)) : esMia(t);
   const veh = esc(v.vehiculo).replace(/'/g,""), tt = esc(t.t).replace(/'/g,"");
   let accion;
   if(meToca){
@@ -916,7 +948,7 @@ function heroSiguiente(v){
     else if(t.foto)            accion = `<button onclick="irATarea('${v.id}','${t.k}')" class="btn-p btn-lg">${ico("foto",16,2)} Subir comprobante</button>`;
     else                       accion = `<button onclick="marcar('${v.id}','${t.k}',false)" class="btn-p btn-lg">${ico("ok",16,2.4)} Marcar como hecha</button>`;
   } else {
-    accion = `<button onclick="avisarWhats('${t.a}','${tt}','${veh}','${esc(v.vin)}')" class="btn-g btn-lg">${ico("chat",16)} Recordar a ${esc(quienes(t.a))}</button>`;
+    accion = `<button onclick="avisarWhats('${t.k}','${tt}','${veh}','${esc(v.vin)}')" class="btn-g btn-lg">${ico("chat",16)} Recordar a ${esc(quienes(t))}</button>`;
   }
   const mias = pendientesMias(v);
   const otraMia = !meToca && mias.length ? mias[0] : null;
@@ -933,7 +965,7 @@ function heroSiguiente(v){
     ${t.d?`<p class="t-sm mt-1.5" style="line-height:1.5">${esc(t.d)}</p>`:""}
     <div class="flex items-center gap-2 mt-3 flex-wrap">
       <span class="chip chip-gr">${areaI(t.a,13)} ${esc(areaN(t.a))}</span>
-      <span class="t-xs">${meToca?'Te toca a ti':'Le toca a '+esc(quienes(t.a))}${multiInfo}</span>
+      <span class="t-xs">${meToca?'Te toca a ti':'Le toca a '+esc(quienes(t))}${multiInfo}</span>
     </div>
     <div class="flex items-center gap-2 mt-4 flex-wrap">
       ${accion}
@@ -971,8 +1003,8 @@ window.abrirDetalle = function(id, silencioso){
         <span class="fase-chev">${ico("flecha",14,1.8)}</span>
       </summary>
       <div class="fase-body">` + ts.map(t=>{
-      const st = v.tareas?.[t.k], ok = tareaOk(v,t), can = puede(t.a);
-      const req = t.multi ? respons(t.a) : [];
+      const st = v.tareas?.[t.k], ok = tareaOk(v,t), can = puedeT(t);
+      const req = t.multi ? resp(t) : [];
 
       // ── Tarea con check individual por persona (marketing) ──
       if(t.multi && req.length){
@@ -1001,7 +1033,7 @@ window.abrirDetalle = function(id, silencioso){
             <span class="chip ${ok?'chip-ok':'chip-wn'} flex-shrink-0">${listos}/${req.length}</span>
           </div>
           <div class="pl-6 pt-1 border-t" style="border-color:var(--line)">${filas}</div>
-          ${!ok?`<div class="pl-6"><button onclick="avisarWhats('${t.a}','${esc(t.t).replace(/'/g,"")}','${esc(v.vehiculo).replace(/'/g,"")}','${esc(v.vin)}')"
+          ${!ok?`<div class="pl-6"><button onclick="avisarWhats('${t.k}','${esc(t.t).replace(/'/g,"")}','${esc(v.vehiculo).replace(/'/g,"")}','${esc(v.vin)}')"
              class="btn-g px-2.5 py-1.5 rounded-lg flex items-center gap-1.5">${ico("chat",13)} Recordar a los que faltan</button></div>`:""}
         </div>`;
       }
@@ -1043,10 +1075,10 @@ window.abrirDetalle = function(id, silencioso){
             <div class="flex flex-wrap items-center gap-2 mt-1.5">
               <span class="chip chip-gr">${areaI(t.a)} ${esc(areaN(t.a))}</span>
               ${ok && st?.por ? `<span class="t-xs" style="color:var(--ok)">${esc(usersData[st.por]?.nombre||st.por)} · ${fch(st.fecha)}</span>`
-                            : `<span class="t-xs">→ ${esc(quienes(t.a))}</span>`}
+                            : `<span class="t-xs">→ ${esc(quienes(t))}</span>`}
             </div>
           </div>
-          ${!ok ? `<button onclick="avisarWhats('${t.a}','${esc(t.t).replace(/'/g,"")}','${esc(v.vehiculo).replace(/'/g,"")}','${esc(v.vin)}')"
+          ${!ok ? `<button onclick="avisarWhats('${t.k}','${esc(t.t).replace(/'/g,"")}','${esc(v.vehiculo).replace(/'/g,"")}','${esc(v.vin)}')"
               class="btn-g text-xs px-2 py-1.5 rounded-lg flex-shrink-0" title="Recordar por WhatsApp">${ico("chat",14)}</button>`:""}
         </div>
         ${bloqueFotos}
@@ -1201,8 +1233,8 @@ window.guardarDatos = function(id){
 window.marcar = async function(id, k, ok){
   const v = autos.find(a=>a.id===id); if(!v) return;
   const def = defT(v).find(t=>t.k===k); if(!def) return;
-  if(!puede(def.a)){ toast("No tienes el área "+areaN(def.a)+" habilitada.","err"); return; }
-  if(def.multi && respons(def.a).length) return marcarMulti(id, k, miMarca(v,def));
+  if(!puedeT(def)){ toast("No tienes el área "+areaN(def.a)+" habilitada.","err"); return; }
+  if(def.multi && resp(def).length) return marcarMulti(id, k, miMarca(v,def));
 
   const st = v.tareas?.[k] || {};
   let sinComprobante = null;
@@ -1238,7 +1270,7 @@ window.subirFoto = async function(id, k){
   if(!inp || !inp.files.length){ toast("Elige una foto primero.","warn"); return; }
   const v = autos.find(a=>a.id===id); if(!v) return;
   const def = defT(v).find(t=>t.k===k);
-  if(!puede(def.a)){ toast("No tienes esta área habilitada.","err"); return; }
+  if(!puedeT(def)){ toast("No tienes esta área habilitada.","err"); return; }
 
   const file = inp.files[0];
   if(file.size > 8*1024*1024){ toast("La foto pesa más de 8 MB. Usa una más liviana.","warn"); return; }
@@ -1265,7 +1297,7 @@ window.subirFoto = async function(id, k){
 window.borrarFoto = async function(id, k, idx){
   const v = autos.find(a=>a.id===id); if(!v) return;
   const def = defT(v).find(t=>t.k===k);
-  if(!puede(def.a)){ toast("No tienes esta área habilitada.","err"); return; }
+  if(!puedeT(def)){ toast("No tienes esta área habilitada.","err"); return; }
   if(!confirm("¿Quitar este comprobante de la tarea?")) return;
   const st = v.tareas?.[k] || {};
   const fotos = (st.fotos||[]).filter((_,i)=>i!==idx);
@@ -1279,7 +1311,7 @@ window.borrarFoto = async function(id, k, idx){
 window.marcarMulti = async function(id, k, yaHecho){
   const v = autos.find(a=>a.id===id); if(!v) return;
   const def = defT(v).find(t=>t.k===k); if(!def) return;
-  if(!puede(def.a)){ toast("No tienes el área "+areaN(def.a)+" habilitada.","err"); return; }
+  if(!puedeT(def)){ toast("No tienes el área "+areaN(def.a)+" habilitada.","err"); return; }
   const st = v.tareas?.[k] || {};
   const marcas = { ...(st.marcas||{}) };
   if(yaHecho) delete marcas[yo.usuario]; else marcas[yo.usuario] = new Date().toISOString();
@@ -1287,7 +1319,7 @@ window.marcarMulti = async function(id, k, yaHecho){
   tareas[k] = { ...st, marcas };
   try{
     await updateDoc(doc(db,"vehiculos",id), { tareas });
-    const req = respons(def.a), listos = req.filter(u=>marcas[u]).length;
+    const req = resp(def), listos = req.filter(u=>marcas[u]).length;
     if(!yaHecho) celebrar();
     toast(yaHecho ? "Quitaste tu marca." : `Tu parte lista (${listos}/${req.length})`);
   }catch(e){ toast("No se pudo guardar: "+e.code,"err"); }
@@ -1340,7 +1372,8 @@ window.eliminar = async function(id){
 };
 
 window.avisarWhats = function(area, tarea, veh, vin){
-  const msg = `🚨 *IMPORTACIONES YESICA*\nHola *${quienes(area)}*, tienes pendiente:\n\n📌 *${tarea}*\n🚗 ${veh||'(carro por asignar)'} ${vin?'('+vin+')':''}\n\nPor favor márcala en el sistema cuando la completes. ¡Gracias!`;
+  const tt = [...T_ENC,...T_STK].find(x=>x.k===area);
+  const msg = `🚨 *IMPORTACIONES YESICA*\nHola *${tt?quienes(tt):quienes(area)}*, tienes pendiente:\n\n📌 *${tarea}*\n🚗 ${veh||'(carro por asignar)'} ${vin?'('+vin+')':''}\n\nPor favor márcala en el sistema cuando la completes. ¡Gracias!`;
   window.open("https://api.whatsapp.com/send?text="+encodeURIComponent(msg), "_blank");
 };
 

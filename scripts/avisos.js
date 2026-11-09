@@ -3,7 +3,7 @@
    Corre solo en GitHub Actions cada 15 minutos.
    Nadie necesita tener nada abierto.
 
-   ⚠️ Si cambias las tareas en control.html, cámbialas también aquí abajo.
+   Las tareas se leen de proceso.json (vienen del tablero). La lista de abajo es solo respaldo.
    ═══════════════════════════════════════════════════════════════ */
 import admin from "firebase-admin";
 
@@ -61,6 +61,17 @@ const T_STK = [
   {k:"s18",f:3,a:"legal",    t:"Crear prórroga de compraventa", opc:true},
 ];
 
+// Tareas del tablero (proceso.json). Si falta o viene mal, se queda la lista de arriba.
+try{
+  const fs = await import("node:fs");
+  const p = JSON.parse(fs.readFileSync(new URL("../proceso.json", import.meta.url), "utf8"));
+  if(p?.tareas?.Encargo?.length && p?.tareas?.Stock?.length){
+    T_ENC.splice(0, T_ENC.length, ...p.tareas.Encargo);
+    T_STK.splice(0, T_STK.length, ...p.tareas.Stock);
+    console.log(`Tareas del tablero: ${T_ENC.length} encargo · ${T_STK.length} stock`);
+  }
+}catch(e){ console.log("Sin proceso.json, uso la lista de respaldo:", e.message); }
+
 const defT = v => v.tipoProceso === "Encargo" ? T_ENC : T_STK;
 
 // ── Configuración por defecto (la web puede cambiarla y se guarda en Firestore) ──
@@ -68,11 +79,16 @@ const DEF = { minTareas:30, minClientes:15, clientesOn:true, soloHorario:true, h
 
 const respons = (usuarios, area) =>
   Object.keys(usuarios).filter(u => (usuarios[u].areas || []).includes(area));
+// Quién hace la tarea: las personas del tablero; si no tiene, la gente de su área
+const resp = (usuarios, t) => {
+  const p = (t.personas || []).filter(u => usuarios[u]);
+  return p.length ? p : respons(usuarios, t.a);
+};
 
 function tareaOk(usuarios, v, t){
   const st = v.tareas?.[t.k];
   if(!t.multi) return !!st?.ok;
-  const req = respons(usuarios, t.a);
+  const req = resp(usuarios, t);
   if(!req.length) return !!st?.ok;
   const m = st?.marcas || {};
   return req.every(u => !!m[u]);
@@ -149,7 +165,7 @@ async function main(){
     autos.forEach(v => {
       defT(v).forEach(t => {
         if(t.opc || tareaOk(usuarios, v, t)) return;
-        respons(usuarios, t.a).forEach(u => {
+        resp(usuarios, t).forEach(u => {
           if(t.multi && (v.tareas?.[t.k]?.marcas || {})[u]) return;  // ya hizo su parte
           (mapa[u] ||= []).push({ v, t });
         });
