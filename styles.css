@@ -1215,3 +1215,9 @@ html,body{max-width:100%;overflow-x:clip}
 @media(max-width:400px){ .pp-perms{grid-template-columns:1fr} }
 body.sin-fin .solo-fin{display:none!important}
 @media(max-width:700px){ body.sin-fin .stats-web>div:first-child{display:block} }
+.pp-perms{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media(max-width:560px){ .pp-perms{grid-template-columns:1fr} .pp-perms .pp-crear{padding:10px 12px} }
+.pp-crear.auto{opacity:.65;cursor:default}
+.pp-lbl{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);margin:16px 0 0 2px}
+.pp-lbl+.pp-perms,.pp-lbl+.pp-areas{margin-top:8px}
+@media(max-width:560px){ .pp-perms{gap:6px} .pp-perms .pp-crear{padding:9px 12px} .pp-crear small{display:none} .pp-crear.auto small{display:block} }

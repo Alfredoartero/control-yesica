@@ -224,6 +224,7 @@ function toast(msg, tipo="ok"){
 /* ════════ PERMISOS ════════ */
 const puede = area => !!yo && (yo.admin || (yo.areas||[]).includes(area));
 const verFin = () => !!yo && (yo.admin || yo.verFin===true);      // costos, ganancias y panel financiero
+const verCobros = () => !!yo && (yo.admin || yo.cobros===true || yo.verFin===true || (yo.areas||[]).includes('finanzas'));  // lo cobrado y lo que debe el cliente
 const puedeCrear = () => !!yo && (yo.admin || yo.crear===true);   // agregar carros / clientes nuevos
 function quienes(x){
   const n = typeof x==='object' ? resp(x).map(nombreU)
@@ -700,7 +701,7 @@ function pintarFlota(){
           <div class="vc-pr min-w-0">${v.vehiculo
             ? `<small>Venta</small><span class="num">${vta?money(vta):'Por definir'}</span>`
             : `<small>Busca</small><span class="vc-busca">${esc(v.deseoCliente||'Por definir')}</span>`}</div>
-          ${falta>0 && cob>0 ? `<span class="vc-falta">Falta ${money(falta)}</span>` : (vta && falta===0 ? `<span class="vc-falta ok">Pagado</span>` : '')}
+          ${!verCobros() ? '' : falta>0 && cob>0 ? `<span class="vc-falta">Falta ${money(falta)}</span>` : (vta && falta===0 ? `<span class="vc-falta ok">Pagado</span>` : '')}
         </div>
       </div>
       <div class="vc-cuerpo">
@@ -940,10 +941,12 @@ function pintarUsers(){
           <span class="pp-tg ${tg?'ok':''}" title="${tg?'Recibe avisos por Telegram':'No ha vinculado Telegram'}">Telegram ${tg?'✓':'—'}</span>
         </div>
       </div>
-      ${d.admin ? '' : `<div class="pp-perms">
-        <label class="pp-crear"><input type="checkbox" ${d.crear?'checked':''} onchange="togPerm('${u}','crear',this.checked)"><span class="pe-sw-b"></span><span><b>Agregar carros</b><small>Ve "Nueva unidad"</small></span></label>
-        <label class="pp-crear"><input type="checkbox" ${d.verFin?'checked':''} onchange="togPerm('${u}','verFin',this.checked)"><span class="pe-sw-b"></span><span><b>Ver finanzas</b><small>Costos, ganancias y panel</small></span></label>
+      ${d.admin ? '' : `<p class="pp-lbl">Permisos</p><div class="pp-perms">
+        ${[['crear','Agregar y editar carros','También el precio de venta'],['cobros','Ver y registrar cobros','Lo que paga y debe cada cliente'],['verFin','Ver finanzas','Costos, ganancias y panel']].map(([c,n,ds])=>{
+          const on = !!d[c], auto = c==='cobros' && !on && (d.verFin || (d.areas||[]).includes('finanzas'));
+          return `<label class="pp-crear${auto?' auto':''}"><input type="checkbox" ${on||auto?'checked':''} ${auto?'disabled':''} onchange="togPerm('${u}','${c}',this.checked)"><span class="pe-sw-b"></span><span><b>${n}</b><small>${auto?'Incluido por '+(d.verFin?'Finanzas':'su área Finanzas y pagos'):ds}</small></span></label>`; }).join('')}
       </div>`}
+      <p class="pp-lbl">Áreas · qué tareas le tocan</p>
       <div class="pp-areas">${AREAS.map(a=>{ const on = areas.includes(a.k);
         return `<button type="button" class="pp-a${on?' on':''}" onclick="togArea('${u}','${a.k}',${!on})" aria-pressed="${on}">${areaI(a.k,14)}<span>${esc(a.n)}</span></button>`; }).join('')}</div>
     </div>`;
@@ -1172,7 +1175,7 @@ window.abrirDetalle = function(id, silencioso){
         <p class="t-md">${sinCarro?'Todavía sin carro':'Todavía sin cliente'}</p>
         <p class="t-sm mt-0.5">${sinCarro ? (v.deseoCliente ? "Busca: "+esc(v.deseoCliente) : "Cuando se gane en subasta, asígnale el carro.") : "Cuando lo vendas, agrega aquí al cliente."}</p>
       </div>
-      <button onclick="toggleEditar()" class="btn-p px-4 py-2.5 flex-shrink-0">${sinCarro?'Asignar carro':'Asignar cliente'}</button>
+      ${puedeCrear()?`<button onclick="toggleEditar()" class="btn-p px-4 py-2.5 flex-shrink-0">${sinCarro?'Asignar carro':'Asignar cliente'}</button>`:''}
     </div>`;
   }
 
@@ -1191,7 +1194,7 @@ window.abrirDetalle = function(id, silencioso){
         </div>
       </div>
       <div class="flex gap-1.5 flex-shrink-0">
-        <button onclick="toggleEditar()" class="btn-g px-2.5 py-2 rounded-lg" title="Editar datos">${ico("editar",15)}</button>
+        ${puedeCrear()?`<button onclick="toggleEditar()" class="btn-g px-2.5 py-2 rounded-lg" title="Editar datos">${ico("editar",15)}</button>`:''}
         <button onclick="cerrar()" class="btn-g px-2.5 py-2 rounded-lg" title="Cerrar">${ico("cerrar",15)}</button>
       </div>
     </div>
@@ -1205,7 +1208,7 @@ window.abrirDetalle = function(id, silencioso){
       ${panelDatos}
       ${heroSiguiente(v)}
 
-      <div class="dinero">
+      ${verCobros() ? `      <div class="dinero">
         <div><p class="t-lbl">Cobrado</p><p class="num text-[17px] font-semibold mt-0.5" style="color:var(--ok)">${money(pagado(v))}</p></div>
         ${Number(v.precio_venta||0) ? `
         <div><p class="t-lbl">Falta cobrar</p><p class="num text-[17px] font-semibold mt-0.5" style="color:${saldo(v)>0?'var(--warn)':'var(--t2)'}">${money(saldo(v))}</p></div>
@@ -1219,7 +1222,7 @@ window.abrirDetalle = function(id, silencioso){
           <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
             ${verFin()?`<div class="deep rounded-xl p-3"><p class="t-lbl">Costo</p><p class="num text-base font-semibold mt-1">${money(v.costo_subasta)}</p></div>`:''}
             <div class="deep rounded-xl p-3"><p class="t-lbl">Precio venta</p>
-              <div class="campo-num mt-1"><span>$</span><input type="number" value="${Number(v.precio_venta||0)}" onchange="setVenta('${v.id}',this.value)" class="num"></div></div>
+              ${puedeCrear()?`<div class="campo-num mt-1"><span>$</span><input type="number" value="${Number(v.precio_venta||0)}" onchange="setVenta('${v.id}',this.value)" class="num"></div>`:`<p class="num text-base font-semibold mt-1">${money(v.precio_venta)}</p>`}</div>
             <div class="deep rounded-xl p-3"><p class="t-lbl">Registrada</p><p class="t-sm mt-1.5" style="color:var(--t1)">${fch(v.fecha_registro)||"—"}</p></div>
           </div>
           <div>${abonos}</div>
@@ -1227,9 +1230,9 @@ window.abrirDetalle = function(id, silencioso){
             <input type="number" id="abMonto" placeholder="Monto $" class="inp flex-1 min-w-[110px] px-3 py-2 rounded-xl text-xs">
             <input type="text" id="abNota" placeholder="Nota (opcional)" class="inp flex-1 min-w-[140px] px-3 py-2 rounded-xl text-xs">
             <button onclick="addAbono('${v.id}')" class="btn-p px-4 py-2">Abonar</button>
-          </div>` : `<p class="t-xs">Solo Finanzas puede registrar abonos.</p>`}
+          </div>` : `<p class="t-xs">No tienes permiso para registrar cobros.</p>`}
         </div>
-      </details>
+      </details>` : (Number(v.precio_venta||0) ? `<div class="dinero"><div><p class="t-lbl">Precio de venta</p><p class="num text-[17px] font-semibold mt-0.5">${money(v.precio_venta)}</p></div></div>` : '')}
 
       <div>
         <p class="t-lbl mb-2.5">Proceso completo</p>
@@ -1251,9 +1254,10 @@ window.abrirDetalle = function(id, silencioso){
 };
 window.cerrar = function(){ abiertoId=null; editando=false; const m=document.getElementById('modal'); m.className="hidden"; m.innerHTML=""; };
 
-window.toggleEditar = function(){ editando = !editando; if(abiertoId) abrirDetalle(abiertoId, true); };
+window.toggleEditar = function(){ if(!puedeCrear()){ toast("No tienes permiso para editar carros.","warn"); return; } editando = !editando; if(abiertoId) abrirDetalle(abiertoId, true); };
 
 window.guardarDatos = function(id){
+  if(!puedeCrear()){ toast("No tienes permiso para editar carros.","err"); return; }
   const g = i => (document.getElementById(i)?.value || "").trim();
   const v = autos.find(a=>a.id===id) || {};
   const datos = {};
@@ -1382,7 +1386,7 @@ window.togArea = async function(u, k, on){
 
 window.togPerm = async function(u, campo, on){
   if(!yo?.admin) return;
-  const txt = { crear:["ya puede","ya no puede","agregar carros"], verFin:["ya puede","ya no puede","ver finanzas"] }[campo];
+  const txt = { crear:["ya puede","ya no puede","agregar y editar carros"], cobros:["ya puede","ya no puede","ver y registrar cobros"], verFin:["ya puede","ya no puede","ver finanzas"] }[campo];
   try{ await setDoc(doc(db,"usuarios",u), { [campo]:on }, { merge:true }); toast(`${nombreU(u)}: ${on?txt[0]:txt[1]} ${txt[2]}`); }
   catch(e){ toast("Error al guardar permiso.","err"); }
 };
@@ -1392,11 +1396,13 @@ window.togCrear = async function(u, on){
   catch(e){ toast("Error al guardar permiso.","err"); }
 };
 window.setVenta = async function(id, val){
+  if(!puedeCrear()){ toast("No tienes permiso para cambiar el precio.","err"); return; }
   const n = Number(val); if(isNaN(n)) return;
   try{ await updateDoc(doc(db,"vehiculos",id), { precio_venta:n }); toast("Precio actualizado."); }catch(e){ toast("Error.","err"); }
 };
 
 window.addAbono = async function(id){
+  if(!verCobros()){ toast("No tienes permiso para registrar cobros.","err"); return; }
   const m = Number(document.getElementById('abMonto').value);
   const nota = document.getElementById('abNota').value;
   if(!m || m<=0){ toast("Escribe un monto válido.","warn"); return; }
