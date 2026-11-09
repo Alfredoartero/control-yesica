@@ -795,7 +795,7 @@ function pintarMias(){
           <p class="task-meta truncate">${esc(areaN(t.a))}${personasDe(t).length?` · ${esc(personasDe(t).map(nombreU).join(", "))}`:""}${t.multi&&resp(t).length?` · tu parte (${resp(t).filter(u=>(v.tareas?.[t.k]?.marcas||{})[u]).length}/${resp(t).length})`:""}</p>
         </div>
         ${t.foto?`<span class="chip chip-wn flex-shrink-0 solo-pc">comprobante</span><span class="solo-movil flex-shrink-0" style="color:var(--warn)" title="Pide comprobante">${ico("clip",15,1.8)}</span>`:""}
-        <button onclick="event.stopPropagation();abrirDetalle('${v.id}')" class="btn-g px-2.5 py-1.5 rounded-lg flex-shrink-0">Ver</button>
+        <button onclick="event.stopPropagation();abrirDetalle('${v.id}')" class="tk-ir" title="Ver el carro" aria-label="Ver el carro">${ico("flecha",15,1.8)}</button>
       </div>`).join("")}
     ${grupos[a].length>MAX ? `<button onclick="verMasArea('${a}')" class="ver-mas">${verMas.has(a)?'Ver menos':`Ver ${grupos[a].length-MAX} más`}</button>`:""}</div>
     ${false ? `<button onclick="verMasArea('${a}')" class="ver-mas">${verMas.has(a)?'Ver menos':`Ver ${grupos[a].length-MAX} más`}</button>`:""}
@@ -864,6 +864,19 @@ function pintarFinanzas(){
     t.innerHTML = `<tr><td colspan="8" class="p-14 text-center t-md" style="color:var(--t3)"><div class="flex justify-center mb-2" style="color:var(--t3)">${ico("direccion",30,1.3)}</div>No hay unidades activas.</td></tr>`;
     return;
   }
+  const fc = document.getElementById('finCards');
+  if(fc) fc.innerHTML = act.map(v=>{
+    const vta = Number(v.precio_venta||0), cos = Number(v.costo_subasta||0), cob = pagado(v), fal = saldo(v), g = vta - cos;
+    const pct = vta ? Math.min(100, Math.round(cob/vta*100)) : 0;
+    const nom = esc(v.vehiculo) || (v.nombreCliente ? "Encargo de "+esc(v.nombreCliente.split(" ")[0]) : "Carro por asignar");
+    return `<button class="fc" onclick="abrirDetalle('${v.id}')">
+      <div class="fc-cab"><div class="min-w-0"><p class="fc-n">${nom}</p><p class="fc-c">${v.nombreCliente?esc(v.nombreCliente):(v.tipoProceso==='Encargo'?'Sin cliente':'Stock · sin cliente')}</p></div>
+        ${vta?`<span class="fc-g ${g<0?'neg':''}">${g>=0?'+':''}${money(g)}<small>ganancia</small></span>`:''}</div>
+      ${vta ? `<div class="fc-nums"><div><small>Venta</small><b class="num">${money(vta)}</b></div><div><small>Cobrado</small><b class="num ok">${money(cob)}</b></div><div><small>Falta</small><b class="num ${fal?'wn':''}">${money(fal)}</b></div></div>
+        <div class="fc-bar"><i style="width:${pct}%"></i></div><p class="fc-p">${pct}% cobrado${cos?` · costo ${money(cos)}`:''}</p>`
+      : `<p class="fc-p">Precio por definir${cob?` · cobrado ${money(cob)}`:''}</p>`}
+    </button>`;
+  }).join("");
   t.innerHTML = act.map(v=>{
     const g = Number(v.precio_venta||0) - Number(v.costo_subasta||0);
     return `<tr class="fin-fila border-b hover:bg-white/5 cursor-pointer" style="border-color:var(--line)" onclick="abrirDetalle('${v.id}')">
@@ -900,24 +913,26 @@ function pintarArchivo(){
 
 function pintarUsers(){
   const c = document.getElementById('users'); if(!c || !yo?.admin) return;
+  const todas = [...T_ENC, ...T_STK];
   c.innerHTML = Object.keys(EQUIPO).map(u=>{
     const d = usersData[u] || { nombre:EQUIPO[u].nombre, admin:EQUIPO[u].admin, areas:[] };
-    const creado = !!usersData[u];
-    const body = (d.admin ? `<span class="chip chip-pk mb-1"><span class="dot"></span>Admin · puede todo</span>` : "")
-      + AREAS.map(a=>{
-          const on = (d.areas||[]).includes(a.k);
-          return `<label class="perm ${on?'on':''}">
-            <input type="checkbox" ${on?'checked':''} onchange="togArea('${u}','${a.k}',this.checked)">
-            <span class="perm-box">${ico("ok",11,3)}</span>
-            <span class="perm-ico">${areaI(a.k,15)}</span>
-            <span class="perm-n">${esc(a.n)}</span></label>`;
-        }).join("");
-    return `<div class="deep lift rounded-2xl p-5 space-y-3">
-      <div class="flex items-center justify-between gap-2">
-        <span class="t-md">${esc(d.nombre)}</span>
-        <span class="chip ${creado?'chip-ok':'chip-gr'}">${creado?'activo':'sin entrar'}</span>
+    const creado = !!usersData[u], areas = d.areas||[];
+    const porNombre = todas.filter(t=>(t.personas||[]).includes(u)).length;
+    const tg = !!d.telegram;
+    return `<div class="pp">
+      <div class="pp-cab">
+        <span class="pp-av${d.admin?' adm':''}">${esc((d.nombre||u).charAt(0).toUpperCase())}</span>
+        <div class="min-w-0 flex-1">
+          <p class="pp-n">${esc(d.nombre)}${u===yo.usuario?' <span class="t-xs">(tú)</span>':''}</p>
+          <p class="pp-s">${d.admin?'<b>Admin</b> · ve y edita todo':`${areas.length} área${areas.length===1?'':'s'}`}${porNombre?` · ${porNombre} tarea${porNombre===1?'':'s'} a su nombre`:''}</p>
+        </div>
+        <div class="pp-est">
+          <span class="pp-dot ${creado?'ok':''}" title="${creado?'Ya entró al sistema':'Todavía no ha entrado'}"></span>${creado?'Activo':'Sin entrar'}
+          <span class="pp-tg ${tg?'ok':''}" title="${tg?'Recibe avisos por Telegram':'No ha vinculado Telegram'}">Telegram ${tg?'✓':'—'}</span>
+        </div>
       </div>
-      <div class="flex flex-col gap-2">${body}</div>
+      <div class="pp-areas">${AREAS.map(a=>{ const on = areas.includes(a.k);
+        return `<button type="button" class="pp-a${on?' on':''}" onclick="togArea('${u}','${a.k}',${!on})" aria-pressed="${on}">${areaI(a.k,14)}<span>${esc(a.n)}</span></button>`; }).join('')}</div>
     </div>`;
   }).join("");
 }
@@ -1156,7 +1171,11 @@ window.abrirDetalle = function(id, silencioso){
           <h2 class="font-display text-xl font-bold truncate" style="color:var(--t1)">${esc(v.vehiculo) || (v.nombreCliente ? "Encargo de "+esc(v.nombreCliente.split(" ")[0]) : "Unidad sin datos")}</h2>
           ${pillEstado(v)}<span class="estado e-neutro">${enc?'Encargo':'Stock'}</span>
         </div>
-        <p class="t-xs mt-1" style="color:var(--t3)">${v.vehiculo?`${esc(v.plataforma)} · ${esc(v.vin)||"sin VIN"}`:(v.deseoCliente?"Busca: "+esc(v.deseoCliente):"Sin vehículo asignado")}${v.nombreCliente?` · ${esc(v.nombreCliente)} ${v.telefonoCliente?"· "+esc(v.telefonoCliente):""}`:""}</p>
+        <div class="det-info">
+          ${v.nombreCliente?`<span class="di">${ico("usuario",13)}<b>${esc(v.nombreCliente)}</b>${v.telefonoCliente?`<a class="di-wa" href="https://wa.me/${(()=>{const n=String(v.telefonoCliente||'').replace(/\D/g,''); return n.length===8?'503'+n:n;})()}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${esc(v.telefonoCliente)}</a>`:''}</span>`:''}
+          ${v.vehiculo?`<span class="di">${ico("compras",13)}${esc(v.plataforma||'Subasta')}</span>${v.vin?`<span class="di mono">${esc(v.vin)}</span>`:''}`
+                      :`<span class="di">${ico("buscar",13)}${v.deseoCliente?'Busca '+esc(v.deseoCliente):'Sin vehículo asignado'}</span>`}
+        </div>
       </div>
       <div class="flex gap-1.5 flex-shrink-0">
         <button onclick="toggleEditar()" class="btn-g px-2.5 py-2 rounded-lg" title="Editar datos">${ico("editar",15)}</button>

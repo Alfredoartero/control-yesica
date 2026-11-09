@@ -30,7 +30,7 @@ try{ history.scrollRestoration='manual'; }catch(e){}
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=16">
+<link rel="stylesheet" href="styles.css?v=17">
 </head>
 <body class="min-h-screen pb-20 selection:bg-pink-600 selection:text-white">
 
@@ -256,7 +256,8 @@ try{ history.scrollRestoration='manual'; }catch(e){}
           <p class="t-sm mt-0.5">Costo, venta, cobrado y saldo</p>
         </div>
       </div>
-      <div class="overflow-x-auto"><table class="w-full text-left border-collapse">
+      <div id="finCards" class="fin-cards"></div>
+      <div class="overflow-x-auto fin-tabla"><table class="w-full text-left border-collapse">
         <thead><tr>
           <th class="p-4">Vehículo</th><th class="p-4">Cliente</th>
           <th class="p-4 text-right">Costo</th><th class="p-4 text-right">Venta</th>
@@ -300,19 +301,16 @@ try{ history.scrollRestoration='manual'; }catch(e){}
       <div class="flex items-center gap-3 border-b pb-4" style="border-color:var(--line)">
         <div class="icon-badge"><span id="icEqH1"></span></div>
         <div>
-          <h2 class="t-md">Usuarios y permisos</h2>
-          <p class="t-sm mt-0.5">Marca las áreas de cada quien. Se activa al instante en su cuenta.</p>
+          <h2 class="t-md">Personas y permisos</h2>
+          <p class="t-sm mt-0.5">Toca un área para darla o quitarla. Se activa al instante en su cuenta.</p>
         </div>
       </div>
-      <div class="deep rounded-xl p-3.5 flex gap-2.5">
-        <span style="color:var(--t3)"><span id="icEqH2"></span></span>
-        <p class="t-sm leading-relaxed">
-          En las tareas de <b style="color:var(--cyan)">Marketing</b> (enviar opciones y publicidad) <b style="color:var(--t1)">cada persona con esa área marca su propio check</b>
-          —una por Facebook, otra por el grupo de WhatsApp, etc.— y la tarea solo se da por completa cuando todas marcaron.
-          Si eres admin y no haces marketing, deja esa casilla sin marcar para que no te la pida.
-        </p>
+      <div class="pp-ayuda">
+        <div><b>Admin</b><span>Alfredo y Yesica. Ven y editan todo: tareas, permisos, borrar carros.</span></div>
+        <div><b>Áreas</b><span>Lo que cada quien puede marcar. Las tareas sin nombre asignado le salen a todos los de su área.</span></div>
+        <div><b>A su nombre</b><span>Si en <i>Tareas del proceso</i> le pones personas a una tarea, solo a ellas les sale y les llega el aviso.</span></div>
       </div>
-      <div id="users" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"></div>
+      <div id="users" class="pp-grid"></div>
     </div>
   </section>
 
@@ -322,6 +320,6 @@ try{ history.scrollRestoration='manual'; }catch(e){}
 
 <div id="modal" class="hidden"></div>
 
-<script type="module" src="app.js?v=16"></script>
+<script type="module" src="app.js?v=17"></script>
 </body>
 </html>
