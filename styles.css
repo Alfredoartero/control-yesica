@@ -1221,3 +1221,22 @@ body.sin-fin .solo-fin{display:none!important}
 .pp-lbl{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);margin:16px 0 0 2px}
 .pp-lbl+.pp-perms,.pp-lbl+.pp-areas{margin-top:8px}
 @media(max-width:560px){ .pp-perms{gap:6px} .pp-perms .pp-crear{padding:9px 12px} .pp-crear small{display:none} .pp-crear.auto small{display:block} }
+
+/* ═══════════ V18 · FECHAS, COSTO REAL ═══════════ */
+.fx{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;padding:4px 9px;border-radius:999px;white-space:nowrap}
+.fx-w{background:var(--warn-dim);color:var(--warn)}
+.fx-i{background:rgba(96,165,250,.12);color:#93c5fd}
+:root[data-theme="light"] .fx-i{color:#1d4ed8;background:rgba(29,78,216,.08)}
+.vc-fx{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.det-fx{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.monto-chip{flex-shrink:0;font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:999px;border:1px solid var(--line-2);color:var(--t1);background:transparent;font-variant-numeric:tabular-nums}
+.monto-chip.falta{border-style:dashed;color:var(--warn);border-color:rgba(251,191,36,.4)}
+.monto-chip:not(:disabled):hover{border-color:var(--brand)}
+.costos{display:flex;flex-direction:column}
+.co-f{display:flex;align-items:center;gap:10px;padding:8px 2px;font-size:13.5px;color:var(--t2);border-bottom:1px solid var(--line)}
+.co-f b{color:var(--t1);font-weight:600}
+.co-t{border-bottom:0;border-top:1px solid var(--line-2);margin-top:2px;color:var(--t1);font-weight:600}
+.co-sp{width:34px;flex-shrink:0}
+.plegable>summary~div{padding-left:14px!important;padding-right:14px!important;padding-bottom:14px!important}
+.plegable>summary .t-xs{text-align:right}
+@media(max-width:560px){ .plegable>summary{flex-wrap:wrap} .plegable>summary .t-xs{order:3;width:100%;text-align:left;margin-top:-6px} }

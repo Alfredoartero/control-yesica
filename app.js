@@ -574,6 +574,57 @@ function estadoDe(v){
 }
 const pillEstado = v => { const e = estadoDe(v); return `<span class="estado ${e.c}">${e.c==='e-verde'?'<span class="dot"></span>':''}${e.t}</span>`; };
 
+/* ── Fechas: último avance, atrasos y llegada estimada ── */
+const DIAS_ALERTA = 7;
+const ms_ = x => typeof x==='number' ? x : (Date.parse(x)||0);
+function ultimoAvance(v){
+  let m = ms_(v.fecha_registro) || ms_(v.creado) || 0;
+  Object.values(v.tareas||{}).forEach(st=>{
+    if(st?.ok && st.fecha) m = Math.max(m, ms_(st.fecha));
+    Object.values(st?.marcas||{}).forEach(x=> m = Math.max(m, ms_(x)));
+  });
+  (v.abonos||[]).forEach(a=> m = Math.max(m, ms_(a.fecha)));
+  return m;
+}
+const diasDesde = t => t ? Math.max(0, Math.floor((Date.now()-t)/86400000)) : null;
+function atraso(v){
+  if(v.archivado || !tareasDe(v).some(t=>!tareaOk(v,t))) return null;
+  const d = diasDesde(ultimoAvance(v));
+  return d!=null && d>=DIAS_ALERTA ? d : null;
+}
+function etaInfo(v){
+  if(!v.eta) return null;
+  const e = estadoDe(v).t; if(!['Ganado en subasta','En camino','Por iniciar'].includes(e)) return null;
+  const d = Math.round((Date.parse(v.eta+'T12:00:00') - Date.now())/86400000);
+  const f = new Date(v.eta+'T12:00:00').toLocaleDateString('es-SV',{day:'numeric',month:'short'}).replace('.','');
+  return { d, f, txt: d>1 ? `Llega en ${d} días` : d===1 ? 'Llega mañana' : d===0 ? 'Llega hoy' : `Debía llegar el ${f}`, tarde: d<0 };
+}
+function chipsFecha(v){
+  const a = atraso(v), e = etaInfo(v), out = [];
+  if(a!=null) out.push(`<span class="fx fx-w" title="Último avance hace ${a} días">${ico("alerta",12,2)} ${a} días sin avance</span>`);
+  if(e) out.push(`<span class="fx ${e.tarde?'fx-w':'fx-i'}">${ico("avion",12,2)} ${e.txt}</span>`);
+  return out.join('');
+}
+
+/* ── Costo real del carro: lo pagado a proveedores (tareas de gasto) + otros gastos ── */
+const RX_GASTO = /^(pagar|pagos?\b|cancelar impuestos|pago de impuestos)/i;
+const esGasto = t => t.gasto!==undefined ? !!t.gasto : (!t.pago && RX_GASTO.test(t.t||''));
+const tieneMonto = st => st && st.monto!=null && st.monto!=='';
+function costosDe(v){
+  const items = []; let compraReg = false;
+  defT(v).filter(esGasto).forEach(t=>{
+    const st = v.tareas?.[t.k];
+    if(tieneMonto(st)){ items.push({ n:t.t, m:Number(st.monto)||0, k:t.k }); if(t.a==='compras') compraReg = true; }
+  });
+  (v.gastos||[]).forEach((g,i)=> items.push({ n:g.concepto||'Gasto', m:Number(g.monto)||0, i, fecha:g.fecha }));
+  if(!compraReg && Number(v.costo_subasta)) items.unshift({ n:'Compra en subasta', m:Number(v.costo_subasta), est:true });
+  const total = items.reduce((s,x)=> s + x.m, 0);
+  const faltan = defT(v).filter(t=> esGasto(t) && tareaOk(v,t) && !tieneMonto(v.tareas?.[t.k])).length;
+  return { items, total, faltan };
+}
+const gananciaDe = v => Number(v.precio_venta||0) - costosDe(v).total;
+const leerMonto = (txt, def='') => { const r = prompt(txt, def); if(r===null) return null; const n = Number(String(r).replace(/[^\d.]/g,'')); return r.trim()==='' ? '' : (isNaN(n) ? NaN : n); };
+
 /* Portada del carro: su foto si la tiene; si no, un dibujo según el tipo */
 const RX_SUV = /cr-?v|rav ?4|tucson|sportage|outlander|cx-?\d|rogue|explorer|highlander|santa ?fe|equinox|escape|pilot|4runner|tahoe|suburban|cherokee|wrangler|kicks|seltos|kona|venue|hr-?v|forester|crosstrek|tiguan|pathfinder|murano|sorento|telluride|palisade|trax|blazer|traverse|edge|bronco|compass|renegade|x-?trail|qashqai|soul|hilux|tacoma|frontier|ranger|tundra|silverado|f-?150|ram\b|l200|navara|suv|camioneta|pick ?up/i;
 function portada(v){
@@ -707,6 +758,7 @@ function pintarFlota(){
       <div class="vc-cuerpo">
         <h3 class="vc-t">${esc(v.vehiculo) || (v.nombreCliente ? "Encargo de "+esc(v.nombreCliente.split(" ")[0]) : "Carro por asignar")}</h3>
         <p class="vc-sub">${sub}</p>
+        ${chipsFecha(v) ? `<div class="vc-fx">${chipsFecha(v)}</div>` : ''}
         <div class="vc-barras">${et.map(x=>`<span title="${esc(x.n)}"><b style="width:${x.done?100:Math.round(x.pct*100)}%"></b></span>`).join('')}</div>
         <div class="vc-etq"><span class="min-w-0 truncate">Etapa ${Math.min(fa>=0?fa+1:et.length,et.length)} de ${et.length} · <b>${esc(eAct.n)}</b></span><span class="num">${hechas}/${tot}</span></div>
         ${sig ? `<div class="vc-sigue${sigMia?' mia':''}"><span class="vc-ck"></span><div class="min-w-0"><small>${sigMia?'Te toca':'Sigue'}</small><p class="truncate">${esc(sig.t)}</p></div>${mias>1?`<em class="num">+${mias-1}</em>`:''}</div>`
@@ -825,7 +877,7 @@ window.marcarDesdeLista = function(id, k){
 
 function pintarFinanzas(){
   const act = autos.filter(a=>!a.archivado);
-  const costo   = act.reduce((s,a)=> s + Number(a.costo_subasta||0), 0);
+  const costo   = act.reduce((s,a)=> s + costosDe(a).total, 0);
   const venta   = act.reduce((s,a)=> s + Number(a.precio_venta||0), 0);
   const cobrado = act.reduce((s,a)=> s + pagado(a), 0);
   const porCobrar = act.reduce((s,a)=> s + saldo(a), 0);
@@ -876,7 +928,7 @@ function pintarFinanzas(){
   }
   const fc = document.getElementById('finCards');
   if(fc) fc.innerHTML = act.map(v=>{
-    const vta = Number(v.precio_venta||0), cos = Number(v.costo_subasta||0), cob = pagado(v), fal = saldo(v), g = vta - cos;
+    const vta = Number(v.precio_venta||0), cos = costosDe(v).total, cob = pagado(v), fal = saldo(v), g = vta - cos;
     const pct = vta ? Math.min(100, Math.round(cob/vta*100)) : 0;
     const nom = esc(v.vehiculo) || (v.nombreCliente ? "Encargo de "+esc(v.nombreCliente.split(" ")[0]) : "Carro por asignar");
     return `<button class="fc" onclick="abrirDetalle('${v.id}')">
@@ -888,11 +940,11 @@ function pintarFinanzas(){
     </button>`;
   }).join("");
   t.innerHTML = act.map(v=>{
-    const g = Number(v.precio_venta||0) - Number(v.costo_subasta||0);
+    const g = gananciaDe(v);
     return `<tr class="fin-fila border-b hover:bg-white/5 cursor-pointer" style="border-color:var(--line)" onclick="abrirDetalle('${v.id}')">
       <td data-l="Vehículo" class="p-4 font-semibold" style="color:var(--t1)">${esc(v.vehiculo)||"Por asignar"}</td>
       <td data-l="Cliente" class="p-4" style="color:var(--cyan)">${esc(v.nombreCliente)||"—"}</td>
-      <td data-l="Costo" class="p-4 text-right num">${money(v.costo_subasta)}</td>
+      <td data-l="Costo" class="p-4 text-right num">${money(costosDe(v).total)}</td>
       <td data-l="Venta" class="p-4 text-right num" style="color:var(--info)">${money(v.precio_venta)}</td>
       <td data-l="Cobrado" class="p-4 text-right num" style="color:var(--ok)">${money(pagado(v))}</td>
       <td data-l="Saldo" class="p-4 text-right num" style="color:var(--warn)">${money(saldo(v))}</td>
@@ -1108,6 +1160,7 @@ window.abrirDetalle = function(id, silencioso){
           <div class="tbox on" ${can?`onclick="marcar('${v.id}','${t.k}',true)" title="Reabrir"`:''}>${ico("ok",11,2.6)}</div>
           <span class="flex-1 min-w-0 truncate">${esc(t.t)}</span>
           ${nf?`<a href="${esc(st.fotos[0].url)}" target="_blank" class="t-xs flex items-center gap-1" style="color:var(--cyan)" onclick="event.stopPropagation()">${ico("clip",12)}${nf>1?nf:''}</a>`:""}
+          ${esGasto(t) ? `<button class="monto-chip ${tieneMonto(st)?'':'falta'}" ${can?`onclick="ponMonto('${v.id}','${t.k}')"`:'disabled'}>${tieneMonto(st)?money(st.monto):'+ monto'}</button>` : ''}
           <span class="t-xs flex-shrink-0">${st?.por?esc(usersData[st.por]?.nombre||st.por)+' · ':''}${fch(st?.fecha)}</span>
         </div>`;
       }
@@ -1205,14 +1258,39 @@ window.abrirDetalle = function(id, silencioso){
           <label class="det-foto-btn">${ico("foto",15,2)} ${v.foto?'Cambiar foto':'Agregar foto'}<input type="file" accept="image/*" class="hidden" onchange="subirPortada('${v.id}',this)"></label>
           ${v.foto?`<button class="det-foto-btn" onclick="quitarPortada('${v.id}')">Quitar</button>`:''}
         </div></div>` : ''}
+      ${chipsFecha(v) ? `<div class="det-fx">${chipsFecha(v)}<span class="t-xs">Último avance: ${fch(ultimoAvance(v))||'—'}</span></div>` : ''}
       ${panelDatos}
       ${heroSiguiente(v)}
+      ${v.vehiculo ? `<details class="plegable">
+        <summary><span class="flex-1">Llegada y contenedor</span><span class="t-xs">${v.eta ? (etaInfo(v)?.txt || 'ETA '+esc(v.eta)) : 'sin fecha'}${v.contenedor?' · '+esc(v.contenedor):''}</span><span class="fase-chev">${ico("flecha",14,1.8)}</span></summary>
+        <div class="pt-3">${puedeLogistica() ? `<div class="rejilla">
+            <div class="campo"><label for="lgEta">Llegada estimada (ETA)</label><input id="lgEta" type="date" class="inp" value="${esc(v.eta||'')}"></div>
+            <div class="campo"><label for="lgCont">Contenedor o BL</label><input id="lgCont" class="inp" value="${esc(v.contenedor||'')}" placeholder="MSCU1234567" style="text-transform:uppercase" autocomplete="off"></div>
+          </div><button onclick="guardarLogistica('${v.id}')" class="btn-p px-4 py-2.5 mt-3">Guardar llegada</button>`
+          : `<p class="t-sm">${v.eta?'Llegada estimada: '+esc(etaInfo(v)?.f||v.eta):'Sin fecha de llegada.'}${v.contenedor?' · Contenedor '+esc(v.contenedor):''}</p>`}</div>
+      </details>` : ''}
+      ${verFin() && v.vehiculo ? (()=>{ const c = costosDe(v), vta = Number(v.precio_venta||0), gr = vta - c.total;
+        return `<details class="plegable">
+        <summary><span class="flex-1">Costo real del carro</span><span class="t-xs">${money(c.total)}${vta?` · ganancia <b style="color:${gr>=0?'var(--brand-light)':'var(--danger)'}">${money(gr)}</b>`:''}</span><span class="fase-chev">${ico("flecha",14,1.8)}</span></summary>
+        <div class="pt-3">
+          <div class="costos">${c.items.map(x=>`<div class="co-f"><span class="flex-1 min-w-0 truncate">${esc(x.n)}${x.est?' <em class="t-xs">(precio de compra)</em>':''}</span><b class="num">${money(x.m)}</b>${x.i!=null?`<button class="pe-ib" title="Quitar" onclick="quitarGasto('${v.id}',${x.i})">${ico("cerrar",12,2)}</button>`:'<span class="co-sp"></span>'}</div>`).join('') || '<p class="t-xs py-2">Todavía no hay costos registrados.</p>'}
+            <div class="co-f co-t"><span class="flex-1">Costo real</span><b class="num">${money(c.total)}</b><span class="co-sp"></span></div>
+            ${vta?`<div class="co-f"><span class="flex-1">Ganancia real</span><b class="num" style="color:${gr>=0?'var(--brand-light)':'var(--danger)'}">${money(gr)}</b><span class="co-sp"></span></div>`:''}
+          </div>
+          ${c.faltan?`<p class="t-xs mt-2" style="color:var(--warn)">${c.faltan} pago${c.faltan>1?'s':''} ya hecho${c.faltan>1?'s':''} sin monto. Ponlo en la tarea (botón “+ monto”).</p>`:''}
+          <div class="flex gap-2 flex-wrap mt-3">
+            <input id="gaCon" class="inp flex-1 min-w-[140px]" placeholder="Otro gasto: grúa, reparación, trámite…">
+            <input id="gaMon" type="number" inputmode="decimal" class="inp" style="width:120px" placeholder="$ monto">
+            <button onclick="addGasto('${v.id}')" class="btn-g px-4 py-2">Agregar</button>
+          </div>
+        </div>
+      </details>`; })() : ''}
 
       ${verCobros() ? `      <div class="dinero">
         <div><p class="t-lbl">Cobrado</p><p class="num text-[17px] font-semibold mt-0.5" style="color:var(--ok)">${money(pagado(v))}</p></div>
         ${Number(v.precio_venta||0) ? `
         <div><p class="t-lbl">Falta cobrar</p><p class="num text-[17px] font-semibold mt-0.5" style="color:${saldo(v)>0?'var(--warn)':'var(--t2)'}">${money(saldo(v))}</p></div>
-        ${verFin()?`<div><p class="t-lbl">Ganancia</p><p class="num text-[17px] font-semibold mt-0.5" style="color:${(Number(v.precio_venta||0)-Number(v.costo_subasta||0))>=0?'var(--brand-light)':'var(--danger)'}">${money(Number(v.precio_venta||0)-Number(v.costo_subasta||0))}</p></div>`:''}`
+        ${verFin()?`<div><p class="t-lbl">Ganancia</p><p class="num text-[17px] font-semibold mt-0.5" style="color:${gananciaDe(v)>=0?'var(--brand-light)':'var(--danger)'}">${money(gananciaDe(v))}</p></div>`:''}`
         : `<div style="grid-column:span 2"><p class="t-lbl">Precio de venta</p><p class="t-sm mt-1" style="color:var(--t2)">Por definir · se pone al asignar el carro</p></div>`}
       </div>
 
@@ -1244,6 +1322,7 @@ window.abrirDetalle = function(id, silencioso){
         ${v.archivado ? `<button onclick="archivar('${v.id}',false)" class="btn-g px-4 py-2.5 rounded-xl flex items-center gap-2">${ico("flecha",14)} Reactivar</button>`
                       : `<button onclick="archivar('${v.id}',true)" class="btn-g px-4 py-2.5 rounded-xl flex items-center gap-2">${ico("archivo",14)} Archivar</button>`}
         ${v.telefonoCliente ? `<a href="https://wa.me/503${String(v.telefonoCliente).replace(/\\D/g,'')}" target="_blank" class="btn-g px-4 py-2.5 inline-flex items-center gap-2">${ico("chat",14)} Escribir al cliente</a>`:""}
+        ${v.telefonoCliente && verCobros() ? `<button onclick="estadoCuenta('${v.id}')" class="btn-p px-4 py-2.5 inline-flex items-center gap-2">${ico("chat",14)} Enviar estado de cuenta</button>`:""}
         ${yo?.admin
           ? `<button onclick="eliminar('${v.id}')" class="btn-g btn-d px-4 py-2.5 flex items-center gap-2 ml-auto">${ico("basura",14)} Eliminar</button>`
           : `<span class="t-xs self-center flex items-center gap-1.5">${ico("candado",12)} Solo un admin puede eliminar</span>`}
@@ -1305,10 +1384,17 @@ window.marcar = async function(id, k, ok){
     sinComprobante = motivo.trim();
   }
 
+  let monto = null;
+  if(!ok && esGasto(def) && !tieneMonto(st)){
+    const r = leerMonto(`¿Cuánto se pagó?\n\n${def.t}\n\nEscribe el monto en dólares (se suma al costo real del carro). Si todavía no lo sabes, déjalo vacío.`);
+    if(r===null) return;
+    if(Number.isNaN(r)){ toast("Escribe solo el número, por ejemplo 1250.","warn"); return; }
+    if(r!=='') monto = r;
+  }
   const tareas = { ...(v.tareas||{}) };
   tareas[k] = ok
     ? { ...st, ok:false }
-    : { ...st, ok:true, por:yo.usuario, fecha:new Date().toISOString(), ...(sinComprobante?{sinComprobante}:{}) };
+    : { ...st, ok:true, por:yo.usuario, fecha:new Date().toISOString(), ...(sinComprobante?{sinComprobante}:{}), ...(monto!=null?{monto, montoPor:yo.usuario}:{}) };
   try{
     await updateDoc(doc(db,"vehiculos",id), { tareas });
     if(!ok){ celebrar(); toast(""+def.t); } else toast("Tarea reabierta.");
@@ -1384,6 +1470,62 @@ window.togArea = async function(u, k, on){
   catch(e){ toast("Error al guardar permiso.","err"); }
 };
 
+window.ponMonto = async function(id, k){
+  const v = autos.find(a=>a.id===id); if(!v) return;
+  const def = defT(v).find(t=>t.k===k); if(!def || !puedeT(def)){ toast("No tienes esta tarea habilitada.","err"); return; }
+  const st = v.tareas?.[k] || {};
+  const r = leerMonto(`Monto pagado en:\n${def.t}`, st.monto ?? '');
+  if(r===null) return; if(Number.isNaN(r)){ toast("Escribe solo el número.","warn"); return; }
+  const tareas = { ...(v.tareas||{}) }; tareas[k] = { ...st, monto: r==='' ? null : r, montoPor:yo.usuario };
+  try{ await updateDoc(doc(db,"vehiculos",id), { tareas }); toast(r===''?"Monto quitado.":"Monto guardado: "+money(r)); }catch(e){ toast("No se pudo guardar: "+e.code,"err"); }
+};
+window.addGasto = async function(id){
+  if(!verFin()){ toast("No tienes permiso de finanzas.","err"); return; }
+  const v = autos.find(a=>a.id===id); if(!v) return;
+  const c = document.getElementById('gaCon')?.value.trim(), m = Number(document.getElementById('gaMon')?.value);
+  if(!c || !m){ toast("Escribe el concepto y el monto.","warn"); return; }
+  const gastos = [ ...(v.gastos||[]), { concepto:c, monto:m, por:yo.usuario, fecha:new Date().toISOString() } ];
+  try{ await updateDoc(doc(db,"vehiculos",id), { gastos }); toast(`Gasto de ${money(m)} agregado.`); }catch(e){ toast("No se pudo guardar: "+e.code,"err"); }
+};
+window.quitarGasto = async function(id, i){
+  if(!verFin()) return;
+  const v = autos.find(a=>a.id===id); if(!v) return;
+  if(!confirm(`¿Quitar "${v.gastos?.[i]?.concepto}"?`)) return;
+  const gastos = (v.gastos||[]).filter((_,x)=>x!==i);
+  try{ await updateDoc(doc(db,"vehiculos",id), { gastos }); toast("Gasto quitado."); }catch(e){ toast("No se pudo: "+e.code,"err"); }
+};
+const puedeLogistica = () => puedeCrear() || puede('naviera') || puede('aduana');
+window.guardarLogistica = async function(id){
+  if(!puedeLogistica()){ toast("No tienes permiso para cambiar la llegada.","err"); return; }
+  const eta = document.getElementById('lgEta')?.value || '', cont = (document.getElementById('lgCont')?.value || '').trim().toUpperCase();
+  try{ await updateDoc(doc(db,"vehiculos",id), { eta, contenedor:cont }); toast("Llegada guardada."); }catch(e){ toast("No se pudo guardar: "+e.code,"err"); }
+};
+// Estado de cuenta para el cliente por WhatsApp (pagos por etapa, sin crédito)
+window.estadoCuenta = function(id){
+  const v = autos.find(a=>a.id===id); if(!v) return;
+  const nombre = (v.nombreCliente||'').split(' ')[0] || 'cliente';
+  const carro = v.vehiculo || 'carro';
+  const et = etapas(v), fa = et.findIndex(x=>x.cur), e = et[fa>=0?fa:et.length-1];
+  const vta = Number(v.precio_venta||0), cob = pagado(v), fal = saldo(v), eta = etaInfo(v);
+  const abonos = (v.abonos||[]).map(a=>`   • ${fch(ms_(a.fecha))} — ${money(a.monto)}`).join('\n');
+  const msg = [
+    `Hola ${nombre} 👋`,
+    `Te compartimos cómo va tu *${carro}* con *Importaciones Yesica*:`,
+    ``,
+    `📍 *Etapa:* ${fa>=0?fa+1:et.length} de ${et.length} · ${e.n}`,
+    `🚗 *Estado:* ${estadoDe(v).t}`,
+    eta ? `🚢 *Llegada estimada:* ${eta.f}` : null,
+    ``,
+    vta ? `💰 *Precio:* ${money(vta)}` : null,
+    `✅ *Pagado:* ${money(cob)}`,
+    abonos || null,
+    vta ? (fal>0 ? `⏳ *Pendiente:* ${money(fal)}` : `🎉 *Pagado por completo*`) : null,
+    ``,
+    `Cualquier duda, aquí estamos. ¡Gracias por tu confianza! 💗`
+  ].filter(x=>x!==null).join('\n');
+  const n = String(v.telefonoCliente||'').replace(/\D/g,''), num = n.length===8 ? '503'+n : n;
+  window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, '_blank');
+};
 window.togPerm = async function(u, campo, on){
   if(!yo?.admin) return;
   const txt = { crear:["ya puede","ya no puede","agregar y editar carros"], cobros:["ya puede","ya no puede","ver y registrar cobros"], verFin:["ya puede","ya no puede","ver finanzas"] }[campo];
@@ -1962,7 +2104,7 @@ function pintarProceso(){
   const fila = (t, i, lista) => {
     const abierta = procAbierta===t.k;
     const per = (t.personas||[]);
-    const marcas = [t.foto&&'Comprobante', t.pago&&'Pago', t.multi&&'Cada quien marca', t.opc&&'Opcional', t.repetible&&'Constante'].filter(Boolean);
+    const marcas = [t.foto&&'Comprobante', t.pago&&'Pago', esGasto(t)&&'Gasto', t.multi&&'Cada quien marca', t.opc&&'Opcional', t.repetible&&'Constante'].filter(Boolean);
     return `<div class="pe-t${abierta?' abierta':''}" id="pe-${t.k}">
       <div class="pe-fila" onclick="peAbrir('${t.k}')">
         <span class="pe-n num">${i+1}</span>
@@ -1987,8 +2129,8 @@ function pintarProceso(){
           <p class="t-xs mt-1.5">${per.length?'Solo a ellos les aparece y les llega el aviso.':'Sin nadie marcado: le toca a todos los que tengan el área '+esc(areaN(t.a))+'.'}</p>
         </div>
         <div class="pe-sw">
-          ${[['foto','Pide comprobante (foto)'],['pago','Es un pago del cliente'],['multi','Cada quien marca su parte'],['opc','Opcional'],['repetible','Constante (se repite)']].map(([c,n])=>
-            `<label class="pe-sw-i"><input type="checkbox" ${t[c]?'checked':''} onchange="peCampo('${t.k}','${c}',this.checked)"><span class="pe-sw-b"></span>${n}</label>`).join('')}
+          ${[['foto','Pide comprobante (foto)'],['pago','Es un pago del cliente'],['gasto','Es un gasto del carro (pide monto)'],['multi','Cada quien marca su parte'],['opc','Opcional'],['repetible','Constante (se repite)']].map(([c,n])=>
+            `<label class="pe-sw-i"><input type="checkbox" ${(c==='gasto'?esGasto(t):t[c])?'checked':''} onchange="peCampo('${t.k}','${c}',this.checked)"><span class="pe-sw-b"></span>${n}</label>`).join('')}
         </div>
         ${t.repetible?`<label class="campo"><span class="lbl">Se repite hasta que se haga</span><select class="inp" onchange="peCampo('${t.k}','hasta',this.value)">
           <option value="">El final del proceso</option>${ts.filter(x=>x.k!==t.k).map(x=>`<option value="${x.k}" ${x.k===t.hasta?'selected':''}>${esc(x.t)}</option>`).join('')}</select></label>`:''}
@@ -2051,7 +2193,8 @@ window.peAbrir = k => { procAbierta = procAbierta===k ? null : k; pintarProceso(
 window.peTipo = t => { procTipo = t; procAbierta = null; pintarProceso(); };
 window.peCampo = function(k, c, val, enVivo){
   const t = borr().tareas[procTipo].find(x=>x.k===k); if(!t) return;
-  if(typeof val==='boolean'){ if(val) t[c]=true; else delete t[c]; }
+  if(c==='gasto') t.gasto = !!val;
+  else if(typeof val==='boolean'){ if(val) t[c]=true; else delete t[c]; }
   else if(c==='hasta' && !val) delete t.hasta;
   else t[c] = val;
   if(c==='d' && !val) delete t.d;
@@ -2107,7 +2250,7 @@ window.peGuardar = async function(){
     const vacia = B.tareas[tipo].find(t=>!String(t.t).trim()); if(vacia){ procTipo = tipo; procAbierta = vacia.k; pintarProceso(); toast('Hay una tarea sin nombre.','warn'); return; }
   }
   const limpio = JSON.parse(JSON.stringify(B));
-  ['Encargo','Stock'].forEach(tp => limpio.tareas[tp] = limpio.tareas[tp].map(t=>{ const o={}; Object.keys(t).forEach(c=>{ if(t[c]!==undefined && t[c]!=='' && t[c]!==false) o[c]=t[c]; }); o.t=String(o.t).trim(); return o; }));
+  ['Encargo','Stock'].forEach(tp => limpio.tareas[tp] = limpio.tareas[tp].map(t=>{ const o={}; Object.keys(t).forEach(c=>{ if(t[c]!==undefined && t[c]!=='' && (t[c]!==false || c==='gasto')) o[c]=t[c]; }); o.t=String(o.t).trim(); return o; }));
   const btn = document.querySelector('.pe-barra .btn-p'); if(btn){ btn.disabled = true; btn.textContent = 'Guardando…'; }
   try{
     await setDoc(doc(db,"config","proceso"), { ...limpio, fuente:'control', actualizado:new Date().toISOString(), por:yo.usuario });

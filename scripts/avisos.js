@@ -86,6 +86,17 @@ async function cargarProcesoFirestore(){
 }
 
 const defT = v => v.tipoProceso === "Encargo" ? T_ENC : T_STK;
+// Días desde el último avance del carro (tarea marcada o abono)
+const ms_ = x => typeof x === "number" ? x : (Date.parse(x) || 0);
+function diasQuieto(v){
+  let m = ms_(v.fecha_registro) || ms_(v.creado) || 0;
+  Object.values(v.tareas || {}).forEach(st => {
+    if(st?.ok && st.fecha) m = Math.max(m, ms_(st.fecha));
+    Object.values(st?.marcas || {}).forEach(x => m = Math.max(m, ms_(x)));
+  });
+  (v.abonos || []).forEach(a => m = Math.max(m, ms_(a.fecha)));
+  return m ? Math.floor((Date.now() - m) / 86400000) : 0;
+}
 
 // ── Configuración por defecto (la web puede cambiarla y se guarda en Firestore) ──
 const DEF = { minTareas:30, minClientes:15, clientesOn:true, soloHorario:true, hIni:7, hFin:20 };
@@ -188,7 +199,7 @@ async function main(){
       if(!quien.length) quien = Object.keys(usuarios).filter(u => usuarios[u].admin);
       quien.forEach(u => {
         if(t.multi && (v.tareas?.[t.k]?.marcas || {})[u]) return;  // ya hizo su parte
-        (mapa[u] ||= []).push({ v, t, paso:i+1, total:ls.length });
+        (mapa[u] ||= []).push({ v, t, paso:i+1, total:ls.length, quieto:diasQuieto(v) });
       });
     });
 
@@ -199,7 +210,7 @@ async function main(){
       const ls = mapa[u];
       const nombreCarro = v => v.vehiculo || (v.nombreCliente ? "Encargo de " + v.nombreCliente.split(" ")[0] : "Carro por asignar");
       const lista = ls.map(x =>
-        `\u{1F697} <b>${escHtml(nombreCarro(x.v))}</b>\n   \u{27A1}\u{FE0F} ${escHtml(x.t.t)}  <i>(paso ${x.paso} de ${x.total})</i>`).join("\n\n");
+        `\u{1F697} <b>${escHtml(nombreCarro(x.v))}</b>\n   \u{27A1}\u{FE0F} ${escHtml(x.t.t)}  <i>(paso ${x.paso} de ${x.total})</i>` + (x.quieto>=7 ? `\n   \u{26A0}\u{FE0F} <b>${x.quieto} d\u00edas sin avance</b>` : '')).join("\n\n");
       const texto =
         `\u{23F0} <b>${ls.length===1 ? "Un carro espera" : ls.length+" carros esperan"} tu siguiente paso</b>\n\n` +
         lista +
