@@ -175,31 +175,37 @@ async function main(){
 
   // ── Aviso de tareas pendientes ──
   if(tocaTareas){
+    // Por cada carro, SOLO su siguiente tarea pendiente (en el orden del proceso).
+    // Si ya se hizo hasta el paso 9, se avisa el paso 10, y solo a quien le toca.
     const mapa = {};
     autos.forEach(v => {
-      defT(v).forEach(t => {
-        if(t.opc || tareaOk(usuarios, v, t)) return;
-        resp(usuarios, t).forEach(u => {
-          if(t.multi && (v.tareas?.[t.k]?.marcas || {})[u]) return;  // ya hizo su parte
-          (mapa[u] ||= []).push({ v, t });
-        });
+      const ls = defT(v).filter(t => !t.opc);
+      const i = ls.findIndex(t => !tareaOk(usuarios, v, t));
+      if(i < 0) return;                                   // proceso completo
+      const t = ls[i];
+      let quien = resp(usuarios, t);
+      // Si nadie tiene esa tarea (sin persona y nadie con el área), se avisa a los admin para que no se quede trabada
+      if(!quien.length) quien = Object.keys(usuarios).filter(u => usuarios[u].admin);
+      quien.forEach(u => {
+        if(t.multi && (v.tareas?.[t.k]?.marcas || {})[u]) return;  // ya hizo su parte
+        (mapa[u] ||= []).push({ v, t, paso:i+1, total:ls.length });
       });
     });
 
     let enviados = 0;
     for(const u of Object.keys(mapa)){
       const chat = usuarios[u]?.telegram;
-      if(!chat){ console.log(`· ${usuarios[u]?.nombre||u}: ${mapa[u].length} pendiente(s), pero SIN Telegram vinculado`); continue; }
+      if(!chat){ console.log(`· ${usuarios[u]?.nombre||u}: ${mapa[u].length} carro(s) esperando, pero SIN Telegram vinculado`); continue; }
       const ls = mapa[u];
-      const lista = ls.slice(0,5).map(x =>
-        `• ${escHtml(x.t.t)}\n   \u{1F697} <i>${escHtml(x.v.vehiculo || "Carro por asignar")}</i>`).join("\n");
+      const nombreCarro = v => v.vehiculo || (v.nombreCliente ? "Encargo de " + v.nombreCliente.split(" ")[0] : "Carro por asignar");
+      const lista = ls.map(x =>
+        `\u{1F697} <b>${escHtml(nombreCarro(x.v))}</b>\n   \u{27A1}\u{FE0F} ${escHtml(x.t.t)}  <i>(paso ${x.paso} de ${x.total})</i>`).join("\n\n");
       const texto =
-        `\u{23F0} <b>Tienes ${ls.length} tarea${ls.length>1?"s":""} pendiente${ls.length>1?"s":""}</b>\n\n` +
+        `\u{23F0} <b>${ls.length===1 ? "Un carro espera" : ls.length+" carros esperan"} tu siguiente paso</b>\n\n` +
         lista +
-        (ls.length > 5 ? `\n\n\u2026 y ${ls.length-5} m\u00e1s.` : "") +
-        `\n\n<i>M\u00e1rcalas en el sistema cuando las completes.</i>`;
+        `\n\n<i>M\u00e1rcalo en el sistema cuando lo completes.</i>`;
       const ok = await enviarTelegram(chat, texto);
-      if(ok){ enviados++; console.log(`\u2713 ${usuarios[u].nombre}: ${ls.length} tarea(s)`); }
+      if(ok){ enviados++; console.log(`\u2713 ${usuarios[u].nombre}: ${ls.length} carro(s)`); }
     }
     console.log(`Avisos de tareas enviados: ${enviados}`);
     marcar.ultimoTareas = ahora;
