@@ -223,6 +223,7 @@ function toast(msg, tipo="ok"){
 
 /* ════════ PERMISOS ════════ */
 const puede = area => !!yo && (yo.admin || (yo.areas||[]).includes(area));
+const puedeCrear = () => !!yo && (yo.admin || yo.crear===true);   // agregar carros / clientes nuevos
 function quienes(x){
   const n = typeof x==='object' ? resp(x).map(nombreU)
           : Object.keys(usersData).filter(u => (usersData[u].areas||[]).includes(x)).map(u=>usersData[u].nombre);
@@ -296,6 +297,8 @@ onAuthStateChanged(auth, async user=>{
     document.getElementById('dRol').innerText = yo.admin ? "Administrador" : ((yo.areas||[]).length + " áreas");
     document.getElementById('dRol').style.color = "var(--t3)";
     document.getElementById('tbUsers').classList.toggle('hidden', !yo.admin);
+    document.getElementById('tbNuevo').classList.toggle('hidden', !puedeCrear());
+    if(!puedeCrear() && !document.getElementById('pgNuevo').classList.contains('hidden')) ir('flota');
     pintarUsers(); pintarTodo();
     if(!suscrito){
       suscrito = true;
@@ -346,6 +349,7 @@ let TITULOS = {   // [ceja, título, palabra en rosa, subtítulo]
   usuarios: ["Equipo",        "Equipo y",     "proceso",     "Las tareas de cada proceso, quién las hace, y los permisos de cada persona."],
 };
 window.ir = function(p){
+  if(p==='nuevo' && yo && !puedeCrear()){ toast("No tienes permiso para agregar carros.","warn"); p='flota'; }
   if(p==='finanzas') pintarFinanzas();
   if(p==='usuarios') setTimeout(()=>{ pintarProceso(); moverPastilla(); }, 0);
   Object.keys(PGS).forEach(k=>{
@@ -931,6 +935,7 @@ function pintarUsers(){
           <span class="pp-tg ${tg?'ok':''}" title="${tg?'Recibe avisos por Telegram':'No ha vinculado Telegram'}">Telegram ${tg?'✓':'—'}</span>
         </div>
       </div>
+      ${d.admin ? '' : `<label class="pp-crear"><input type="checkbox" ${d.crear?'checked':''} onchange="togCrear('${u}',this.checked)"><span class="pe-sw-b"></span><span><b>Puede agregar carros</b><small>Registrar clientes y carros nuevos en "Nueva unidad"</small></span></label>`}
       <div class="pp-areas">${AREAS.map(a=>{ const on = areas.includes(a.k);
         return `<button type="button" class="pp-a${on?' on':''}" onclick="togArea('${u}','${a.k}',${!on})" aria-pressed="${on}">${areaI(a.k,14)}<span>${esc(a.n)}</span></button>`; }).join('')}</div>
     </div>`;
@@ -1366,6 +1371,11 @@ window.togArea = async function(u, k, on){
   catch(e){ toast("Error al guardar permiso.","err"); }
 };
 
+window.togCrear = async function(u, on){
+  if(!yo?.admin) return;
+  try{ await setDoc(doc(db,"usuarios",u), { crear:on }, { merge:true }); toast(`${nombreU(u)}: ${on?"ya puede":"ya no puede"} agregar carros`); }
+  catch(e){ toast("Error al guardar permiso.","err"); }
+};
 window.setVenta = async function(id, val){
   const n = Number(val); if(isNaN(n)) return;
   try{ await updateDoc(doc(db,"vehiculos",id), { precio_venta:n }); toast("Precio actualizado."); }catch(e){ toast("Error.","err"); }
@@ -1411,6 +1421,7 @@ window.avisarWhats = function(area, tarea, veh, vin){
 };
 
 window.crearUnidad = async function(){
+  if(!puedeCrear()){ toast("No tienes permiso para agregar carros. Pídeselo a un admin.","err"); return; }
   const b = document.getElementById('btnCrear');
   const veh = document.getElementById('fVeh').value.trim();
   const enc = tipoNuevo==="Encargo";

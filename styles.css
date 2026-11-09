@@ -1202,3 +1202,11 @@ html,body{max-width:100%;overflow-x:clip}
 .fc-bar{height:5px;border-radius:9px;background:rgba(var(--fg),.08);margin-top:12px;overflow:hidden}
 .fc-bar i{display:block;height:100%;border-radius:9px;background:linear-gradient(90deg,#16a34a,#4ade80)}
 .fc-p{font-size:12px;color:var(--t3);margin-top:7px}
+.pp-crear{display:flex;align-items:center;gap:12px;margin-top:14px;padding:11px 12px;border-radius:14px;border:1px solid var(--card-line,var(--line));cursor:pointer}
+.pp-crear input{position:absolute;opacity:0;pointer-events:none}
+.pp-crear input:checked+.pe-sw-b{background:var(--brand)}
+.pp-crear input:checked+.pe-sw-b::after{transform:translateX(14px)}
+.pp-crear b{display:block;font-size:13.5px;font-weight:600;color:var(--t1)}
+.pp-crear small{display:block;font-size:12px;color:var(--t3);margin-top:1px}
+.pp-ayuda{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media(max-width:900px){ .pp-ayuda{grid-template-columns:1fr} }
