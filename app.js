@@ -337,7 +337,7 @@ onAuthStateChanged(auth, async user=>{
       onSnapshot(collection(db,"vehiculos"), sn=>{
         autos = []; sn.forEach(d=> autos.push({ id:d.id, ...d.data() }));
         autos.sort((a,b)=> (b.fecha_registro||"").localeCompare(a.fecha_registro||""));
-        pintarTodo(); if(abiertoId) abrirDetalle(abiertoId, true);
+        pintarTodo(); if(cotPendiente) setTimeout(mostrarCotizacion, 300); if(abiertoId) abrirDetalle(abiertoId, true);
       });
     }
   });
@@ -1262,21 +1262,29 @@ window.abrirDetalle = function(id, silencioso){
       ${panelDatos}
       ${heroSiguiente(v)}
       ${v.vehiculo ? `<details class="plegable">
-        <summary><span class="flex-1">Llegada y contenedor</span><span class="t-xs">${v.eta ? (etaInfo(v)?.txt || 'ETA '+esc(v.eta)) : 'sin fecha'}${v.contenedor?' · '+esc(v.contenedor):''}</span><span class="fase-chev">${ico("flecha",14,1.8)}</span></summary>
+        <summary><span class="flex-1">Llegada estimada</span><span class="t-xs">${v.eta ? (etaInfo(v)?.txt || 'ETA '+esc(v.eta)) : 'sin fecha'}</span><span class="fase-chev">${ico("flecha",14,1.8)}</span></summary>
         <div class="pt-3">${puedeLogistica() ? `<div class="rejilla">
             <div class="campo"><label for="lgEta">Llegada estimada (ETA)</label><input id="lgEta" type="date" class="inp" value="${esc(v.eta||'')}"></div>
-            <div class="campo"><label for="lgCont">Contenedor o BL</label><input id="lgCont" class="inp" value="${esc(v.contenedor||'')}" placeholder="MSCU1234567" style="text-transform:uppercase" autocomplete="off"></div>
-          </div><button onclick="guardarLogistica('${v.id}')" class="btn-p px-4 py-2.5 mt-3">Guardar llegada</button>`
-          : `<p class="t-sm">${v.eta?'Llegada estimada: '+esc(etaInfo(v)?.f||v.eta):'Sin fecha de llegada.'}${v.contenedor?' · Contenedor '+esc(v.contenedor):''}</p>`}</div>
+          </div><button onclick="guardarLogistica('${v.id}')" class="btn-p px-4 py-2.5 mt-3">Guardar fecha</button>`
+          : `<p class="t-sm">${v.eta?'Llegada estimada: '+esc(etaInfo(v)?.f||v.eta):'Sin fecha de llegada.'}</p>`}</div>
       </details>` : ''}
       ${verFin() && v.vehiculo ? (()=>{ const c = costosDe(v), vta = Number(v.precio_venta||0), gr = vta - c.total;
         return `<details class="plegable">
-        <summary><span class="flex-1">Costo real del carro</span><span class="t-xs">${money(c.total)}${vta?` · ganancia <b style="color:${gr>=0?'var(--brand-light)':'var(--danger)'}">${money(gr)}</b>`:''}</span><span class="fase-chev">${ico("flecha",14,1.8)}</span></summary>
+        <summary><span class="flex-1">Costo real del carro</span><span class="t-xs">${v.cotizacion?`estimado ${money(v.cotizacion.costoTotal)} · real `:''}${money(c.total)}${vta?` · ganancia <b style="color:${gr>=0?'var(--brand-light)':'var(--danger)'}">${money(gr)}</b>`:''}</span><span class="fase-chev">${ico("flecha",14,1.8)}</span></summary>
         <div class="pt-3">
           <div class="costos">${c.items.map(x=>`<div class="co-f"><span class="flex-1 min-w-0 truncate">${esc(x.n)}${x.est?' <em class="t-xs">(precio de compra)</em>':''}</span><b class="num">${money(x.m)}</b>${x.i!=null?`<button class="pe-ib" title="Quitar" onclick="quitarGasto('${v.id}',${x.i})">${ico("cerrar",12,2)}</button>`:'<span class="co-sp"></span>'}</div>`).join('') || '<p class="t-xs py-2">Todavía no hay costos registrados.</p>'}
             <div class="co-f co-t"><span class="flex-1">Costo real</span><b class="num">${money(c.total)}</b><span class="co-sp"></span></div>
             ${vta?`<div class="co-f"><span class="flex-1">Ganancia real</span><b class="num" style="color:${gr>=0?'var(--brand-light)':'var(--danger)'}">${money(gr)}</b><span class="co-sp"></span></div>`:''}
           </div>
+          ${v.cotizacion ? (()=>{ const ct = v.cotizacion, dif = c.total - Number(ct.costoTotal||0);
+            return `<div class="cot-cmp">
+              <p class="lbl">Lo que estimó la calculadora <span class="t-xs">· ${fch(ms_(ct.fecha))}</span></p>
+              <div class="costos">${(ct.partidas||[]).map(x=>`<div class="co-f"><span class="flex-1 min-w-0 truncate">${esc(x.n)}</span><b class="num">${money(x.m)}</b><span class="co-sp"></span></div>`).join('')}
+                <div class="co-f co-t"><span class="flex-1">Costo estimado</span><b class="num">${money(ct.costoTotal)}</b><span class="co-sp"></span></div>
+                <div class="co-f"><span class="flex-1">${dif>0?'Ya se pasó de lo estimado':'Queda por gastar (según lo estimado)'}</span><b class="num" style="color:${dif>0?'var(--danger)':'var(--t1)'}">${dif>0?'+'+money(dif):money(-dif)}</b><span class="co-sp"></span></div>
+              </div>
+              <p class="t-xs mt-1">El costo real se completa conforme se pagan subasta, naviera y aduana.</p>
+            </div>`; })() : ''}
           ${c.faltan?`<p class="t-xs mt-2" style="color:var(--warn)">${c.faltan} pago${c.faltan>1?'s':''} ya hecho${c.faltan>1?'s':''} sin monto. Ponlo en la tarea (botón “+ monto”).</p>`:''}
           <div class="flex gap-2 flex-wrap mt-3">
             <input id="gaCon" class="inp flex-1 min-w-[140px]" placeholder="Otro gasto: grúa, reparación, trámite…">
@@ -1497,8 +1505,8 @@ window.quitarGasto = async function(id, i){
 const puedeLogistica = () => puedeCrear() || puede('naviera') || puede('aduana');
 window.guardarLogistica = async function(id){
   if(!puedeLogistica()){ toast("No tienes permiso para cambiar la llegada.","err"); return; }
-  const eta = document.getElementById('lgEta')?.value || '', cont = (document.getElementById('lgCont')?.value || '').trim().toUpperCase();
-  try{ await updateDoc(doc(db,"vehiculos",id), { eta, contenedor:cont }); toast("Llegada guardada."); }catch(e){ toast("No se pudo guardar: "+e.code,"err"); }
+  const eta = document.getElementById('lgEta')?.value || '';
+  try{ await updateDoc(doc(db,"vehiculos",id), { eta }); toast("Llegada guardada."); }catch(e){ toast("No se pudo guardar: "+e.code,"err"); }
 };
 // Estado de cuenta para el cliente por WhatsApp (pagos por etapa, sin crédito)
 window.estadoCuenta = function(id){
@@ -1525,6 +1533,70 @@ window.estadoCuenta = function(id){
   ].filter(x=>x!==null).join('\n');
   const n = String(v.telefonoCliente||'').replace(/\D/g,''), num = n.length===8 ? '503'+n : n;
   window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, '_blank');
+};
+/* ════════ COTIZACIÓN QUE LLEGA DESDE LA CALCULADORA ════════
+   La calculadora abre el control con #cotizacion=<datos>. Se guarda en un carro existente o se crea uno nuevo. */
+let cotPendiente = (()=>{
+  const m = location.hash.match(/^#cotizacion=([\w-]+)/); if(!m) return null;
+  try{
+    const b = m[1].replace(/-/g,'+').replace(/_/g,'/'), pad = b + '==='.slice((b.length+3)%4);
+    const c = JSON.parse(decodeURIComponent(escape(atob(pad))));
+    history.replaceState(null, '', location.pathname + location.search);
+    return Array.isArray(c.partidas) ? c : null;
+  }catch(e){ return null; }
+})();
+const subastaDe = c => (c.partidas||[]).find(x=>x.k==='subasta')?.m || 0;
+function cerrarCot(){ document.getElementById('cotOv')?.remove(); }
+window.cerrarCot = cerrarCot;
+function mostrarCotizacion(){
+  const c = cotPendiente; if(!c || !yo) return; cotPendiente = null;
+  if(!verFin()){ toast("Llegó una cotización de la calculadora, pero necesitas el permiso de finanzas para guardarla.","warn"); return; }
+  const act = autos.filter(a=>!a.archivado);
+  const nom = v => esc(v.vehiculo) || (v.nombreCliente ? "Encargo de "+esc(v.nombreCliente.split(" ")[0]) : "Carro por asignar");
+  const q = String(c.carro||'').toLowerCase(), lote = String(c.lote||'').toLowerCase();
+  const sugerido = act.find(v => (lote && String(v.vin||'').toLowerCase().includes(lote)) || (q && String(v.vehiculo||'').toLowerCase()===q));
+  const ov = document.createElement('div'); ov.id = 'cotOv'; ov.className = 'cot-ov';
+  ov.innerHTML = `<div class="cot" role="dialog" aria-label="Cotización de la calculadora">
+    <div class="cot-cab"><div><p class="ceja" style="margin:0">Desde la calculadora</p>
+      <h3 class="cot-t">${esc(c.carro)||'Cotización'}${c.lote?` <span class="t-xs">· Lote ${esc(c.lote)}</span>`:''}</h3>
+      <p class="t-xs">${esc(c.subasta||'')}${c.oferta?` · oferta ${money(c.oferta)}`:''}${c.compraFinal?` · compra final ${money(c.compraFinal)}`:''}${c.cliente?` · ${esc(c.cliente)}`:''}</p></div>
+      <button class="pe-ib" onclick="cerrarCot()" aria-label="Cerrar">${ico("cerrar",15,2)}</button></div>
+    <div class="costos mt-3">${c.partidas.map(x=>`<div class="co-f"><span class="flex-1 min-w-0 truncate">${esc(x.n)}</span><b class="num">${money(x.m)}</b></div>`).join('')}
+      <div class="co-f co-t"><span class="flex-1">Costo estimado</span><b class="num">${money(c.costoTotal)}</b></div>
+      <div class="co-f"><span class="flex-1">Venta sugerida</span><b class="num">${money(c.ventaSugerida)}</b></div>
+      <div class="co-f"><span class="flex-1">Ganancia neta</span><b class="num" style="color:${c.gananciaNeta>=0?'var(--ok-txt)':'var(--danger)'}">${money(c.gananciaNeta)}</b></div>
+    </div>
+    <p class="lbl mt-4">¿Dónde la guardo?</p>
+    <div class="flex gap-2 flex-wrap mt-2">
+      <select id="cotCarro" class="inp flex-1 min-w-[200px]">${act.map(v=>`<option value="${v.id}" ${sugerido&&sugerido.id===v.id?'selected':''}>${nom(v)}${v.nombreCliente&&v.vehiculo?' · '+esc(v.nombreCliente):''}${v.cotizacion?' (ya tiene)':''}</option>`).join('')}</select>
+      <button class="btn-p px-4 py-2.5" onclick="cotGuardar()" ${act.length?'':'disabled'}>Guardar en este carro</button>
+    </div>
+    ${puedeCrear()?`<button class="pe-add mt-3" onclick="cotNueva()">${ico("mas",14,2)} Crear un carro nuevo con estos datos</button>`:''}
+  </div>`;
+  ov.addEventListener('click', e=>{ if(e.target===ov) cerrarCot(); });
+  document.body.appendChild(ov);
+  window.__cot = c;
+}
+window.cotGuardar = async function(){
+  const c = window.__cot, id = document.getElementById('cotCarro')?.value; if(!c || !id) return;
+  const v = autos.find(a=>a.id===id); if(!v) return;
+  if(v.cotizacion && !confirm('Este carro ya tiene una cotización. ¿La reemplazo con la nueva?')) return;
+  const datos = { cotizacion:c };
+  if(!Number(v.costo_subasta) && subastaDe(c)) datos.costo_subasta = subastaDe(c);
+  if(!Number(v.precio_venta) && c.ventaSugerida) datos.precio_venta = c.ventaSugerida;
+  try{ await updateDoc(doc(db,"vehiculos",id), datos); cerrarCot(); toast("Cotización guardada en el carro."); abrirDetalle(id); }
+  catch(e){ toast("No se pudo guardar: "+(e.code||e.message),"err"); }
+};
+window.cotNueva = function(){
+  const c = window.__cot; if(!c) return;
+  if(!puedeCrear()){ toast("No tienes permiso para agregar carros.","err"); return; }
+  cerrarCot(); ir('nuevo');
+  const pon = (i,val) => { const e = document.getElementById(i); if(e && val!=null && val!=='') e.value = val; };
+  pon('fVeh', c.carro); pon('fVin', String(c.lote||'').toUpperCase()); pon('fPlat', c.subasta);
+  pon('fCosto', subastaDe(c)); pon('fVenta', c.ventaSugerida); pon('nCli', c.cliente);
+  setTipo(c.cliente ? 'Encargo' : 'Stock');
+  window.__cotNueva = c;
+  toast("Datos de la calculadora puestos. Revisa y registra.");
 };
 window.togPerm = async function(u, campo, on){
   if(!yo?.admin) return;
@@ -1613,6 +1685,7 @@ window.crearUnidad = async function(){
     creadoPor: yo.usuario,
     fecha_registro: new Date().toISOString()
   };
+  if(window.__cotNueva){ nuevo.cotizacion = window.__cotNueva; window.__cotNueva = null; }
   // Firestore guarda primero en el teléfono y luego sincroniza: no hay que esperar al servidor
   const ref = doc(collection(db,"vehiculos"));
   setDoc(ref, nuevo).catch(e=> toast("No se pudo guardar en el servidor: "+(e.code||e.message)+". Revisa tu internet.","err"));

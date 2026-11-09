@@ -1240,3 +1240,11 @@ body.sin-fin .solo-fin{display:none!important}
 .plegable>summary~div{padding-left:14px!important;padding-right:14px!important;padding-bottom:14px!important}
 .plegable>summary .t-xs{text-align:right}
 @media(max-width:560px){ .plegable>summary{flex-wrap:wrap} .plegable>summary .t-xs{order:3;width:100%;text-align:left;margin-top:-6px} }
+
+/* ═══════════ V19 · COTIZACIÓN DE LA CALCULADORA ═══════════ */
+.cot-ov{position:fixed;inset:0;z-index:80;background:var(--scrim);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:16px;animation:fadeIn .25s ease}
+.cot{width:100%;max-width:520px;max-height:calc(100dvh - 32px);overflow:auto;background:var(--card,var(--s1));border:1px solid var(--card-line,var(--line));border-radius:24px;padding:20px;box-shadow:var(--sh3)}
+.cot-cab{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.cot-t{font-size:19px;font-weight:600;letter-spacing:-.01em;color:var(--t1);margin:6px 0 2px}
+.cot-cmp{margin-top:16px;padding:12px 14px;border-radius:16px;background:rgba(var(--fg),.03);border:1px dashed var(--line-2)}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
