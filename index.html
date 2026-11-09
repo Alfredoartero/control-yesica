@@ -28,7 +28,7 @@ try{ history.scrollRestoration='manual'; }catch(e){}
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=14">
+<link rel="stylesheet" href="styles.css?v=15">
 </head>
 <body class="min-h-screen pb-20 selection:bg-pink-600 selection:text-white">
 
@@ -66,6 +66,11 @@ try{ history.scrollRestoration='manual'; }catch(e){}
 
 <!-- ══════════ APP ══════════ -->
 <div id="app" class="hidden">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="s-car" viewBox="0 0 320 110"><path fill="#e6e8ee" d="M18 78c-6 0-10-5-9-11l3-12c1-5 5-8 10-9l52-9 38-24c8-5 17-7 26-7h64c11 0 21 4 29 11l27 24 34 5c9 1 16 8 17 17l1 9c1 6-4 11-10 11h-14a30 30 0 0 0-59 0H101a30 30 0 0 0-59 0z"/><path fill="#0f1116" opacity=".6" d="M120 33l20-14c6-4 12-6 19-6h29v27h-63c-6 0-8-4-5-7zm76-20h22c8 0 15 3 21 8l18 17c3 3 1 7-3 7h-58z"/><circle fill="#1b1d24" cx="72" cy="80" r="23"/><circle fill="#9aa0ab" cx="72" cy="80" r="11"/><circle fill="#1b1d24" cx="248" cy="80" r="23"/><circle fill="#9aa0ab" cx="248" cy="80" r="11"/></symbol>
+<symbol id="s-suv" viewBox="0 0 320 120"><path fill="#e6e8ee" d="M16 88c-6 0-10-5-9-11l3-18c1-6 6-10 12-11l46-6 30-30c6-6 14-9 23-9h108c9 0 17 4 22 11l24 30 28 4c9 1 16 9 16 18v11c0 6-5 11-11 11h-12a30 30 0 0 0-59 0H101a30 30 0 0 0-59 0z"/><path fill="#0f1116" opacity=".6" d="M106 40l20-20c4-4 9-6 15-6h38v30h-69c-5 0-7-1-4-4zm81-26h48c6 0 11 3 14 7l17 22c2 2 0 5-3 5h-76z"/><circle fill="#1b1d24" cx="72" cy="90" r="24"/><circle fill="#9aa0ab" cx="72" cy="90" r="12"/><circle fill="#1b1d24" cx="248" cy="90" r="24"/><circle fill="#9aa0ab" cx="248" cy="90" r="12"/></symbol>
+<symbol id="s-q" viewBox="0 0 320 110"><path fill="none" stroke="#f9a8d4" stroke-width="3" stroke-dasharray="9 8" opacity=".85" d="M18 78c-6 0-10-5-9-11l3-12c1-5 5-8 10-9l52-9 38-24c8-5 17-7 26-7h64c11 0 21 4 29 11l27 24 34 5c9 1 16 8 17 17l1 9c1 6-4 11-10 11h-14a30 30 0 0 0-59 0H101a30 30 0 0 0-59 0z"/><text x="160" y="64" text-anchor="middle" fill="#f9a8d4" font-family="Inter,sans-serif" font-weight="700" font-size="36">?</text></symbol>
+</defs></svg>
 
 <!-- ═══ BARRA LATERAL ═══ -->
 <aside class="rail">
@@ -126,6 +131,7 @@ try{ history.scrollRestoration='manual'; }catch(e){}
 
   <!-- ══ FLOTA ══ -->
   <section id="pgFlota" class="space-y-4">
+    <div id="hoyFlota"></div>
     <div class="filtros-bar filtros-web">
       <div class="filtros seg-f">
         <span class="seg-pill" aria-hidden="true"></span>
@@ -208,6 +214,9 @@ try{ history.scrollRestoration='manual'; }catch(e){}
           <div class="campo"><label for="fPlat">Subasta</label><select id="fPlat" class="inp"><option>Copart</option><option>IAAI</option><option>ADESA</option><option>Manheim</option><option>Otro</option></select></div>
           <div class="campo"><label for="fCosto">Costo de compra ($)</label><input type="number" id="fCosto" class="inp" placeholder="0" inputmode="decimal"></div>
           <div class="campo"><label for="fVenta">Precio de venta ($)</label><input type="number" id="fVenta" class="inp" placeholder="0" inputmode="decimal"></div>
+          <div class="campo col-2"><span class="lbl">Foto del carro <em class="t-xs" style="font-style:normal">(opcional)</em></span>
+            <label class="foto-in"><input type="file" id="fFoto" accept="image/*" class="hidden" onchange="verFotoNueva(this)">
+              <span class="foto-in-v" id="fFotoVista"></span><span class="foto-in-t"><span id="icFotoIn"></span><span id="fFotoTxt">Toca para elegir una foto</span></span></label></div>
         </div>
       </div>
 
@@ -306,6 +315,6 @@ try{ history.scrollRestoration='manual'; }catch(e){}
 
 <div id="modal" class="hidden"></div>
 
-<script type="module" src="app.js?v=13"></script>
+<script type="module" src="app.js?v=14"></script>
 </body>
 </html>

@@ -518,6 +518,91 @@ function estadoDe(v){
 }
 const pillEstado = v => { const e = estadoDe(v); return `<span class="estado ${e.c}">${e.c==='e-verde'?'<span class="dot"></span>':''}${e.t}</span>`; };
 
+/* Portada del carro: su foto si la tiene; si no, un dibujo según el tipo */
+const RX_SUV = /cr-?v|rav ?4|tucson|sportage|outlander|cx-?\d|rogue|explorer|highlander|santa ?fe|equinox|escape|pilot|4runner|tahoe|suburban|cherokee|wrangler|kicks|seltos|kona|venue|hr-?v|forester|crosstrek|tiguan|pathfinder|murano|sorento|telluride|palisade|trax|blazer|traverse|edge|bronco|compass|renegade|x-?trail|qashqai|soul|hilux|tacoma|frontier|ranger|tundra|silverado|f-?150|ram\b|l200|navara|suv|camioneta|pick ?up/i;
+function portada(v){
+  if(v.foto) return `<img src="${esc(v.foto)}" alt="" loading="lazy" decoding="async" class="vc-img">`;
+  const tipo = !v.vehiculo ? 'q' : (RX_SUV.test(v.vehiculo) ? 'suv' : 'car');
+  const tono = {'e-verde':'t-verde','e-rosa':'t-rosa','e-ambar':'t-ambar','e-solido':'t-rosa'}[estadoDe(v).c] || 't-gris';
+  return `<div class="vc-dib ${tono}"><svg viewBox="0 0 320 ${tipo==='suv'?120:110}" aria-hidden="true"><use href="#s-${tipo}"/></svg></div>`;
+}
+async function achicarFoto(file, max=1600){
+  try{
+    const bmp = await createImageBitmap(file);
+    const k = Math.min(1, max/Math.max(bmp.width, bmp.height));
+    const c = document.createElement('canvas'); c.width = Math.round(bmp.width*k); c.height = Math.round(bmp.height*k);
+    c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+    return await new Promise(r=> c.toBlob(b=> r(b||file), 'image/jpeg', .82));
+  }catch(e){ return file; }
+}
+async function subirPortadaArchivo(id, file){
+  if(!file) return;
+  if(!/^image\//.test(file.type||'image/')){ toast("Elige una imagen.","warn"); return; }
+  toast("Subiendo foto…","warn");
+  try{
+    const blob = await achicarFoto(file);
+    const snap = await uploadBytes(ref(storage, `comprobantes/${id}/portada_${Date.now()}.jpg`), blob, {contentType:'image/jpeg'});
+    const url  = await getDownloadURL(snap.ref);
+    await updateDoc(doc(db,"vehiculos",id), { foto:url });
+    toast("Foto del carro guardada.");
+  }catch(e){
+    toast(e.code==="storage/unauthorized" ? "Storage sin permisos. Revisa las reglas en Firebase." : "No se pudo subir: "+(e.code||e.message), "err");
+  }
+}
+window.verFotoNueva = inp => {
+  const box = document.getElementById('fFotoVista'); if(!box) return;
+  const f = inp.files && inp.files[0];
+  box.innerHTML = f ? `<img src="${URL.createObjectURL(f)}" alt="">` : '';
+  box.closest('.foto-in')?.classList.toggle('con', !!f);
+  const t = document.getElementById('fFotoTxt'); if(t) t.textContent = f ? 'Cambiar foto' : 'Toca para elegir una foto';
+};
+window.subirPortada = (id, inp) => { const f = inp.files && inp.files[0]; inp.value = ""; subirPortadaArchivo(id, f); };
+window.quitarPortada = async id => {
+  if(!confirm("¿Quitar la foto de este carro?")) return;
+  try{ await updateDoc(doc(db,"vehiculos",id), { foto:"" }); toast("Foto quitada."); }catch(e){ toast("No se pudo: "+e.code,"err"); }
+};
+
+/* Lo tuyo de hoy: las 3 primeras tareas, arriba de la flota */
+function pintarHoy(items, hechasHoy){
+  const box = document.getElementById('hoyFlota'); if(!box) return;
+  const nom = (yo?.nombre||"").split(" ")[0];
+  const d = new Date(), fecha = d.toLocaleDateString('es-SV',{weekday:'long', day:'numeric', month:'short'}).replace('.','');
+  const carros = autos.filter(a=>!a.archivado).length;
+  TITULOS.flota = [fecha, "Hola,", nom || "equipo",
+    items.length ? `Te tocan ${items.length} tarea${items.length>1?'s':''} · ${carros} carro${carros===1?'':'s'} en proceso` : `Nada pendiente para ti · ${carros} carro${carros===1?'':'s'} en proceso`];
+  const pg = document.getElementById('pgFlota');
+  if(pg && !pg.classList.contains('hidden')){
+    document.getElementById('cejaPagina').textContent = TITULOS.flota[0];
+    ponTitulo(document.getElementById('tituloPagina'), TITULOS.flota[1], TITULOS.flota[2]);
+    document.getElementById('subPagina').textContent = TITULOS.flota[3];
+  }
+  if(!items.length){
+    box.innerHTML = hechasHoy ? `<div class="hoy-web vacio-hoy"><span class="hoy-ck on">${ico("ok",13,3)}</span><p>Terminaste lo tuyo de hoy. <b>${hechasHoy}</b> hecha${hechasHoy>1?'s':''}.</p></div>` : "";
+    return;
+  }
+  const top = items.slice(0,3);
+  box.innerHTML = `<div class="hoy-web">
+    <div class="hoy-cab">
+      <div><p class="ceja" style="margin:0">Lo tuyo de hoy</p>
+        <p class="hoy-tt">${hechasHoy?`Llevas <b>${hechasHoy}</b> · `:''}empieza por ${top.length===1?'esta':'estas'}</p></div>
+      ${items.length>top.length?`<button onclick="ir('mias')" class="hoy-link">Ver las ${items.length} <span aria-hidden="true">→</span></button>`:''}
+    </div>
+    <div class="hoy-lista">${top.map(({v,t})=>{
+      const modo = t.foto ? 'foto' : (t.multi && respons(t.a).length ? 'multi' : 'ok');
+      return `<div class="hoy-fila" onclick="abrirDetalle('${v.id}')">
+        <button class="hoy-ck" title="${modo==='foto'?'Subir comprobante':'Marcar como hecha'}" onclick="event.stopPropagation();hoyMarcar(this,'${v.id}','${t.k}','${modo}')">${modo==='foto'?ico("clip",13,2):ico("ok",13,3)}</button>
+        <div class="min-w-0 flex-1"><p class="hoy-t">${esc(t.t)}</p>
+          <p class="hoy-m">${esc(v.vehiculo)||"Carro por asignar"}${v.nombreCliente?` · ${esc(v.nombreCliente)}`:""}</p></div>
+        <span class="hoy-area" title="${esc(areaN(t.a))}">${areaI(t.a,14)}</span>
+      </div>`;}).join('')}</div>
+  </div>`;
+}
+window.hoyMarcar = function(btn, id, k, modo){
+  if(modo==='foto'){ abrirDetalle(id); setTimeout(()=>irATarea(id,k),80); return; }
+  btn.classList.add('on'); btn.closest('.hoy-fila')?.classList.add('hecha');
+  setTimeout(()=> modo==='multi' ? marcarMulti(id,k,false) : marcar(id,k,false), 280);
+};
+
 function pintarFlota(){
   const cont = document.getElementById('flota');
   const q = (document.getElementById('buscar').value||"").toLowerCase().trim();
@@ -548,29 +633,29 @@ function pintarFlota(){
     const enc = v.tipoProceso==="Encargo";
     const sig = tareasDe(v).find(t=> !tareaOk(v,t));
     const cob = pagado(v), vta = Number(v.precio_venta||0), falta = saldo(v);
-    const meta = [
-      `<span>${enc?'Encargo':'Stock'}</span>`,
-      v.nombreCliente ? `<span>${esc(v.nombreCliente)}</span>` : (!enc ? `<span style="color:var(--warn)">Sin cliente</span>` : ""),
-      v.vehiculo ? `<span>${esc(v.plataforma)}</span>` : `<span>${v.deseoCliente ? "Busca "+esc(v.deseoCliente) : "Sin vehículo"}</span>`,
-      v.vehiculo && v.vin ? `<span class="mono">${esc(v.vin)}</span>` : ""
-    ].join("");
-    return `<article class="vcard${nueva?' pop':''}" style="${nueva?`animation-delay:${retraso}ms;--d:${retraso}ms`:''}" onclick="abrirDetalle('${v.id}')">
-      <div class="vc-top">
-        <div class="min-w-0">
-          <h3 class="vc-t">${esc(v.vehiculo) || (v.nombreCliente ? "Encargo de "+esc(v.nombreCliente.split(" ")[0]) : "Carro por asignar")}</h3>
-          <p class="vc-precio">${v.vehiculo ? `Venta <b>${vta?money(vta):'por definir'}</b>` : `Busca <b>${esc(v.deseoCliente||"por definir")}</b>`}</p>
+    const et = etapas(v), fa = et.findIndex(x=>x.cur), eAct = et[fa>=0?fa:et.length-1];
+    const hechas = tareasDe(v).filter(t=>tareaOk(v,t)).length, tot = tareasDe(v).length;
+    const sigMia = sig && pendientesMias(v).some(t=>t.k===sig.k);
+    const sub = [enc?'Encargo':'Stock', v.nombreCliente ? esc(v.nombreCliente) : (!enc ? '<span style="color:var(--warn)">Sin cliente</span>' : ''), v.vehiculo ? esc(v.plataforma) : ''].filter(Boolean).join(' · ');
+    return `<article class="vcard v2${nueva?' pop':''}" style="${nueva?`animation-delay:${retraso}ms;--d:${retraso}ms`:''}" onclick="abrirDetalle('${v.id}')">
+      <div class="vc-cover">${portada(v)}
+        <div class="vc-sombra"></div>
+        <div class="vc-chip">${pillEstado(v)}</div>
+        <div class="vc-over">
+          <div class="vc-pr min-w-0">${v.vehiculo
+            ? `<small>Venta</small><span class="num">${vta?money(vta):'Por definir'}</span>`
+            : `<small>Busca</small><span class="vc-busca">${esc(v.deseoCliente||'Por definir')}</span>`}</div>
+          ${falta>0 && cob>0 ? `<span class="vc-falta">Falta ${money(falta)}</span>` : (vta && falta===0 ? `<span class="vc-falta ok">Pagado</span>` : '')}
         </div>
-        ${pillEstado(v)}
       </div>
-      <div class="meta">${meta}</div>
-      <div class="vc-ruta">${ruta(v,true)}</div>
-      <div class="vc-sig">${sig ? `<span class="vc-sig-l">Sigue</span><span class="truncate">${esc(sig.t)}</span>` : `<span style="color:var(--ok-txt)">Proceso completo</span>`}</div>
-      <div class="vc-specs">
-        <div><b class="num" style="color:var(--ok-txt)">${money(cob)}</b><small>Cobrado</small></div>
-        <div><b class="num" style="color:${falta>0?'var(--warn)':'var(--t1)'}">${money(falta)}</b><small>Falta</small></div>
-        <div><b class="num" style="color:${mias?'var(--brand-light)':'var(--t1)'}">${mias}</b><small>Tus tareas</small></div>
+      <div class="vc-cuerpo">
+        <h3 class="vc-t">${esc(v.vehiculo) || (v.nombreCliente ? "Encargo de "+esc(v.nombreCliente.split(" ")[0]) : "Carro por asignar")}</h3>
+        <p class="vc-sub">${sub}</p>
+        <div class="vc-barras">${et.map(x=>`<span title="${esc(x.n)}"><b style="width:${x.done?100:Math.round(x.pct*100)}%"></b></span>`).join('')}</div>
+        <div class="vc-etq"><span class="min-w-0 truncate">Etapa ${Math.min(fa>=0?fa+1:et.length,et.length)} de ${et.length} · <b>${esc(eAct.n)}</b></span><span class="num">${hechas}/${tot}</span></div>
+        ${sig ? `<div class="vc-sigue${sigMia?' mia':''}"><span class="vc-ck"></span><div class="min-w-0"><small>${sigMia?'Te toca':'Sigue'}</small><p class="truncate">${esc(sig.t)}</p></div>${mias>1?`<em class="num">+${mias-1}</em>`:''}</div>`
+              : `<div class="vc-sigue listo"><span class="vc-ck">${ico("ok",12,3)}</span><div><small>Listo</small><p>Proceso completo</p></div></div>`}
       </div>
-      <button class="vc-btn" onclick="event.stopPropagation();abrirDetalle('${v.id}')">Ver detalles <span aria-hidden="true">→</span></button>
     </article>`;
   }).join("");
   requestAnimationFrame(moverPastilla);
@@ -596,6 +681,7 @@ function pintarMias(){
   }));
   const totalDia = hechasHoy + totalMias;
   const pctDia = totalDia ? Math.round((hechasHoy/totalDia)*100) : 100;
+  pintarHoy(items, hechasHoy);
 
   document.getElementById('miasAnillo').innerHTML = `<div class="hoy-box"><p class="num">${hechasHoy}</p><p class="t-xs">hecha${hechasHoy===1?'':'s'} hoy</p></div>`;
   const tit = document.getElementById('miasTitulo');
@@ -1033,6 +1119,11 @@ window.abrirDetalle = function(id, silencioso){
     </div>
 
     <div class="p-6 space-y-5">
+      ${(v.vehiculo || v.foto) ? `<div class="det-cover">${portada(v)}<div class="vc-sombra"></div>
+        <div class="det-foto-acc">
+          <label class="det-foto-btn">${ico("foto",15,2)} ${v.foto?'Cambiar foto':'Agregar foto'}<input type="file" accept="image/*" class="hidden" onchange="subirPortada('${v.id}',this)"></label>
+          ${v.foto?`<button class="det-foto-btn" onclick="quitarPortada('${v.id}')">Quitar</button>`:''}
+        </div></div>` : ''}
       ${panelDatos}
       ${heroSiguiente(v)}
 
@@ -1286,6 +1377,9 @@ window.crearUnidad = async function(){
   const ref = doc(collection(db,"vehiculos"));
   setDoc(ref, nuevo).catch(e=> toast("No se pudo guardar en el servidor: "+(e.code||e.message)+". Revisa tu internet.","err"));
   toast(veh ? "Carro registrado con su lista de tareas." : "Cliente registrado. Asígnale el carro cuando se gane.");
+  const ff = document.getElementById('fFoto');
+  if(veh && ff && ff.files && ff.files[0]) subirPortadaArchivo(ref.id, ff.files[0]);
+  if(ff){ ff.value = ""; verFotoNueva(ff); }
   ["fVeh","fVin","fCosto","fVenta","nCli","tCli","dCli"].forEach(i=> document.getElementById(i).value="");
   document.getElementById('aCli').value = "100";
   b.disabled = false; setTipo(tipoNuevo);
@@ -1702,7 +1796,7 @@ setTipo("Encargo");
 // Íconos del riel y la barra superior
 (function(){
   const map = { icAvisos:'campana', icNuevaH:'nueva', icAlertaH:'alerta', icFinH:'finanzas', icDirH:'direccion', icArchH:'archivo', icEqH1:'equipo', icEqH2:'equipo', icFlota:'flota', icTareas:'tareas', icNueva:'nueva', icFin:'finanzas',
-                icArch:'archivo', icEquipo:'equipo' };
+                icArch:'archivo', icEquipo:'equipo', icFotoIn:'foto' };
   Object.keys(map).forEach(id=>{ const e=document.getElementById(id); if(e) e.innerHTML = ico(map[id], 19, 1.6); });
   const k = { kiUnidades:'flota', kiAvance:'direccion', kiCobrar:'reloj', kiMias:'tareas' };
   Object.keys(k).forEach(id=>{ const e=document.getElementById(id); if(e) e.innerHTML = ico(k[id],16); });
