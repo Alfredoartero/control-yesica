@@ -22,13 +22,15 @@ try{ history.scrollRestoration='manual'; }catch(e){}
 })();
 </script>
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
 <meta name="apple-mobile-web-app-title" content="Control Yesica">
 <link rel="manifest" href="manifest.json">
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=15">
+<link rel="stylesheet" href="styles.css?v=16">
 </head>
 <body class="min-h-screen pb-20 selection:bg-pink-600 selection:text-white">
 
@@ -288,7 +290,12 @@ try{ history.scrollRestoration='manual'; }catch(e){}
 
   <!-- ══ USUARIOS ══ -->
   <section id="pgUsers" class="hidden">
-    <div class="glass rounded-3xl p-6 md:p-8 space-y-5 relative" >
+    <div class="seg seg-f eq-seg"><span class="seg-pill" aria-hidden="true"></span>
+      <button onclick="verEquipo('proceso')" id="eqProc" class="tab on">Tareas del proceso</button>
+      <button onclick="verEquipo('personas')" id="eqPers" class="tab">Personas y permisos</button>
+    </div>
+    <div id="procEd" class="mt-5"></div>
+    <div id="eqPersonas" class="glass rounded-3xl p-6 md:p-8 space-y-5 relative hidden" >
       
       <div class="flex items-center gap-3 border-b pb-4" style="border-color:var(--line)">
         <div class="icon-badge"><span id="icEqH1"></span></div>
@@ -315,6 +322,6 @@ try{ history.scrollRestoration='manual'; }catch(e){}
 
 <div id="modal" class="hidden"></div>
 
-<script type="module" src="app.js?v=15"></script>
+<script type="module" src="app.js?v=16"></script>
 </body>
 </html>

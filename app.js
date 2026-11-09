@@ -101,7 +101,7 @@ const defF   = v => v.tipoProceso === "Encargo" ? FASES_ENC : FASES_STK;
 
 /* Las tareas vienen del tablero ("Tareas del proceso Yesica") a través de proceso.json.
    Si no se puede leer, se queda con la lista de arriba (o la última que se guardó en el teléfono). */
-let procesoInfo = null;
+let procesoInfo = null, procBorr = null, procSucio = false, procTipo = 'Encargo', procAbierta = null;
 function aplicarProceso(p){
   try{
     const E = p?.tareas?.Encargo, S = p?.tareas?.Stock;
@@ -111,13 +111,13 @@ function aplicarProceso(p){
     const fe = p.fases?.Encargo, fs = p.fases?.Stock;
     if(Array.isArray(fe) && fe.length) FASES_ENC.splice(0, FASES_ENC.length, ...fe.map((n,i)=>`${i+1} · ${n}`));
     if(Array.isArray(fs) && fs.length) FASES_STK.splice(0, FASES_STK.length, ...fs.map((n,i)=>`${i+1} · ${n}`));
-    procesoInfo = { actualizado:p.actualizado, fuente:p.fuente };
+    procesoInfo = { actualizado:p.actualizado, fuente:p.fuente, por:p.por };
     return true;
   }catch(e){ return false; }
 }
 try{ const g = JSON.parse(localStorage.getItem('proceso-yesica')||'null'); if(g) aplicarProceso(g); }catch(e){}
 fetch('proceso.json?'+Date.now(), {cache:'no-store'}).then(r=> r.ok ? r.json() : null).then(p=>{
-  if(!p || !aplicarProceso(p)) return;
+  if(!p || procesoInfo?.fuente==='control' || !aplicarProceso(p)) return;
   try{ localStorage.setItem('proceso-yesica', JSON.stringify(p)); }catch(e){}
   if(typeof pintarTodo==='function' && yo){ pintarTodo(); if(abiertoId) abrirDetalle(abiertoId); }
 }).catch(()=>{});
@@ -162,6 +162,8 @@ const ICO = {
   robot:    '<rect x="4.5" y="8" width="15" height="11" rx="3"/><path d="M12 4.5V8M8.5 13v1.5M15.5 13v1.5"/><circle cx="12" cy="4" r="1.2"/>',
   foto:     '<rect x="3.5" y="6.5" width="17" height="13" rx="3"/><circle cx="12" cy="13" r="3.2"/><path d="M8.5 6.5l1.2-2h4.6l1.2 2"/>',
   candado:  '<rect x="5.5" y="10.5" width="13" height="9" rx="2.5"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/>',
+  subir:    '<path d="M7 14.5l5-5 5 5"/>',
+  bajar:    '<path d="M7 9.5l5 5 5-5"/>',
   flecha:   '<path d="M5 12h13M13 7l5 5-5 5"/>',
   sol:'<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4L6 18M18 6l1.4-1.4"/>',
   luna:'<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>',
@@ -313,6 +315,17 @@ onAuthStateChanged(auth, async user=>{
         }
         pintarCfgNotis();
       });
+      // Tareas del proceso: las edita un admin en Equipo → Tareas del proceso
+      onSnapshot(doc(db,"config","proceso"), s=>{
+        if(!s.exists()) return;                       // todavía nadie guardó: se queda con proceso.json
+        const p = s.data();
+        if(aplicarProceso(p)){
+          procesoInfo = { ...procesoInfo, por:p.por, fuente:'control' };
+          try{ localStorage.setItem('proceso-yesica', JSON.stringify(p)); }catch(e){}
+          pintarTodo(); if(abiertoId) abrirDetalle(abiertoId, true);
+          if(!procSucio) { procBorr = null; pintarProceso(); }
+        }
+      });
       onSnapshot(collection(db,"vehiculos"), sn=>{
         autos = []; sn.forEach(d=> autos.push({ id:d.id, ...d.data() }));
         autos.sort((a,b)=> (b.fecha_registro||"").localeCompare(a.fecha_registro||""));
@@ -330,10 +343,11 @@ let TITULOS = {   // [ceja, título, palabra en rosa, subtítulo]
   nuevo:    ["Nueva unidad",  "Registra un",  "cliente",     "Una búsqueda personalizada: el carro se le asigna cuando se gane en subasta."],
   finanzas: ["Finanzas",      "Panel",        "financiero",  "Inversión, cobros y ganancia de las unidades activas."],
   archivo:  ["Archivo",       "Unidades",     "terminadas",  "Lo que ya completó su proceso o se archivó."],
-  usuarios: ["Equipo",        "Equipo y",     "permisos",    "Marca qué áreas puede tocar cada persona."],
+  usuarios: ["Equipo",        "Equipo y",     "proceso",     "Las tareas de cada proceso, quién las hace, y los permisos de cada persona."],
 };
 window.ir = function(p){
   if(p==='finanzas') pintarFinanzas();
+  if(p==='usuarios') setTimeout(()=>{ pintarProceso(); moverPastilla(); }, 0);
   Object.keys(PGS).forEach(k=>{
     document.getElementById(PGS[k][0]).classList.toggle('hidden', k!==p);
     document.getElementById(PGS[k][1]).classList.toggle('on', k===p);
@@ -1865,10 +1879,202 @@ document.getElementById('fechaHoy').innerText =
 })();
 
 // Pastilla rosa que se desliza al filtro activo (como el selector de /inventario)
+
+/* ════════ EDITOR DE TAREAS DEL PROCESO (solo admin) ════════
+   Trabaja sobre un borrador; nada cambia para el equipo hasta tocar "Guardar cambios".
+   Se guarda en Firestore config/proceso y todos lo reciben al instante. */
+window.verEquipo = function(v){
+  document.getElementById('eqProc').classList.toggle('on', v==='proceso');
+  document.getElementById('eqPers').classList.toggle('on', v==='personas');
+  document.getElementById('procEd').classList.toggle('hidden', v!=='proceso');
+  document.getElementById('eqPersonas').classList.toggle('hidden', v!=='personas');
+  requestAnimationFrame(moverPastilla);
+  if(v==='proceso') pintarProceso();
+};
+const procActual = () => ({
+  fases:{ Encargo: FASES_ENC.map(f=>f.replace(/^\d+\s*·\s*/,'')), Stock: FASES_STK.map(f=>f.replace(/^\d+\s*·\s*/,'')) },
+  tareas:{ Encargo: T_ENC.map(t=>({...t})), Stock: T_STK.map(t=>({...t})) }
+});
+function borr(){ if(!procBorr) procBorr = JSON.parse(JSON.stringify(procActual())); return procBorr; }
+function sucio(){ procSucio = true; pintarProceso(); }
+const nuevoK = () => 'n' + Date.now().toString(36) + Math.random().toString(36).slice(2,5);
+// Carros activos que ya marcaron esta tarea (para avisar antes de borrarla)
+const usoTarea = k => autos.filter(a=>!a.archivado && a.tareas?.[k] && (a.tareas[k].ok || Object.keys(a.tareas[k].marcas||{}).length)).length;
+
+function pintarProceso(){
+  const box = document.getElementById('procEd'); if(!box) return;
+  if(!yo?.admin){ box.innerHTML = `<div class="vacio"><p class="t-md">Solo un administrador puede editar las tareas.</p></div>`; return; }
+  const B = borr(), tipo = procTipo, fases = B.fases[tipo], ts = B.tareas[tipo];
+  const quien = procesoInfo?.por ? nombreU(procesoInfo.por) : null;
+  const cuando = procesoInfo?.actualizado ? fch(Date.parse(procesoInfo.actualizado)) : '';
+  const nombreT = k => (ts.find(t=>t.k===k)||{}).t || k;
+  const fila = (t, i, lista) => {
+    const abierta = procAbierta===t.k;
+    const per = (t.personas||[]);
+    const marcas = [t.foto&&'Comprobante', t.pago&&'Pago', t.multi&&'Cada quien marca', t.opc&&'Opcional', t.repetible&&'Constante'].filter(Boolean);
+    return `<div class="pe-t${abierta?' abierta':''}" id="pe-${t.k}">
+      <div class="pe-fila" onclick="peAbrir('${t.k}')">
+        <span class="pe-n num">${i+1}</span>
+        <div class="min-w-0 flex-1">
+          <p class="pe-tt">${esc(t.t)||'<em>Sin nombre</em>'}</p>
+          <p class="pe-meta">${esc(areaN(t.a))}${per.length?` · <b>${esc(per.map(nombreU).join(', '))}</b>`:' · todos los del área'}${marcas.length?` · ${marcas.join(' · ')}`:''}</p>
+        </div>
+        <div class="pe-ord" onclick="event.stopPropagation()">
+          <button class="pe-ib" title="Subir" ${i===0&&t.f===0?'disabled':''} onclick="peMover('${t.k}',-1)">${ico('subir',16,2)}</button>
+          <button class="pe-ib" title="Bajar" ${i===lista.length-1&&t.f===fases.length-1?'disabled':''} onclick="peMover('${t.k}',1)">${ico('bajar',16,2)}</button>
+        </div>
+      </div>
+      ${abierta ? `<div class="pe-form" onclick="event.stopPropagation()">
+        <label class="campo"><span class="lbl">Tarea</span><input class="inp" value="${esc(t.t)}" oninput="peCampo('${t.k}','t',this.value,true)"></label>
+        <label class="campo"><span class="lbl">Detalle <em class="t-xs" style="font-style:normal">(opcional)</em></span><input class="inp" value="${esc(t.d||'')}" placeholder="Cómo se hace, qué adjuntar…" oninput="peCampo('${t.k}','d',this.value,true)"></label>
+        <div class="rejilla">
+          <label class="campo"><span class="lbl">Área</span><select class="inp" onchange="peCampo('${t.k}','a',this.value)">${AREAS.map(a=>`<option value="${a.k}" ${a.k===t.a?'selected':''}>${esc(a.n)}</option>`).join('')}</select></label>
+          <label class="campo"><span class="lbl">Etapa</span><select class="inp" onchange="peEtapa('${t.k}',+this.value)">${fases.map((f,fi)=>`<option value="${fi}" ${fi===t.f?'selected':''}>${fi+1}. ${esc(f)}</option>`).join('')}</select></label>
+        </div>
+        <div class="campo"><span class="lbl">¿Quién la hace?</span>
+          <div class="pe-chips">${Object.keys(EQUIPO).map(u=>`<button type="button" class="pe-chip${per.includes(u)?' on':''}" onclick="pePersona('${t.k}','${u}')">${esc(nombreU(u))}</button>`).join('')}</div>
+          <p class="t-xs mt-1.5">${per.length?'Solo a ellos les aparece y les llega el aviso.':'Sin nadie marcado: le toca a todos los que tengan el área '+esc(areaN(t.a))+'.'}</p>
+        </div>
+        <div class="pe-sw">
+          ${[['foto','Pide comprobante (foto)'],['pago','Es un pago del cliente'],['multi','Cada quien marca su parte'],['opc','Opcional'],['repetible','Constante (se repite)']].map(([c,n])=>
+            `<label class="pe-sw-i"><input type="checkbox" ${t[c]?'checked':''} onchange="peCampo('${t.k}','${c}',this.checked)"><span class="pe-sw-b"></span>${n}</label>`).join('')}
+        </div>
+        ${t.repetible?`<label class="campo"><span class="lbl">Se repite hasta que se haga</span><select class="inp" onchange="peCampo('${t.k}','hasta',this.value)">
+          <option value="">El final del proceso</option>${ts.filter(x=>x.k!==t.k).map(x=>`<option value="${x.k}" ${x.k===t.hasta?'selected':''}>${esc(x.t)}</option>`).join('')}</select></label>`:''}
+        <div class="pe-acc">
+          <button class="pe-borrar" onclick="peBorrar('${t.k}')">${ico('basura',14,1.8)} Borrar tarea</button>
+          <button class="btn-g px-4 py-2" onclick="peAbrir('${t.k}')">Listo</button>
+        </div>
+      </div>` : ''}
+    </div>`;
+  };
+  box.innerHTML = `
+    <div class="pe-cab">
+      <div class="seg seg-f pe-seg"><span class="seg-pill" aria-hidden="true"></span>
+        <button class="tab ${tipo==='Encargo'?'on':''}" onclick="peTipo('Encargo')">Encargo <i>${B.tareas.Encargo.length}</i></button>
+        <button class="tab ${tipo==='Stock'?'on':''}" onclick="peTipo('Stock')">Stock <i>${B.tareas.Stock.length}</i></button>
+      </div>
+      <p class="t-xs">${quien?`Último cambio: ${esc(quien)}${cuando?' · '+cuando:''}`:'Vienen del tablero. Desde aquí ya las puedes cambiar.'}</p>
+    </div>
+    ${fases.map((f,fi)=>{ const lista = ts.filter(t=>t.f===fi); return `
+      <div class="pe-fase">
+        <div class="pe-fh">
+          <span class="pe-fn num">${fi+1}</span>
+          <input class="pe-fi" value="${esc(f)}" aria-label="Nombre de la etapa" oninput="peFaseNombre(${fi},this.value)">
+          <span class="t-xs flex-shrink-0">${lista.length} tarea${lista.length===1?'':'s'}</span>
+          ${!lista.length && fases.length>1 ? `<button class="pe-ib" title="Quitar etapa" onclick="peFaseBorrar(${fi})">${ico('basura',14,1.8)}</button>`:''}
+        </div>
+        <div class="pe-lista">${lista.map((t,i)=>fila(t,i,lista)).join('') || `<p class="pe-vacia">Sin tareas en esta etapa.</p>`}</div>
+        <button class="pe-add" onclick="peNueva(${fi})">${ico('mas',14,2)} Agregar tarea</button>
+      </div>`; }).join('')}
+    <button class="pe-add-f" onclick="peFaseNueva()">${ico('mas',15,2)} Agregar etapa</button>
+    <div class="pe-barra${procSucio?' on':''}">
+      <span>${procSucio?'Tienes cambios sin guardar':'Todo guardado'}</span>
+      <div class="flex gap-2">
+        ${procSucio?`<button class="btn-g px-4 py-2.5" onclick="peDescartar()">Descartar</button>`:''}
+        <button class="btn-p px-5 py-2.5" ${procSucio?'':'disabled'} onclick="peGuardar()">Guardar cambios</button>
+      </div>
+    </div>`;
+  requestAnimationFrame(moverPastilla);
+}
+// Reordena dentro de la etapa; en la orilla pasa a la etapa de al lado
+window.peMover = function(k, dir){
+  const ts = borr().tareas[procTipo], nf = borr().fases[procTipo].length;
+  const t = ts.find(x=>x.k===k); if(!t) return;
+  const lista = ts.filter(x=>x.f===t.f), i = lista.indexOf(t);
+  if((dir<0 && i===0) || (dir>0 && i===lista.length-1)){
+    const nfa = t.f + dir; if(nfa<0 || nfa>=nf) return;
+    ts.splice(ts.indexOf(t),1); t.f = nfa;
+    const dest = ts.filter(x=>x.f===nfa);
+    if(dir<0){ const ult = dest[dest.length-1]; ts.splice(ult ? ts.indexOf(ult)+1 : ts.length, 0, t); }
+    else { const pri = dest[0]; ts.splice(pri ? ts.indexOf(pri) : ts.length, 0, t); }
+  } else {
+    const otro = lista[i+dir], a = ts.indexOf(t), b = ts.indexOf(otro);
+    [ts[a], ts[b]] = [ts[b], ts[a]];
+  }
+  ordenar(); sucio();
+  requestAnimationFrame(()=> document.getElementById('pe-'+k)?.scrollIntoView({block:'nearest', behavior:'smooth'}));
+};
+function ordenar(){ const ts = borr().tareas[procTipo]; const pos = new Map(ts.map((t,i)=>[t,i])); ts.sort((a,b)=> (a.f-b.f) || (pos.get(a)-pos.get(b))); }
+window.peAbrir = k => { procAbierta = procAbierta===k ? null : k; pintarProceso(); };
+window.peTipo = t => { procTipo = t; procAbierta = null; pintarProceso(); };
+window.peCampo = function(k, c, val, enVivo){
+  const t = borr().tareas[procTipo].find(x=>x.k===k); if(!t) return;
+  if(typeof val==='boolean'){ if(val) t[c]=true; else delete t[c]; }
+  else if(c==='hasta' && !val) delete t.hasta;
+  else t[c] = val;
+  if(c==='d' && !val) delete t.d;
+  if(c==='repetible' && !val) delete t.hasta;
+  procSucio = true;
+  if(enVivo){   // mientras escribe no se repinta (para no perder el cursor): solo el título y la barra
+    const tt = document.querySelector(`#pe-${k} .pe-tt`); if(tt && c==='t') tt.textContent = val || 'Sin nombre';
+    barraSucia(); return;
+  }
+  pintarProceso();
+};
+function barraSucia(){
+  const b = document.querySelector('.pe-barra'); if(!b || b.classList.contains('on')) return;
+  b.classList.add('on'); b.querySelector('span').textContent = 'Tienes cambios sin guardar';
+  const g = b.querySelector('.btn-p'); if(g) g.disabled = false;
+  const d = document.createElement('button'); d.className='btn-g px-4 py-2.5'; d.textContent='Descartar'; d.onclick=()=>peDescartar();
+  g?.parentNode.insertBefore(d, g);
+}
+window.peEtapa = function(k, f){ const ts = borr().tareas[procTipo]; const t = ts.find(x=>x.k===k); if(!t) return; ts.splice(ts.indexOf(t),1); t.f = f; ts.push(t); ordenar(); sucio(); };
+window.pePersona = function(k, u){
+  const t = borr().tareas[procTipo].find(x=>x.k===k); if(!t) return;
+  const p = new Set(t.personas||[]); p.has(u) ? p.delete(u) : p.add(u);
+  if(p.size) t.personas = [...p]; else delete t.personas;
+  sucio();
+};
+window.peNueva = function(fi){
+  const ts = borr().tareas[procTipo], k = nuevoK();
+  const dest = ts.filter(x=>x.f===fi), ult = dest[dest.length-1];
+  ts.splice(ult ? ts.indexOf(ult)+1 : ts.length, 0, { k, f:fi, a:'direccion', t:'Nueva tarea' });
+  procAbierta = k; sucio();
+  requestAnimationFrame(()=>{ const i = document.querySelector(`#pe-${k} .pe-form input`); i?.focus(); i?.select(); i?.scrollIntoView({block:'center', behavior:'smooth'}); });
+};
+window.peBorrar = function(k){
+  const ts = borr().tareas[procTipo], t = ts.find(x=>x.k===k); if(!t) return;
+  const n = usoTarea(k);
+  if(!confirm(`¿Borrar "${t.t}"?${n?`\n\nYa está marcada en ${n} carro${n>1?'s':''}: ese avance deja de contar.`:''}`)) return;
+  ts.splice(ts.indexOf(t),1);
+  ts.forEach(x=>{ if(x.hasta===k) delete x.hasta; });
+  procAbierta = null; sucio();
+};
+window.peFaseNombre = (fi, v) => { borr().fases[procTipo][fi] = v; procSucio = true; barraSucia(); };
+window.peFaseNueva = () => { borr().fases[procTipo].push('Nueva etapa'); sucio(); };
+window.peFaseBorrar = function(fi){
+  const B = borr(); if(B.tareas[procTipo].some(t=>t.f===fi)) return;
+  B.fases[procTipo].splice(fi,1); B.tareas[procTipo].forEach(t=>{ if(t.f>fi) t.f--; }); sucio();
+};
+window.peDescartar = () => { if(!confirm('¿Descartar los cambios que no guardaste?')) return; procBorr = null; procSucio = false; procAbierta = null; pintarProceso(); };
+window.peGuardar = async function(){
+  const B = borr();
+  for(const tipo of ['Encargo','Stock']){
+    if(!B.tareas[tipo].length){ toast(`${tipo} se quedaría sin tareas.`,'warn'); return; }
+    if(B.fases[tipo].some(f=>!String(f).trim())){ toast('Hay una etapa sin nombre.','warn'); return; }
+    const vacia = B.tareas[tipo].find(t=>!String(t.t).trim()); if(vacia){ procTipo = tipo; procAbierta = vacia.k; pintarProceso(); toast('Hay una tarea sin nombre.','warn'); return; }
+  }
+  const limpio = JSON.parse(JSON.stringify(B));
+  ['Encargo','Stock'].forEach(tp => limpio.tareas[tp] = limpio.tareas[tp].map(t=>{ const o={}; Object.keys(t).forEach(c=>{ if(t[c]!==undefined && t[c]!=='' && t[c]!==false) o[c]=t[c]; }); o.t=String(o.t).trim(); return o; }));
+  const btn = document.querySelector('.pe-barra .btn-p'); if(btn){ btn.disabled = true; btn.textContent = 'Guardando…'; }
+  try{
+    await setDoc(doc(db,"config","proceso"), { ...limpio, fuente:'control', actualizado:new Date().toISOString(), por:yo.usuario });
+    procSucio = false; procBorr = null; procAbierta = null;
+    toast('Tareas guardadas. Ya le aparecen así a todo el equipo.');
+    pintarProceso();
+  }catch(e){
+    toast('No se pudo guardar: '+(e.code||e.message), 'err');
+    if(btn){ btn.disabled = false; btn.textContent = 'Guardar cambios'; }
+  }
+};
+window.addEventListener('beforeunload', e=>{ if(procSucio){ e.preventDefault(); e.returnValue=''; } });
+
 function moverPastilla(){
-  const cont = document.querySelector('.seg-f'); const on = cont && cont.querySelector('.tab.on');
-  const p = cont && cont.querySelector('.seg-pill'); if(!p || !on) return;
-  p.style.width = on.offsetWidth + 'px'; p.style.transform = `translateX(${on.offsetLeft}px)`;
+  document.querySelectorAll('.seg-f').forEach(cont=>{
+    const on = cont.querySelector('.tab.on'), p = cont.querySelector('.seg-pill'); if(!p || !on || !on.offsetWidth) return;
+    p.style.width = on.offsetWidth + 'px'; p.style.transform = `translateX(${on.offsetLeft}px)`;
+  });
 }
 window.addEventListener('resize', moverPastilla);
 setTimeout(moverPastilla, 60);

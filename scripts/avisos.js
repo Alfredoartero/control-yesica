@@ -72,6 +72,19 @@ try{
   }
 }catch(e){ console.log("Sin proceso.json, uso la lista de respaldo:", e.message); }
 
+// Si un admin editó las tareas en el control (Equipo → Tareas del proceso), mandan esas
+async function cargarProcesoFirestore(){
+  try{
+    const s = await db.doc("config/proceso").get();
+    const p = s.exists ? s.data() : null;
+    if(p?.tareas?.Encargo?.length && p?.tareas?.Stock?.length){
+      T_ENC.splice(0, T_ENC.length, ...p.tareas.Encargo);
+      T_STK.splice(0, T_STK.length, ...p.tareas.Stock);
+      console.log(`Tareas editadas en el control: ${T_ENC.length} encargo · ${T_STK.length} stock`);
+    }
+  }catch(e){ console.log("No se pudo leer config/proceso:", e.message); }
+}
+
 const defT = v => v.tipoProceso === "Encargo" ? T_ENC : T_STK;
 
 // ── Configuración por defecto (la web puede cambiarla y se guarda en Firestore) ──
@@ -119,6 +132,7 @@ function horaSV(){
 }
 
 async function main(){
+  await cargarProcesoFirestore();
   const cfgRef = db.doc("config/notificaciones");
   const cfgSnap = await cfgRef.get();
   const cfg = { ...DEF, ...(cfgSnap.exists ? cfgSnap.data() : {}) };
