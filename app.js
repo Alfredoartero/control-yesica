@@ -223,6 +223,7 @@ function toast(msg, tipo="ok"){
 
 /* ════════ PERMISOS ════════ */
 const puede = area => !!yo && (yo.admin || (yo.areas||[]).includes(area));
+const verFin = () => !!yo && (yo.admin || yo.verFin===true);      // costos, ganancias y panel financiero
 const puedeCrear = () => !!yo && (yo.admin || yo.crear===true);   // agregar carros / clientes nuevos
 function quienes(x){
   const n = typeof x==='object' ? resp(x).map(nombreU)
@@ -298,6 +299,9 @@ onAuthStateChanged(auth, async user=>{
     document.getElementById('dRol').style.color = "var(--t3)";
     document.getElementById('tbUsers').classList.toggle('hidden', !yo.admin);
     document.getElementById('tbNuevo').classList.toggle('hidden', !puedeCrear());
+    document.getElementById('tbFin').classList.toggle('hidden', !verFin());
+    document.body.classList.toggle('sin-fin', !verFin());
+    if(!verFin() && !document.getElementById('pgFin').classList.contains('hidden')) ir('flota');
     if(!puedeCrear() && !document.getElementById('pgNuevo').classList.contains('hidden')) ir('flota');
     pintarUsers(); pintarTodo();
     if(!suscrito){
@@ -349,6 +353,7 @@ let TITULOS = {   // [ceja, título, palabra en rosa, subtítulo]
   usuarios: ["Equipo",        "Equipo y",     "proceso",     "Las tareas de cada proceso, quién las hace, y los permisos de cada persona."],
 };
 window.ir = function(p){
+  if(p==='finanzas' && yo && !verFin()){ toast("No tienes permiso para ver finanzas.","warn"); p='flota'; }
   if(p==='nuevo' && yo && !puedeCrear()){ toast("No tienes permiso para agregar carros.","warn"); p='flota'; }
   if(p==='finanzas') pintarFinanzas();
   if(p==='usuarios') setTimeout(()=>{ pintarProceso(); moverPastilla(); }, 0);
@@ -906,7 +911,7 @@ function pintarArchivo(){
     <td data-l="Cliente" class="p-4" style="color:var(--cyan)">${esc(v.nombreCliente)||"—"}</td>
     <td data-l="VIN" class="p-4 t-xs" style="color:var(--t3)">${esc(v.vin)}</td>
     <td data-l="Avance" class="p-4 text-center num font-semibold" style="color:var(--cyan)">${progreso(v)}%</td>
-    <td data-l="Costo / Venta" class="p-4 text-right num font-semibold">${money(v.costo_subasta)} / <span style="color:var(--brand)">${money(v.precio_venta)}</span></td>
+    <td data-l="${verFin()?'Costo / Venta':'Venta'}" class="p-4 text-right num font-semibold">${verFin()?money(v.costo_subasta)+' / ':''}<span style="color:var(--brand)">${money(v.precio_venta)}</span></td>
     <td data-l="" class="p-4 text-right whitespace-nowrap">
       <button onclick="archivar('${v.id}',false)" class="btn-g px-2.5 py-1.5 rounded-lg">Reactivar</button>
       ${yo?.admin ? `<button onclick="eliminar('${v.id}')" class="btn-g px-2.5 py-1.5 rounded-lg ml-1.5"
@@ -935,7 +940,10 @@ function pintarUsers(){
           <span class="pp-tg ${tg?'ok':''}" title="${tg?'Recibe avisos por Telegram':'No ha vinculado Telegram'}">Telegram ${tg?'✓':'—'}</span>
         </div>
       </div>
-      ${d.admin ? '' : `<label class="pp-crear"><input type="checkbox" ${d.crear?'checked':''} onchange="togCrear('${u}',this.checked)"><span class="pe-sw-b"></span><span><b>Puede agregar carros</b><small>Registrar clientes y carros nuevos en "Nueva unidad"</small></span></label>`}
+      ${d.admin ? '' : `<div class="pp-perms">
+        <label class="pp-crear"><input type="checkbox" ${d.crear?'checked':''} onchange="togPerm('${u}','crear',this.checked)"><span class="pe-sw-b"></span><span><b>Agregar carros</b><small>Ve "Nueva unidad"</small></span></label>
+        <label class="pp-crear"><input type="checkbox" ${d.verFin?'checked':''} onchange="togPerm('${u}','verFin',this.checked)"><span class="pe-sw-b"></span><span><b>Ver finanzas</b><small>Costos, ganancias y panel</small></span></label>
+      </div>`}
       <div class="pp-areas">${AREAS.map(a=>{ const on = areas.includes(a.k);
         return `<button type="button" class="pp-a${on?' on':''}" onclick="togArea('${u}','${a.k}',${!on})" aria-pressed="${on}">${areaI(a.k,14)}<span>${esc(a.n)}</span></button>`; }).join('')}</div>
     </div>`;
@@ -1134,7 +1142,7 @@ window.abrirDetalle = function(id, silencioso){
         <div class="campo col-2"><label for="edVeh">Año, marca y modelo</label><input id="edVeh" class="inp" value="${esc(v.vehiculo)}" placeholder="2019 Toyota Corolla"></div>
         <div class="campo"><label for="edVin">VIN o lote</label><input id="edVin" class="inp" value="${esc(v.vin)}" style="text-transform:uppercase" autocomplete="off"></div>
         <div class="campo"><label for="edPlat">Subasta</label><select id="edPlat" class="inp">${opcPlat(v.plataforma||"Copart")}</select></div>
-        <div class="campo"><label for="edCosto">Costo de compra ($)</label><input id="edCosto" type="number" inputmode="decimal" class="inp" value="${Number(v.costo_subasta||0)||""}" placeholder="0"></div>
+        ${verFin()?`<div class="campo"><label for="edCosto">Costo de compra ($)</label><input id="edCosto" type="number" inputmode="decimal" class="inp" value="${Number(v.costo_subasta||0)||""}" placeholder="0"></div>`:''}
         <div class="campo"><label for="edVenta">Precio de venta ($)</label><input id="edVenta" type="number" inputmode="decimal" class="inp" value="${Number(v.precio_venta||0)||""}" placeholder="0"></div>
       </div>`;
   const camposCli = `
@@ -1201,15 +1209,15 @@ window.abrirDetalle = function(id, silencioso){
         <div><p class="t-lbl">Cobrado</p><p class="num text-[17px] font-semibold mt-0.5" style="color:var(--ok)">${money(pagado(v))}</p></div>
         ${Number(v.precio_venta||0) ? `
         <div><p class="t-lbl">Falta cobrar</p><p class="num text-[17px] font-semibold mt-0.5" style="color:${saldo(v)>0?'var(--warn)':'var(--t2)'}">${money(saldo(v))}</p></div>
-        <div><p class="t-lbl">Ganancia</p><p class="num text-[17px] font-semibold mt-0.5" style="color:${(Number(v.precio_venta||0)-Number(v.costo_subasta||0))>=0?'var(--brand-light)':'var(--danger)'}">${money(Number(v.precio_venta||0)-Number(v.costo_subasta||0))}</p></div>`
+        ${verFin()?`<div><p class="t-lbl">Ganancia</p><p class="num text-[17px] font-semibold mt-0.5" style="color:${(Number(v.precio_venta||0)-Number(v.costo_subasta||0))>=0?'var(--brand-light)':'var(--danger)'}">${money(Number(v.precio_venta||0)-Number(v.costo_subasta||0))}</p></div>`:''}`
         : `<div style="grid-column:span 2"><p class="t-lbl">Precio de venta</p><p class="t-sm mt-1" style="color:var(--t2)">Por definir · se pone al asignar el carro</p></div>`}
       </div>
 
       <details class="plegable">
-        <summary><span class="flex-1">Pagos, costo y precio</span><span class="t-xs">${(v.abonos||[]).length} abono${(v.abonos||[]).length===1?'':'s'}</span><span class="fase-chev">${ico("flecha",14,1.8)}</span></summary>
+        <summary><span class="flex-1">${verFin()?'Pagos, costo y precio':'Pagos y precio'}</span><span class="t-xs">${(v.abonos||[]).length} abono${(v.abonos||[]).length===1?'':'s'}</span><span class="fase-chev">${ico("flecha",14,1.8)}</span></summary>
         <div class="pt-3 space-y-3">
           <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-            <div class="deep rounded-xl p-3"><p class="t-lbl">Costo</p><p class="num text-base font-semibold mt-1">${money(v.costo_subasta)}</p></div>
+            ${verFin()?`<div class="deep rounded-xl p-3"><p class="t-lbl">Costo</p><p class="num text-base font-semibold mt-1">${money(v.costo_subasta)}</p></div>`:''}
             <div class="deep rounded-xl p-3"><p class="t-lbl">Precio venta</p>
               <div class="campo-num mt-1"><span>$</span><input type="number" value="${Number(v.precio_venta||0)}" onchange="setVenta('${v.id}',this.value)" class="num"></div></div>
             <div class="deep rounded-xl p-3"><p class="t-lbl">Registrada</p><p class="t-sm mt-1.5" style="color:var(--t1)">${fch(v.fecha_registro)||"—"}</p></div>
@@ -1251,7 +1259,8 @@ window.guardarDatos = function(id){
   const datos = {};
   if(document.getElementById('edVeh')){
     datos.vehiculo = g('edVeh'); datos.vin = g('edVin').toUpperCase(); datos.plataforma = g('edPlat') || "Copart";
-    datos.costo_subasta = Number(g('edCosto'))||0; datos.precio_venta = Number(g('edVenta'))||0;
+    if(document.getElementById('edCosto')) datos.costo_subasta = Number(g('edCosto'))||0;
+    datos.precio_venta = Number(g('edVenta'))||0;
   }
   if(document.getElementById('edCli')){
     datos.nombreCliente = g('edCli'); datos.telefonoCliente = g('edTel'); datos.deseoCliente = g('edDeseo');
@@ -1371,6 +1380,12 @@ window.togArea = async function(u, k, on){
   catch(e){ toast("Error al guardar permiso.","err"); }
 };
 
+window.togPerm = async function(u, campo, on){
+  if(!yo?.admin) return;
+  const txt = { crear:["ya puede","ya no puede","agregar carros"], verFin:["ya puede","ya no puede","ver finanzas"] }[campo];
+  try{ await setDoc(doc(db,"usuarios",u), { [campo]:on }, { merge:true }); toast(`${nombreU(u)}: ${on?txt[0]:txt[1]} ${txt[2]}`); }
+  catch(e){ toast("Error al guardar permiso.","err"); }
+};
 window.togCrear = async function(u, on){
   if(!yo?.admin) return;
   try{ await setDoc(doc(db,"usuarios",u), { crear:on }, { merge:true }); toast(`${nombreU(u)}: ${on?"ya puede":"ya no puede"} agregar carros`); }

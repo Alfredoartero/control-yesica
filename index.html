@@ -30,7 +30,7 @@ try{ history.scrollRestoration='manual'; }catch(e){}
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=18">
+<link rel="stylesheet" href="styles.css?v=19">
 </head>
 <body class="min-h-screen pb-20 selection:bg-pink-600 selection:text-white">
 
@@ -125,7 +125,7 @@ try{ history.scrollRestoration='manual'; }catch(e){}
   <div id="statsRow" class="stats-web">
     <div><p id="sTot" class="sw-n">0</p><p class="sw-l">unidades activas</p><p id="sMix" class="sw-s">&mdash;</p></div>
     <div><p id="sPro" class="sw-n">0%</p><p class="sw-l">avance promedio</p><div class="bar mt-2 mx-auto" style="max-width:140px"><i id="sProBar" style="width:0%"></i></div></div>
-    <div><p id="sSal" class="sw-n">$0</p><p class="sw-l">por cobrar</p><p id="sCobrado" class="sw-s">&mdash;</p></div>
+    <div class="solo-fin"><p id="sSal" class="sw-n">$0</p><p class="sw-l">por cobrar</p><p id="sCobrado" class="sw-s">&mdash;</p></div>
     <div><p id="sMias" class="sw-n rosa">0</p><p class="sw-l">tareas tuyas</p><p class="sw-s">en todas las unidades</p></div>
   </div>
 
@@ -214,7 +214,7 @@ try{ history.scrollRestoration='manual'; }catch(e){}
           <div class="campo col-2"><label for="fVeh">Año, marca y modelo</label><input id="fVeh" class="inp" placeholder="2019 Toyota Corolla"></div>
           <div class="campo"><label for="fVin">VIN o lote</label><input id="fVin" class="inp" style="text-transform:uppercase" autocomplete="off"></div>
           <div class="campo"><label for="fPlat">Subasta</label><select id="fPlat" class="inp"><option>Copart</option><option>IAAI</option><option>ADESA</option><option>Manheim</option><option>Otro</option></select></div>
-          <div class="campo"><label for="fCosto">Costo de compra ($)</label><input type="number" id="fCosto" class="inp" placeholder="0" inputmode="decimal"></div>
+          <div class="campo solo-fin"><label for="fCosto">Costo de compra ($)</label><input type="number" id="fCosto" class="inp" placeholder="0" inputmode="decimal"></div>
           <div class="campo"><label for="fVenta">Precio de venta ($)</label><input type="number" id="fVenta" class="inp" placeholder="0" inputmode="decimal"></div>
           <div class="campo col-2"><span class="lbl">Foto del carro <em class="t-xs" style="font-style:normal">(opcional)</em></span>
             <label class="foto-in"><input type="file" id="fFoto" accept="image/*" class="hidden" onchange="verFotoNueva(this)">
@@ -307,7 +307,7 @@ try{ history.scrollRestoration='manual'; }catch(e){}
       </div>
       <div class="pp-ayuda">
         <div><b>Admin</b><span>Alfredo y Yesica. Ven y editan todo: tareas, permisos, borrar carros.</span></div>
-        <div><b>Agregar carros</b><span>Solo quien tenga encendido "Puede agregar carros" ve <i>Nueva unidad</i>. Los admin siempre pueden.</span></div>
+        <div><b>Agregar carros y ver finanzas</b><span>Se encienden por persona. Sin "Ver finanzas" no ve el panel financiero, ni costos ni ganancias; sí ve el precio de venta y lo que debe el cliente. Los admin siempre pueden todo.</span></div>
         <div><b>Áreas</b><span>Lo que cada quien puede marcar. Las tareas sin nombre asignado le salen a todos los de su área.</span></div>
         <div><b>A su nombre</b><span>Si en <i>Tareas del proceso</i> le pones personas a una tarea, solo a ellas les sale y les llega el aviso.</span></div>
       </div>
@@ -321,6 +321,6 @@ try{ history.scrollRestoration='manual'; }catch(e){}
 
 <div id="modal" class="hidden"></div>
 
-<script type="module" src="app.js?v=18"></script>
+<script type="module" src="app.js?v=19"></script>
 </body>
 </html>
