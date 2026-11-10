@@ -1320,3 +1320,4 @@ body.sin-fin .solo-fin{display:none!important}
 .fm-bars.hidden{display:none}
 .fm-vacio{margin-top:16px;padding:14px 16px;border-radius:16px;border:1px dashed var(--line-2);font-size:13px;color:var(--t3);line-height:1.5}
 .fm-add .inp{height:44px;padding:0 14px;border-radius:12px}
+.fm-add>*{min-width:0} .fm-add .inp{width:100%}
