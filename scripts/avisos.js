@@ -19,48 +19,83 @@ const T_ENC = [   // respaldo: el proceso real viene del editor (config/proceso)
   {"k": "e05", "f": 0, "a": "marketing", "t": "Enviar opciones al cliente", "d": "De lunes a viernes hasta que se le gane una", "multi": true, "repetible": true, "hasta": "e06", "personas": ["cesar"]},
   {"k": "e06", "f": 1, "a": "compras", "t": "Se ganó el vehículo en subasta", "personas": ["alfre", "yesica"]},
   {"k": "e07", "f": 1, "a": "direccion", "t": "Registrar vehículo en sistema", "d": "Vehículo, costo y precio de venta", "personas": ["alfre", "yesica", "leslie"]},
+  {"k": "e08", "f": 1, "a": "compras", "t": "Pagar la subasta (Copart / IAA)", "d": "Evitar storage. Adjuntar comprobante del pago", "foto": true},
   {"k": "e11", "f": 1, "a": "finanzas", "t": "Confirmar pago del 50% de enganche", "d": "Con comprobante en foto, o confirmar recibido si es efectivo", "pago": true, "foto": true},
   {"k": "e12", "f": 1, "a": "finanzas", "t": "Facturar el abono del 50%"},
-  {"k": "e08", "f": 1, "a": "compras", "t": "Pagar la subasta (Copart / IAA)", "d": "Evitar storage. Adjuntar comprobante del pago", "foto": true},
-  {"k": "e09", "f": 1, "a": "naviera", "t": "Asignar a naviera"},
   {"k": "e13", "f": 1, "a": "legal", "t": "Crear promesa de venta"},
+  {"k": "e09", "f": 1, "a": "naviera", "t": "Asignar a naviera"},
   {"k": "e10", "f": 1, "a": "naviera", "t": "Brindar estatus al cliente", "d": "Constante, una vez por semana hasta que venga", "repetible": true, "hasta": "e14"},
   {"k": "e14", "f": 2, "a": "aduana", "t": "Marcar llegada del vehículo al país"},
   {"k": "e24", "f": 2, "a": "ventas", "t": "Avisar al cliente que su vehículo llegó al país", "d": "Mensaje al cliente apenas arriba, con los siguientes pasos y lo que falta pagar"},
-  {"k": "e19", "f": 2, "a": "finanzas", "t": "Cliente cancela el restante", "d": "Siempre con comprobante", "pago": true, "foto": true},
-  {"k": "e20", "f": 2, "a": "finanzas", "t": "Facturar el monto pagado"},
-  {"k": "e15", "f": 2, "a": "marketing", "t": "Subir el carro como publicidad", "d": "Cada quien en su canal (Facebook, grupo de WhatsApp, etc.)", "multi": true},
   {"k": "e16", "f": 2, "a": "finanzas", "t": "Pagar a la naviera", "d": "Adjuntar comprobante del pago", "foto": true},
   {"k": "e17", "f": 2, "a": "aduana", "t": "Cancelar impuestos de aduana", "d": "Adjuntar comprobante / DUCA", "foto": true},
-  {"k": "e18", "f": 2, "a": "aduana", "t": "Revisión mecánica", "d": "Subir fotos del estado del vehículo", "foto": true},
-  {"k": "e22", "f": 2, "a": "legal", "t": "Crear compraventa y firmar contrato", "d": "Adjuntar foto del contrato firmado por ambas partes", "foto": true},
   {"k": "e21", "f": 2, "a": "aduana", "t": "Liberación del vehículo"},
+  {"k": "e18", "f": 2, "a": "aduana", "t": "Revisión mecánica", "d": "Subir fotos del estado del vehículo", "foto": true},
+  {"k": "e19", "f": 2, "a": "finanzas", "t": "Cliente cancela el restante", "d": "Siempre con comprobante", "pago": true, "foto": true},
+  {"k": "e20", "f": 2, "a": "finanzas", "t": "Facturar el monto pagado"},
+  {"k": "e22", "f": 2, "a": "legal", "t": "Crear compraventa y firmar contrato", "d": "Adjuntar foto del contrato firmado por ambas partes", "foto": true},
   {"k": "e25", "f": 2, "a": "ventas", "t": "Entregar el vehículo al cliente", "d": "Coordinar la entrega y dejar constancia con foto", "foto": true},
+  {"k": "e15", "f": 2, "a": "marketing", "t": "Publicar la entrega del carro", "d": "Foto o video de la entrega, cada quien en su canal", "multi": true, "opc": true},
   {"k": "e23", "f": 2, "a": "legal", "t": "Hacer prórroga de compraventa", "opc": true}
 ];
 const T_STK = [   // respaldo: el proceso real viene del editor (config/proceso)
   {"k": "s01", "f": 0, "a": "direccion", "t": "Registrar coste e introducción del vehículo"},
-  {"k": "s02", "f": 1, "a": "marketing", "t": "Publicidad del vehículo", "d": "Cada quien en su canal (Facebook, grupo de WhatsApp, etc.)", "multi": true, "personas": ["nehe", "leslie", "alfre"]},
-  {"k": "s03", "f": 1, "a": "compras", "t": "Pagos USA (Copart / IAA)", "d": "Evitar storage. Adjuntar comprobante del pago", "foto": true},
-  {"k": "s04", "f": 1, "a": "naviera", "t": "Asignación de naviera"},
+  {"k": "s03", "f": 1, "a": "compras", "t": "Pagar la subasta (Copart / IAA)", "d": "Evitar storage. Adjuntar comprobante del pago", "foto": true},
+  {"k": "s04", "f": 1, "a": "naviera", "t": "Asignar a naviera"},
   {"k": "s05", "f": 2, "a": "direccion", "t": "Definir precio a cliente", "d": "Podría darse en menos"},
-  {"k": "s06", "f": 2, "a": "ventas", "t": "Venta o asignación a cliente"},
-  {"k": "s07", "f": 2, "a": "finanzas", "t": "Pago de pre-reserva / reserva (≥50%)", "d": "Con comprobante, o confirmar recibido si es efectivo", "pago": true, "foto": true},
-  {"k": "s08", "f": 2, "a": "finanzas", "t": "Facturar el abono recibido"},
-  {"k": "s09", "f": 2, "a": "legal", "t": "Creación de promesa de venta"},
-  {"k": "s10", "f": 2, "a": "naviera", "t": "Control de estatus al cliente", "d": "Semanal hasta que llegue", "repetible": true, "hasta": "s11"},
-  {"k": "s11", "f": 3, "a": "aduana", "t": "Arribo al país"},
-  {"k": "s19", "f": 3, "a": "ventas", "t": "Avisar al cliente que el vehículo llegó", "d": "Solo si ya está asignado a un cliente"},
-  {"k": "s16", "f": 3, "a": "finanzas", "t": "Cancelación total (pago final)", "d": "Adjuntar comprobante del pago final", "pago": true, "foto": true},
-  {"k": "s15", "f": 3, "a": "finanzas", "t": "Facturación del restante"},
-  {"k": "s17", "f": 3, "a": "legal", "t": "Compraventa (firma contrato final)", "d": "Adjuntar foto del contrato firmado", "foto": true},
-  {"k": "nmw6nog5q", "f": 3, "a": "ventas", "t": "PAGAR NAVIERA", "d": "Salió de una idea del esquema"},
-  {"k": "s13", "f": 3, "a": "aduana", "t": "Revisión mecánica", "d": "Subir fotos del estado del vehículo", "foto": true},
-  {"k": "s12", "f": 3, "a": "aduana", "t": "Pago de impuestos en aduana", "d": "Adjuntar comprobante / DUCA", "foto": true},
+  {"k": "s02", "f": 2, "a": "marketing", "t": "Publicidad del vehículo", "d": "Cada quien en su canal (Facebook, grupo de WhatsApp, etc.)", "multi": true, "personas": ["nehe", "leslie", "alfre"]},
+  {"k": "s10", "f": 2, "a": "naviera", "t": "Brindar estatus al cliente", "d": "Solo si se vendió antes de llegar: una vez por semana hasta que venga", "repetible": true, "hasta": "s11", "opc": true},
+  {"k": "s11", "f": 3, "a": "aduana", "t": "Marcar llegada del vehículo al país"},
+  {"k": "nmw6nog5q", "f": 3, "a": "finanzas", "t": "Pagar a la naviera", "d": "Adjuntar comprobante del pago", "foto": true},
+  {"k": "s12", "f": 3, "a": "aduana", "t": "Cancelar impuestos de aduana", "d": "Adjuntar comprobante / DUCA", "foto": true},
   {"k": "s14", "f": 3, "a": "aduana", "t": "Liberación del vehículo"},
-  {"k": "s20", "f": 3, "a": "ventas", "t": "Entregar el vehículo al cliente", "d": "Coordinar la entrega y dejar constancia con foto", "foto": true},
-  {"k": "s18", "f": 3, "a": "legal", "t": "Crear prórroga de compraventa", "opc": true}
+  {"k": "s13", "f": 3, "a": "aduana", "t": "Revisión mecánica", "d": "Subir fotos del estado del vehículo", "foto": true},
+  {"k": "s06", "f": 4, "a": "ventas", "t": "Venta o asignación a cliente"},
+  {"k": "s07", "f": 4, "a": "finanzas", "t": "Pago de pre-reserva / reserva (≥50%)", "d": "Con comprobante, o confirmar recibido si es efectivo", "pago": true, "foto": true},
+  {"k": "s08", "f": 4, "a": "finanzas", "t": "Facturar el abono recibido"},
+  {"k": "s09", "f": 4, "a": "legal", "t": "Crear promesa de venta"},
+  {"k": "s19", "f": 4, "a": "ventas", "t": "Avisar al cliente que su vehículo llegó al país", "d": "Solo si se vendió antes de llegar", "opc": true},
+  {"k": "s16", "f": 4, "a": "finanzas", "t": "Cliente cancela el restante", "d": "Adjuntar comprobante del pago final", "pago": true, "foto": true},
+  {"k": "s15", "f": 4, "a": "finanzas", "t": "Facturar el monto pagado"},
+  {"k": "s17", "f": 4, "a": "legal", "t": "Crear compraventa y firmar contrato", "d": "Adjuntar foto del contrato firmado", "foto": true},
+  {"k": "s20", "f": 4, "a": "ventas", "t": "Entregar el vehículo al cliente", "d": "Coordinar la entrega y dejar constancia con foto", "foto": true},
+  {"k": "s18", "f": 4, "a": "legal", "t": "Hacer prórroga de compraventa", "opc": true}
 ];
+
+/* Orden lógico del proceso (versión 2): primero lo urgente de dinero y logística, la venta no tapa la aduana.
+   Conserva las personas y las tareas propias que ya tenga el proceso; solo reordena y corrige nombres. */
+const PROC_V = 2;
+function ajustarProcesoV2(p){
+  const q = JSON.parse(JSON.stringify(p));
+  const plan = {
+    Encargo:{ orden:[['e01',0],['e02',0],['e03',0],['e04',0],['e05',0],
+        ['e06',1],['e07',1],['e08',1],['e11',1],['e12',1],['e13',1],['e09',1],['e10',1],
+        ['e14',2],['e24',2],['e16',2],['e17',2],['e21',2],['e18',2],['e19',2],['e20',2],['e22',2],['e25',2],['e15',2],['e23',2]],
+      cambios:{ e15:{ t:"Publicar la entrega del carro", d:"Foto o video de la entrega, cada quien en su canal", opc:true } } },
+    Stock:{ fases:["Coste","Compra y envío","Precio y anuncio","Aduana","Venta y entrega"],
+      orden:[['s01',0],['s03',1],['s04',1],['s05',2],['s02',2],['s10',2],
+        ['s11',3],['nmw6nog5q',3],['s12',3],['s14',3],['s13',3],
+        ['s06',4],['s07',4],['s08',4],['s09',4],['s19',4],['s16',4],['s15',4],['s17',4],['s20',4],['s18',4]],
+      cambios:{ s03:{ t:"Pagar la subasta (Copart / IAA)" }, s04:{ t:"Asignar a naviera" },
+        s10:{ t:"Brindar estatus al cliente", d:"Solo si se vendió antes de llegar: una vez por semana hasta que venga", opc:true },
+        s11:{ t:"Marcar llegada del vehículo al país" },
+        nmw6nog5q:{ t:"Pagar a la naviera", a:"finanzas", d:"Adjuntar comprobante del pago", foto:true },
+        s12:{ t:"Cancelar impuestos de aduana" }, s09:{ t:"Crear promesa de venta" },
+        s19:{ t:"Avisar al cliente que su vehículo llegó al país", d:"Solo si se vendió antes de llegar", opc:true },
+        s16:{ t:"Cliente cancela el restante" }, s15:{ t:"Facturar el monto pagado" },
+        s17:{ t:"Crear compraventa y firmar contrato" }, s18:{ t:"Hacer prórroga de compraventa" } } }
+  };
+  for(const tipo of ['Encargo','Stock']){
+    const pl = plan[tipo], ts = q.tareas?.[tipo]; if(!Array.isArray(ts)) continue;
+    const by = new Map(ts.map(t=>[t.k,t])), out = [];
+    pl.orden.forEach(([k,f])=>{ const t = by.get(k); if(!t) return; t.f = f; Object.assign(t, pl.cambios[k]||{}); out.push(t); by.delete(k); });
+    by.forEach(t=>{ let i = -1; out.forEach((x,j)=>{ if(x.f<=t.f) i = j; }); out.splice(i+1, 0, t); });   // tareas propias: al final de su etapa
+    q.tareas[tipo] = out;
+    if(pl.fases){ q.fases = q.fases || {}; q.fases[tipo] = pl.fases; }
+  }
+  q.version = PROC_V;
+  return q;
+}
 
 // Tareas del tablero (proceso.json). Si falta o viene mal, se queda la lista de arriba.
 try{
@@ -77,7 +112,8 @@ try{
 async function cargarProcesoFirestore(){
   try{
     const s = await db.doc("config/proceso").get();
-    const p = s.exists ? s.data() : null;
+    let p = s.exists ? s.data() : null;
+    if(p?.tareas && (p.version||0) < PROC_V) p = ajustarProcesoV2(p);
     if(p?.tareas?.Encargo?.length && p?.tareas?.Stock?.length){
       T_ENC.splice(0, T_ENC.length, ...p.tareas.Encargo.filter(t => !t.archivada));
       T_STK.splice(0, T_STK.length, ...p.tareas.Stock.filter(t => !t.archivada));
