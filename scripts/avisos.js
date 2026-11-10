@@ -142,7 +142,29 @@ function horaSV(){
   }).format(new Date()));
 }
 
+// Reinicios de contraseña que pidió un admin desde el control (colección "cuentas")
+async function reiniciarClaves(){
+  try{
+    const sn = await db.collection("cuentas").get();
+    for(const d of sn.docs){
+      const { clave } = d.data() || {};
+      try{
+        if(!clave || String(clave).length < 6) throw new Error("clave muy corta");
+        const email = d.id + "@yesica.local";
+        let user;
+        try{ user = await admin.auth().getUserByEmail(email); }
+        catch(e){ user = await admin.auth().createUser({ email, password: String(clave) }); }
+        await admin.auth().updateUser(user.uid, { password: String(clave) });
+        await db.doc("usuarios/" + d.id).set({ debeCambiar: true }, { merge: true });
+        console.log("Contraseña reiniciada:", d.id);
+      }catch(e){ console.log("No se pudo reiniciar", d.id, e.message); }
+      await d.ref.delete();
+    }
+  }catch(e){ console.log("Sin reinicios pendientes:", e.message); }
+}
+
 async function main(){
+  await reiniciarClaves();
   await cargarProcesoFirestore();
   const cfgRef = db.doc("config/notificaciones");
   const cfgSnap = await cfgRef.get();

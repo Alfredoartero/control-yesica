@@ -1,0 +1,67 @@
+rules_version = '2';
+// Reglas del Centro de Control · Importaciones Yesica (proyecto sistema-yesica)
+// Pegar en: Firebase → Firestore Database → Reglas → Publicar
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signed()   { return request.auth != null && request.auth.token.email != null
+                                 && request.auth.token.email.matches('.*@yesica[.]local$'); }
+    function uid()      { return request.auth.token.email.split('@')[0]; }
+    function miembro()  { return signed() && exists(/databases/$(database)/documents/usuarios/$(uid())); }
+    function yo()       { return get(/databases/$(database)/documents/usuarios/$(uid())).data; }
+    function esAdmin()  { return miembro() && yo().get('admin', false) == true; }
+    function verFin()   { return miembro() && (yo().get('admin', false) == true || yo().get('verFin', false) == true); }
+    function crear()    { return miembro() && (yo().get('admin', false) == true || yo().get('crear', false) == true); }
+    function cobros()   { return miembro() && (yo().get('admin', false) == true || yo().get('cobros', false) == true
+                                 || yo().get('verFin', false) == true || ('finanzas' in yo().get('areas', []))); }
+    function cambia()   { return request.resource.data.diff(resource.data).affectedKeys(); }
+
+    // Personas y permisos: solo un admin los cambia. Cada quien solo toca su Telegram y su aviso de contraseña.
+    match /usuarios/{u} {
+      allow read: if miembro();
+      allow create: if esAdmin() || (signed() && u == uid() && (u == 'alfre' || u == 'yesica'));
+      allow update: if esAdmin()
+                    || (miembro() && u == uid()
+                        && cambia().hasOnly(['telegram', 'telegramNombre', 'tgCode', 'debeCambiar'])
+                        && request.resource.data.get('debeCambiar', false) == false);
+      allow delete: if false;
+    }
+
+    // Carros: todos los ven y marcan tareas; editar datos requiere permiso; borrar, solo admin.
+    match /vehiculos/{id} {
+      allow read: if miembro();
+      allow create: if crear();
+      allow update: if esAdmin() || crear()
+                    || (miembro() && cambia().hasOnly(['tareas', 'eta', 'foto']))
+                    || (cobros() && cambia().hasOnly(['tareas', 'eta', 'foto', 'abonos']));
+      allow delete: if esAdmin();
+    }
+
+    // Dinero de cada carro (costos, gastos, montos, cotización): solo quien tiene "Ver finanzas".
+    // Quien hace un pago puede ANOTAR su monto aunque no pueda ver los demás números.
+    match /finanzas/{id} {
+      allow read: if verFin();
+      allow create: if verFin() || (miembro() && request.resource.data.keys().hasOnly(['montos']));
+      allow update: if verFin() || (miembro() && cambia().hasOnly(['montos']));
+      allow delete: if esAdmin();
+    }
+
+    // Configuración (proceso, Telegram, avisos): todos leen, solo admin escribe.
+    match /config/{d} {
+      allow read: if miembro();
+      allow write: if esAdmin();
+    }
+
+    // Historial: todos anotan lo que hacen, nadie lo puede editar ni borrar.
+    match /historial/{h} {
+      allow read: if esAdmin() || verFin();
+      allow create: if miembro() && request.resource.data.por == uid();
+      allow update, delete: if false;
+    }
+
+    // Reinicios de contraseña pedidos por un admin (los procesa el robot)
+    match /cuentas/{u} {
+      allow read, write: if esAdmin();
+    }
+  }
+}

@@ -30,7 +30,7 @@ try{ history.scrollRestoration='manual'; }catch(e){}
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=22">
+<link rel="stylesheet" href="styles.css?v=23">
 </head>
 <body class="min-h-screen pb-20 selection:bg-pink-600 selection:text-white">
 
@@ -61,7 +61,7 @@ try{ history.scrollRestoration='manual'; }catch(e){}
     <button onclick="entrar()" id="lgBtn" class="btn-p w-full py-3.5">Entrar</button>
     <p id="lgMsg" class="t-sm text-center" style="color:var(--danger);min-height:18px"></p>
     <p class="t-xs text-center leading-relaxed">
-      Primera vez: escribe la contraseña que quieras (mín. 6 caracteres) y presiona Entrar. Tu cuenta se crea sola.
+      ¿Primera vez? Pídele a Alfredo o Yesica que te creen la cuenta. Te darán una contraseña temporal.
     </p>
   </div>
 </div>
@@ -271,6 +271,7 @@ try{ history.scrollRestoration='manual'; }catch(e){}
 
   <!-- ══ ARCHIVO ══ -->
   <section id="pgArch" class="hidden">
+    <div id="papelera" class="papelera hidden"></div>
     <div class="glass rounded-3xl overflow-hidden" style="border-top:2px solid var(--cyan)">
       <div class="px-6 py-4 border-b flex items-center gap-3" style="background:var(--deep);border-color:var(--line)">
         <div class="icon-badge"><span id="icArchH"></span></div>
@@ -321,6 +322,6 @@ try{ history.scrollRestoration='manual'; }catch(e){}
 
 <div id="modal" class="hidden"></div>
 
-<script type="module" src="app.js?v=22"></script>
+<script type="module" src="app.js?v=23"></script>
 </body>
 </html>

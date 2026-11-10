@@ -1,10 +1,10 @@
 /* Centro de Control · Importaciones Yesica — lógica */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, getDoc, setDoc }
+import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, getDoc, setDoc, deleteField, query, where, getDocs }
   from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL }
   from "https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut }
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, updatePassword }
   from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
 const firebaseConfig = {
@@ -17,6 +17,9 @@ const firebaseConfig = {
 };
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app), storage = getStorage(app), auth = getAuth(app);
+// Segunda conexión, solo para que un admin cree cuentas sin cerrar su propia sesión
+let auth2 = null;
+const authCrear = () => auth2 || (auth2 = getAuth(initializeApp(firebaseConfig, "crear-cuentas")));
 
 /* ════════ EQUIPO ════════ */
 const EQUIPO = {
@@ -263,10 +266,11 @@ window.entrar = async function(){
   try{
     await signInWithEmailAndPassword(auth, mail, p);
   }catch(e){
-    if(["auth/user-not-found","auth/invalid-credential","auth/invalid-login-credentials"].includes(e.code)){
-      try{ await createUserWithEmailAndPassword(auth, mail, p); }
-      catch(e2){ fallar(e2); return; }
-    } else { fallar(e); return; }
+    if(["auth/user-not-found","auth/invalid-credential","auth/invalid-login-credentials","auth/wrong-password"].includes(e.code)){
+      m.innerText = "Contraseña incorrecta, o todavía no tienes cuenta. Si es tu primera vez, pídele a Alfredo o Yesica que te la creen.";
+      b.disabled=false; b.innerText="Entrar"; return;
+    }
+    fallar(e); return;
   }
   b.disabled=false; b.innerText="Entrar";
 };
@@ -282,7 +286,8 @@ onAuthStateChanged(auth, async user=>{
   const r = doc(db,"usuarios",u);
   const s = await getDoc(r);
   if(!s.exists()){
-    await setDoc(r,{ nombre:EQUIPO[u].nombre, admin:EQUIPO[u].admin, areas: [] });
+    if(!EQUIPO[u].admin){ document.getElementById('lgMsg').innerText="Tu cuenta todavía no está habilitada. Pídele a un admin que te la active."; signOut(auth); return; }
+    await setDoc(r,{ nombre:EQUIPO[u].nombre, admin:true, areas: [] });
   } else if(EQUIPO[u].admin && s.data().admin !== true){
     // Cuenta creada con una versión anterior donde aún no era admin: se repara sola.
     await updateDoc(r,{ admin:true });
@@ -304,7 +309,8 @@ onAuthStateChanged(auth, async user=>{
     document.body.classList.toggle('sin-fin', !verFin());
     if(!verFin() && !document.getElementById('pgFin').classList.contains('hidden')) ir('flota');
     if(!puedeCrear() && !document.getElementById('pgNuevo').classList.contains('hidden')) ir('flota');
-    pintarUsers(); pintarTodo();
+    pintarUsers(); pintarTodo(); if(suscrito) suscribirFin();
+    if(yo.debeCambiar && !window.__cambiandoClave) pedirCambioClave();
     if(!suscrito){
       suscrito = true;
       onSnapshot(doc(db,"config","telegram"), s=>{
@@ -323,6 +329,7 @@ onAuthStateChanged(auth, async user=>{
         }
         pintarCfgNotis();
       });
+      suscribirFin();
       // Tareas del proceso: las edita un admin en Equipo → Tareas del proceso
       onSnapshot(doc(db,"config","proceso"), s=>{
         if(!s.exists()) return;                       // todavía nadie guardó: se queda con proceso.json
@@ -335,7 +342,7 @@ onAuthStateChanged(auth, async user=>{
         }
       });
       onSnapshot(collection(db,"vehiculos"), sn=>{
-        autos = []; sn.forEach(d=> autos.push({ id:d.id, ...d.data() }));
+        autos = []; papelera = []; sn.forEach(d=>{ const x = { id:d.id, ...d.data() }; (x.eliminado ? papelera : autos).push(x); });
         autos.sort((a,b)=> (b.fecha_registro||"").localeCompare(a.fecha_registro||""));
         pintarTodo(); if(cotPendiente) setTimeout(mostrarCotizacion, 300); if(abiertoId) abrirDetalle(abiertoId, true);
       });
@@ -609,21 +616,30 @@ function chipsFecha(v){
 /* ── Costo real del carro: lo pagado a proveedores (tareas de gasto) + otros gastos ── */
 const RX_GASTO = /^(pagar|pagos?\b|cancelar impuestos|pago de impuestos)/i;
 const esGasto = t => t.gasto!==undefined ? !!t.gasto : (!t.pago && RX_GASTO.test(t.t||''));
-const tieneMonto = st => st && st.monto!=null && st.monto!=='';
+/* El dinero sensible vive aparte, en finanzas/{carro}: solo lo leen quienes tienen "Ver finanzas".
+   (Mientras se mudan los datos viejos, se lee también lo que quedó dentro del carro.) */
+let finMap = {}, finSub = false, migrado = false, papelera = [];
+const autosTodos = () => [...autos, ...papelera];
+const F = v => finMap[v.id] || {};
+const costoCompra = v => Number(F(v).costo_subasta ?? v.costo_subasta ?? 0);
+const gastosDe = v => F(v).gastos ?? v.gastos ?? [];
+const montoDe = (v,k) => { const m = F(v).montos?.[k]; return m!==undefined ? m : v.tareas?.[k]?.monto; };
+const cotDe = v => F(v).cotizacion ?? v.cotizacion ?? null;
+const guardarFin = (id, datos) => setDoc(doc(db,"finanzas",id), datos, { merge:true });
+const tieneMonto = m => m!=null && m!=='';
 function costosDe(v){
   const items = []; let compraReg = false;
   defT(v).filter(esGasto).forEach(t=>{
     const st = v.tareas?.[t.k];
-    if(tieneMonto(st)){ items.push({ n:t.t, m:Number(st.monto)||0, k:t.k }); if(t.a==='compras') compraReg = true; }
+    const mt = montoDe(v,t.k); if(tieneMonto(mt)){ items.push({ n:t.t, m:Number(mt)||0, k:t.k }); if(t.a==='compras') compraReg = true; }
   });
-  (v.gastos||[]).forEach((g,i)=> items.push({ n:g.concepto||'Gasto', m:Number(g.monto)||0, i, fecha:g.fecha }));
-  if(!compraReg && Number(v.costo_subasta)) items.unshift({ n:'Compra en subasta', m:Number(v.costo_subasta), est:true });
+  gastosDe(v).forEach((g,i)=> items.push({ n:g.concepto||'Gasto', m:Number(g.monto)||0, i, fecha:g.fecha }));
+  if(!compraReg && costoCompra(v)) items.unshift({ n:'Compra en subasta', m:costoCompra(v), est:true });
   const total = items.reduce((s,x)=> s + x.m, 0);
-  const faltan = defT(v).filter(t=> esGasto(t) && tareaOk(v,t) && !tieneMonto(v.tareas?.[t.k])).length;
+  const faltan = defT(v).filter(t=> esGasto(t) && tareaOk(v,t) && !tieneMonto(montoDe(v,t.k))).length;
   return { items, total, faltan };
 }
 const gananciaDe = v => Number(v.precio_venta||0) - costosDe(v).total;
-const leerMonto = (txt, def='') => { const r = prompt(txt, def); if(r===null) return null; const n = Number(String(r).replace(/[^\d.]/g,'')); return r.trim()==='' ? '' : (isNaN(n) ? NaN : n); };
 
 /* Portada del carro: su foto si la tiene; si no, un dibujo según el tipo */
 const RX_SUV = /cr-?v|rav ?4|tucson|sportage|outlander|cx-?\d|rogue|explorer|highlander|santa ?fe|equinox|escape|pilot|4runner|tahoe|suburban|cherokee|wrangler|kicks|seltos|kona|venue|hr-?v|forester|crosstrek|tiguan|pathfinder|murano|sorento|telluride|palisade|trax|blazer|traverse|edge|bronco|compass|renegade|x-?trail|qashqai|soul|hilux|tacoma|frontier|ranger|tundra|silverado|f-?150|ram\b|l200|navara|suv|camioneta|pick ?up/i;
@@ -955,6 +971,13 @@ function pintarFinanzas(){
 }
 
 function pintarArchivo(){
+  const pp = document.getElementById('papelera');
+  if(pp){ pp.classList.toggle('hidden', !yo?.admin || !papelera.length);
+    pp.innerHTML = !yo?.admin || !papelera.length ? '' : `<div class="pap-cab"><span>${ico("basura",16,1.8)}</span><div><p class="t-md">Papelera</p><p class="t-xs">${papelera.length} carro${papelera.length>1?'s':''}. Solo los admin la ven.</p></div></div>
+      ${papelera.map(v=>`<div class="pap-f"><div class="min-w-0 flex-1"><p class="pap-n">${esc(v.vehiculo)||(v.nombreCliente?'Encargo de '+esc(v.nombreCliente.split(' ')[0]):'Sin nombre')}</p>
+        <p class="t-xs">Enviado por ${esc(nombreU(v.eliminadoPor||''))} · ${fch(ms_(v.eliminadoFecha))}</p></div>
+        <button class="btn-g px-3 py-2" onclick="restaurar('${v.id}')">Recuperar</button>
+        <button class="pe-ib" title="Borrar para siempre" style="color:var(--danger)" onclick="borrarDefinitivo('${v.id}')">${ico("basura",15,1.8)}</button></div>`).join('')}`; }
   const t = document.getElementById('tArch');
   const ls = autos.filter(a=>a.archivado);
   if(!ls.length){ t.innerHTML = `<tr><td colspan="7" class="p-14 text-center t-md" style="color:var(--t3)"><div class="flex justify-center mb-2" style="color:var(--t3)">${ico("archivo",30,1.3)}</div>Nada archivado todavía.</td></tr>`; return; }
@@ -964,11 +987,11 @@ function pintarArchivo(){
     <td data-l="Cliente" class="p-4" style="color:var(--cyan)">${esc(v.nombreCliente)||"—"}</td>
     <td data-l="VIN" class="p-4 t-xs" style="color:var(--t3)">${esc(v.vin)}</td>
     <td data-l="Avance" class="p-4 text-center num font-semibold" style="color:var(--cyan)">${progreso(v)}%</td>
-    <td data-l="${verFin()?'Costo / Venta':'Venta'}" class="p-4 text-right num font-semibold">${verFin()?money(v.costo_subasta)+' / ':''}<span style="color:var(--brand)">${money(v.precio_venta)}</span></td>
+    <td data-l="${verFin()?'Costo / Venta':'Venta'}" class="p-4 text-right num font-semibold">${verFin()?money(costoCompra(v))+' / ':''}<span style="color:var(--brand)">${money(v.precio_venta)}</span></td>
     <td data-l="" class="p-4 text-right whitespace-nowrap">
       <button onclick="archivar('${v.id}',false)" class="btn-g px-2.5 py-1.5 rounded-lg">Reactivar</button>
       ${yo?.admin ? `<button onclick="eliminar('${v.id}')" class="btn-g px-2.5 py-1.5 rounded-lg ml-1.5"
-           style="color:var(--danger);border-color:rgba(255,69,58,.3)" title="Eliminar">${ico("basura",14)}</button>`:""}
+           style="color:var(--danger);border-color:rgba(255,69,58,.3)" title="Mandar a la papelera">${ico("basura",14)}</button>`:""}
     </td>
   </tr>`).join("");
 }
@@ -989,7 +1012,8 @@ function pintarUsers(){
           <p class="pp-s">${d.admin?'<b>Admin</b> · ve y edita todo':`${areas.length} área${areas.length===1?'':'s'}`}${porNombre?` · ${porNombre} tarea${porNombre===1?'':'s'} a su nombre`:''}</p>
         </div>
         <div class="pp-est">
-          <span class="pp-dot ${creado?'ok':''}" title="${creado?'Ya entró al sistema':'Todavía no ha entrado'}"></span>${creado?'Activo':'Sin entrar'}
+          ${!usersData[u] ? `<button class="pp-cta" onclick="crearCuenta('${u}')">Crear cuenta</button>` : (u!==yo.usuario ? `<button class="pp-lnk" onclick="reiniciarClave('${u}')">Reiniciar contraseña</button>` : '')}
+          <span class="pp-dot ${creado?'ok':''}"></span>${creado?(d.debeCambiar?'Clave temporal':'Activo'):'Sin cuenta'}
           <span class="pp-tg ${tg?'ok':''}" title="${tg?'Recibe avisos por Telegram':'No ha vinculado Telegram'}">Telegram ${tg?'✓':'—'}</span>
         </div>
       </div>
@@ -1160,7 +1184,7 @@ window.abrirDetalle = function(id, silencioso){
           <div class="tbox on" ${can?`onclick="marcar('${v.id}','${t.k}',true)" title="Reabrir"`:''}>${ico("ok",11,2.6)}</div>
           <span class="flex-1 min-w-0 truncate">${esc(t.t)}</span>
           ${nf?`<a href="${esc(st.fotos[0].url)}" target="_blank" class="t-xs flex items-center gap-1" style="color:var(--cyan)" onclick="event.stopPropagation()">${ico("clip",12)}${nf>1?nf:''}</a>`:""}
-          ${esGasto(t) ? `<button class="monto-chip ${tieneMonto(st)?'':'falta'}" ${can?`onclick="ponMonto('${v.id}','${t.k}')"`:'disabled'}>${tieneMonto(st)?money(st.monto):'+ monto'}</button>` : ''}
+          ${esGasto(t) && verFin() ? `<button class="monto-chip ${tieneMonto(montoDe(v,t.k))?'':'falta'}" ${can?`onclick="ponMonto('${v.id}','${t.k}')"`:'disabled'}>${tieneMonto(montoDe(v,t.k))?money(montoDe(v,t.k)):'+ monto'}</button>` : ''}
           <span class="t-xs flex-shrink-0">${st?.por?esc(usersData[st.por]?.nombre||st.por)+' · ':''}${fch(st?.fecha)}</span>
         </div>`;
       }
@@ -1198,7 +1222,7 @@ window.abrirDetalle = function(id, silencioso){
         <div class="campo col-2"><label for="edVeh">Año, marca y modelo</label><input id="edVeh" class="inp" value="${esc(v.vehiculo)}" placeholder="2019 Toyota Corolla"></div>
         <div class="campo"><label for="edVin">VIN o lote</label><input id="edVin" class="inp" value="${esc(v.vin)}" style="text-transform:uppercase" autocomplete="off"></div>
         <div class="campo"><label for="edPlat">Subasta</label><select id="edPlat" class="inp">${opcPlat(v.plataforma||"Copart")}</select></div>
-        ${verFin()?`<div class="campo"><label for="edCosto">Costo de compra ($)</label><input id="edCosto" type="number" inputmode="decimal" class="inp" value="${Number(v.costo_subasta||0)||""}" placeholder="0"></div>`:''}
+        ${verFin()?`<div class="campo"><label for="edCosto">Costo de compra ($)</label><input id="edCosto" type="number" inputmode="decimal" class="inp" value="${costoCompra(v)||""}" placeholder="0"></div>`:''}
         <div class="campo"><label for="edVenta">Precio de venta ($)</label><input id="edVenta" type="number" inputmode="decimal" class="inp" value="${Number(v.precio_venta||0)||""}" placeholder="0"></div>
       </div>`;
   const camposCli = `
@@ -1232,6 +1256,7 @@ window.abrirDetalle = function(id, silencioso){
     </div>`;
   }
 
+  const plegAbiertos = [...m.querySelectorAll('details.plegable[open] > summary > .flex-1')].map(x=>x.textContent);
   m.innerHTML = `<div class="glass rounded-3xl w-full max-w-2xl my-4 relative" onclick="event.stopPropagation()">
     
     <div class="p-6 border-b flex justify-between items-start gap-3 sticky top-0 rounded-t-3xl z-10" style="border-color:var(--line);background:var(--panel-hi)">
@@ -1270,13 +1295,13 @@ window.abrirDetalle = function(id, silencioso){
       </details>` : ''}
       ${verFin() && v.vehiculo ? (()=>{ const c = costosDe(v), vta = Number(v.precio_venta||0), gr = vta - c.total;
         return `<details class="plegable">
-        <summary><span class="flex-1">Costo real del carro</span><span class="t-xs">${v.cotizacion?`estimado ${money(v.cotizacion.costoTotal)} · real `:''}${money(c.total)}${vta?` · ganancia <b style="color:${gr>=0?'var(--brand-light)':'var(--danger)'}">${money(gr)}</b>`:''}</span><span class="fase-chev">${ico("flecha",14,1.8)}</span></summary>
+        <summary><span class="flex-1">Costo real del carro</span><span class="t-xs">${cotDe(v)?`estimado ${money(cotDe(v).costoTotal)} · real `:''}${money(c.total)}${vta?` · ganancia <b style="color:${gr>=0?'var(--brand-light)':'var(--danger)'}">${money(gr)}</b>`:''}</span><span class="fase-chev">${ico("flecha",14,1.8)}</span></summary>
         <div class="pt-3">
           <div class="costos">${c.items.map(x=>`<div class="co-f"><span class="flex-1 min-w-0 truncate">${esc(x.n)}${x.est?' <em class="t-xs">(precio de compra)</em>':''}</span><b class="num">${money(x.m)}</b>${x.i!=null?`<button class="pe-ib" title="Quitar" onclick="quitarGasto('${v.id}',${x.i})">${ico("cerrar",12,2)}</button>`:'<span class="co-sp"></span>'}</div>`).join('') || '<p class="t-xs py-2">Todavía no hay costos registrados.</p>'}
             <div class="co-f co-t"><span class="flex-1">Costo real</span><b class="num">${money(c.total)}</b><span class="co-sp"></span></div>
             ${vta?`<div class="co-f"><span class="flex-1">Ganancia real</span><b class="num" style="color:${gr>=0?'var(--brand-light)':'var(--danger)'}">${money(gr)}</b><span class="co-sp"></span></div>`:''}
           </div>
-          ${v.cotizacion ? (()=>{ const ct = v.cotizacion, dif = c.total - Number(ct.costoTotal||0);
+          ${cotDe(v) ? (()=>{ const ct = cotDe(v), dif = c.total - Number(ct.costoTotal||0);
             return `<div class="cot-cmp">
               <p class="lbl">Lo que estimó la calculadora <span class="t-xs">· ${fch(ms_(ct.fecha))}</span></p>
               <div class="costos">${(ct.partidas||[]).map(x=>`<div class="co-f"><span class="flex-1 min-w-0 truncate">${esc(x.n)}</span><b class="num">${money(x.m)}</b><span class="co-sp"></span></div>`).join('')}
@@ -1306,7 +1331,7 @@ window.abrirDetalle = function(id, silencioso){
         <summary><span class="flex-1">${verFin()?'Pagos, costo y precio':'Pagos y precio'}</span><span class="t-xs">${(v.abonos||[]).length} abono${(v.abonos||[]).length===1?'':'s'}</span><span class="fase-chev">${ico("flecha",14,1.8)}</span></summary>
         <div class="pt-3 space-y-3">
           <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-            ${verFin()?`<div class="deep rounded-xl p-3"><p class="t-lbl">Costo</p><p class="num text-base font-semibold mt-1">${money(v.costo_subasta)}</p></div>`:''}
+            ${verFin()?`<div class="deep rounded-xl p-3"><p class="t-lbl">Costo</p><p class="num text-base font-semibold mt-1">${money(costoCompra(v))}</p></div>`:''}
             <div class="deep rounded-xl p-3"><p class="t-lbl">Precio venta</p>
               ${puedeCrear()?`<div class="campo-num mt-1"><span>$</span><input type="number" value="${Number(v.precio_venta||0)}" onchange="setVenta('${v.id}',this.value)" class="num"></div>`:`<p class="num text-base font-semibold mt-1">${money(v.precio_venta)}</p>`}</div>
             <div class="deep rounded-xl p-3"><p class="t-lbl">Registrada</p><p class="t-sm mt-1.5" style="color:var(--t1)">${fch(v.fecha_registro)||"—"}</p></div>
@@ -1320,6 +1345,10 @@ window.abrirDetalle = function(id, silencioso){
         </div>
       </details>` : (Number(v.precio_venta||0) ? `<div class="dinero"><div><p class="t-lbl">Precio de venta</p><p class="num text-[17px] font-semibold mt-0.5">${money(v.precio_venta)}</p></div></div>` : '')}
 
+      ${yo?.admin || verFin() ? `<details class="plegable" ontoggle="if(this.open) cargarHistorial('${v.id}')">
+        <summary><span class="flex-1">Historial de cambios</span><span class="t-xs">quién hizo qué</span><span class="fase-chev">${ico("flecha",14,1.8)}</span></summary>
+        <div class="pt-2"><div id="hist-${v.id}" class="hist"><p class="t-xs py-2">Cargando…</p></div></div>
+      </details>` : ''}
       <div>
         <p class="t-lbl mb-2.5">Proceso completo</p>
         <div class="space-y-2">${bloques}</div>
@@ -1332,11 +1361,12 @@ window.abrirDetalle = function(id, silencioso){
         ${v.telefonoCliente ? `<a href="https://wa.me/503${String(v.telefonoCliente).replace(/\\D/g,'')}" target="_blank" class="btn-g px-4 py-2.5 inline-flex items-center gap-2">${ico("chat",14)} Escribir al cliente</a>`:""}
         ${v.telefonoCliente && verCobros() ? `<button onclick="estadoCuenta('${v.id}')" class="btn-p px-4 py-2.5 inline-flex items-center gap-2">${ico("chat",14)} Enviar estado de cuenta</button>`:""}
         ${yo?.admin
-          ? `<button onclick="eliminar('${v.id}')" class="btn-g btn-d px-4 py-2.5 flex items-center gap-2 ml-auto">${ico("basura",14)} Eliminar</button>`
-          : `<span class="t-xs self-center flex items-center gap-1.5">${ico("candado",12)} Solo un admin puede eliminar</span>`}
+          ? `<button onclick="eliminar('${v.id}')" class="btn-g btn-d px-4 py-2.5 flex items-center gap-2 ml-auto">${ico("basura",14)} Papelera</button>`
+          : `<span class="t-xs self-center flex items-center gap-1.5">${ico("candado",12)} Solo un admin puede mandar a la papelera</span>`}
       </div>
     </div>
   </div>`;
+  m.querySelectorAll('details.plegable').forEach(d=>{ const t = d.querySelector('summary > .flex-1')?.textContent; if(plegAbiertos.includes(t)){ d.open = true; if(/Historial/.test(t)) cargarHistorial(v.id); } });
   m.onclick = cerrar;
 };
 window.cerrar = function(){ abiertoId=null; editando=false; const m=document.getElementById('modal'); m.className="hidden"; m.innerHTML=""; };
@@ -1350,7 +1380,7 @@ window.guardarDatos = function(id){
   const datos = {};
   if(document.getElementById('edVeh')){
     datos.vehiculo = g('edVeh'); datos.vin = g('edVin').toUpperCase(); datos.plataforma = g('edPlat') || "Copart";
-    if(document.getElementById('edCosto')) datos.costo_subasta = Number(g('edCosto'))||0;
+    if(document.getElementById('edCosto')){ const cc = Number(g('edCosto'))||0; if(cc!==costoCompra(v)){ guardarFin(id,{ costo_subasta:cc }).catch(e=>toast('No se guardó el costo: '+e.code,'err')); registrar('costo', id, `Cambió el costo de compra a ${money(cc)}`); } }
     datos.precio_venta = Number(g('edVenta'))||0;
   }
   if(document.getElementById('edCli')){
@@ -1359,6 +1389,7 @@ window.guardarDatos = function(id){
   const asignaCarro = datos.vehiculo && !v.vehiculo, asignaCli = datos.nombreCliente && !v.nombreCliente;
   if(datos.vehiculo===""&&v.vehiculo){ toast("Escribe el vehículo.","warn"); return; }
   updateDoc(doc(db,"vehiculos",id), datos).catch(e=> toast("No se pudo guardar en el servidor: "+(e.code||e.message),"err"));
+  registrar('datos', id, Object.keys(datos).filter(k=>String(datos[k])!==String(v[k]??'')).map(k=>({vehiculo:'vehículo',vin:'VIN',plataforma:'subasta',precio_venta:'precio de venta',nombreCliente:'cliente',telefonoCliente:'teléfono',deseoCliente:'lo que busca'}[k]||k)).join(', ').replace(/^/,'Editó: ') || 'Editó datos');
   Object.assign(v, datos);            // la ficha cambia al instante
   editando = false;
   toast(asignaCarro ? "Carro asignado a "+(v.nombreCliente||"la unidad")+"." : asignaCli ? "Cliente asignado." : "Datos actualizados.");
@@ -1380,31 +1411,28 @@ window.marcar = async function(id, k, ok){
   // Tareas que exigen comprobante: si no hay foto, se puede dejar constancia
   // (el esquema permite efectivo confirmado de recibido).
   if(!ok && def.foto && !(st.fotos||[]).length){
-    const motivo = prompt(
-      "Esta tarea pide comprobante y todavía no hay ninguna foto.\n\n"+
-      def.t+"\n\n"+
-      "Si el pago fue en EFECTIVO o no hay comprobante, escribe aquí quién lo recibió\n"+
-      "y quedará registrado. Si no, cancela y sube la foto primero.",
-      "Recibido en efectivo por "+(yo.nombre||"")
-    );
-    if(motivo===null) return;                       // canceló: sube la foto
+    const rr = await dialogo({ titulo:'Esta tarea pide comprobante', texto:`<b>${esc(def.t)}</b><br>Todavía no hay foto. Si fue en efectivo o no hay comprobante, deja constancia de quién lo recibió. Si no, cancela y sube la foto primero.`,
+      campos:[{ label:'Constancia', value:'Recibido en efectivo por '+(yo.nombre||'') }], ok:'Marcar con constancia' });
+    if(rr===null) return;                           // canceló: sube la foto
+    const motivo = rr[0];
     if(!motivo.trim()){ toast("Escribe una constancia o sube el comprobante.","warn"); return; }
     sinComprobante = motivo.trim();
   }
 
   let monto = null;
-  if(!ok && esGasto(def) && !tieneMonto(st)){
-    const r = leerMonto(`¿Cuánto se pagó?\n\n${def.t}\n\nEscribe el monto en dólares (se suma al costo real del carro). Si todavía no lo sabes, déjalo vacío.`);
+  if(!ok && esGasto(def) && !tieneMonto(montoDe(v,k))){
+    const r = await pedirMonto('¿Cuánto se pagó?', `<b>${esc(def.t)}</b><br>Se suma al costo real del carro.`);
     if(r===null) return;
-    if(Number.isNaN(r)){ toast("Escribe solo el número, por ejemplo 1250.","warn"); return; }
     if(r!=='') monto = r;
   }
   const tareas = { ...(v.tareas||{}) };
   tareas[k] = ok
     ? { ...st, ok:false }
-    : { ...st, ok:true, por:yo.usuario, fecha:new Date().toISOString(), ...(sinComprobante?{sinComprobante}:{}), ...(monto!=null?{monto, montoPor:yo.usuario}:{}) };
+    : { ...st, ok:true, por:yo.usuario, fecha:new Date().toISOString(), ...(sinComprobante?{sinComprobante}:{}) };
+  if(monto!=null){ guardarFin(id, { montos:{ [k]:monto } }).catch(e=>toast('No se guardó el monto: '+e.code,'err')); registrar('monto', id, `${def.t}: ${money(monto)}`); }
   try{
     await updateDoc(doc(db,"vehiculos",id), { tareas });
+    registrar('tarea', id, ok ? `Reabrió: ${def.t}` : `Marcó: ${def.t}${sinComprobante?' (sin comprobante: '+sinComprobante+')':''}`);
     if(!ok){ celebrar(); toast(""+def.t); } else toast("Tarea reabierta.");
   }catch(e){ toast("No se pudo guardar: "+e.code,"err"); }
 };
@@ -1466,6 +1494,7 @@ window.marcarMulti = async function(id, k, yaHecho){
     await updateDoc(doc(db,"vehiculos",id), { tareas });
     const req = resp(def), listos = req.filter(u=>marcas[u]).length;
     if(!yaHecho) celebrar();
+    registrar('tarea', id, yaHecho ? `Quitó su parte: ${def.t}` : `Marcó su parte: ${def.t}`);
     toast(yaHecho ? "Quitaste tu marca." : `Tu parte lista (${listos}/${req.length})`);
   }catch(e){ toast("No se pudo guardar: "+e.code,"err"); }
 };
@@ -1474,7 +1503,7 @@ window.togArea = async function(u, k, on){
   if(!yo?.admin) return;
   const cur = usersData[u]?.areas || [];
   const nue = on ? Array.from(new Set([...cur,k])) : cur.filter(x=>x!==k);
-  try{ await updateDoc(doc(db,"usuarios",u), { areas:nue }); toast(`${usersData[u].nombre}: ${on?"+":"−"} ${areaN(k)}`); }
+  try{ await updateDoc(doc(db,"usuarios",u), { areas:nue }); registrar('permiso', null, `${on?'Dio':'Quitó'} el área ${areaN(k)} a ${nombreU(u)}`); toast(`${usersData[u].nombre}: ${on?"+":"−"} ${areaN(k)}`); }
   catch(e){ toast("Error al guardar permiso.","err"); }
 };
 
@@ -1482,25 +1511,24 @@ window.ponMonto = async function(id, k){
   const v = autos.find(a=>a.id===id); if(!v) return;
   const def = defT(v).find(t=>t.k===k); if(!def || !puedeT(def)){ toast("No tienes esta tarea habilitada.","err"); return; }
   const st = v.tareas?.[k] || {};
-  const r = leerMonto(`Monto pagado en:\n${def.t}`, st.monto ?? '');
-  if(r===null) return; if(Number.isNaN(r)){ toast("Escribe solo el número.","warn"); return; }
-  const tareas = { ...(v.tareas||{}) }; tareas[k] = { ...st, monto: r==='' ? null : r, montoPor:yo.usuario };
-  try{ await updateDoc(doc(db,"vehiculos",id), { tareas }); toast(r===''?"Monto quitado.":"Monto guardado: "+money(r)); }catch(e){ toast("No se pudo guardar: "+e.code,"err"); }
+  const r = await pedirMonto('Monto pagado', `<b>${esc(def.t)}</b>`, montoDe(v,k) ?? '');
+  if(r===null) return;
+  try{ await guardarFin(id, { montos:{ [k]: r==='' ? null : r } }); registrar('monto', id, `${def.t}: ${r===''?'sin monto':money(r)}`); toast(r===''?"Monto quitado.":"Monto guardado: "+money(r)); }catch(e){ toast("No se pudo guardar: "+e.code,"err"); }
 };
 window.addGasto = async function(id){
   if(!verFin()){ toast("No tienes permiso de finanzas.","err"); return; }
   const v = autos.find(a=>a.id===id); if(!v) return;
   const c = document.getElementById('gaCon')?.value.trim(), m = Number(document.getElementById('gaMon')?.value);
   if(!c || !m){ toast("Escribe el concepto y el monto.","warn"); return; }
-  const gastos = [ ...(v.gastos||[]), { concepto:c, monto:m, por:yo.usuario, fecha:new Date().toISOString() } ];
-  try{ await updateDoc(doc(db,"vehiculos",id), { gastos }); toast(`Gasto de ${money(m)} agregado.`); }catch(e){ toast("No se pudo guardar: "+e.code,"err"); }
+  const gastos = [ ...gastosDe(v), { concepto:c, monto:m, por:yo.usuario, fecha:new Date().toISOString() } ];
+  try{ await guardarFin(id, { gastos }); registrar('gasto', id, `Agregó gasto: ${c} ${money(m)}`); toast(`Gasto de ${money(m)} agregado.`); }catch(e){ toast("No se pudo guardar: "+e.code,"err"); }
 };
 window.quitarGasto = async function(id, i){
   if(!verFin()) return;
   const v = autos.find(a=>a.id===id); if(!v) return;
-  if(!confirm(`¿Quitar "${v.gastos?.[i]?.concepto}"?`)) return;
-  const gastos = (v.gastos||[]).filter((_,x)=>x!==i);
-  try{ await updateDoc(doc(db,"vehiculos",id), { gastos }); toast("Gasto quitado."); }catch(e){ toast("No se pudo: "+e.code,"err"); }
+  const g0 = gastosDe(v)[i]; if(!confirm(`¿Quitar "${g0?.concepto}"?`)) return;
+  const gastos = gastosDe(v).filter((_,x)=>x!==i);
+  try{ await guardarFin(id, { gastos }); registrar('gasto', id, `Quitó gasto: ${g0?.concepto} ${money(g0?.monto)}`); toast("Gasto quitado."); }catch(e){ toast("No se pudo: "+e.code,"err"); }
 };
 const puedeLogistica = () => puedeCrear() || puede('naviera') || puede('aduana');
 window.guardarLogistica = async function(id){
@@ -1568,7 +1596,7 @@ function mostrarCotizacion(){
     </div>
     <p class="lbl mt-4">¿Dónde la guardo?</p>
     <div class="flex gap-2 flex-wrap mt-2">
-      <select id="cotCarro" class="inp flex-1 min-w-[200px]">${act.map(v=>`<option value="${v.id}" ${sugerido&&sugerido.id===v.id?'selected':''}>${nom(v)}${v.nombreCliente&&v.vehiculo?' · '+esc(v.nombreCliente):''}${v.cotizacion?' (ya tiene)':''}</option>`).join('')}</select>
+      <select id="cotCarro" class="inp flex-1 min-w-[200px]">${act.map(v=>`<option value="${v.id}" ${sugerido&&sugerido.id===v.id?'selected':''}>${nom(v)}${v.nombreCliente&&v.vehiculo?' · '+esc(v.nombreCliente):''}${cotDe(v)?' (ya tiene)':''}</option>`).join('')}</select>
       <button class="btn-p px-4 py-2.5" onclick="cotGuardar()" ${act.length?'':'disabled'}>Guardar en este carro</button>
     </div>
     ${puedeCrear()?`<button class="pe-add mt-3" onclick="cotNueva()">${ico("mas",14,2)} Crear un carro nuevo con estos datos</button>`:''}
@@ -1580,11 +1608,13 @@ function mostrarCotizacion(){
 window.cotGuardar = async function(){
   const c = window.__cot, id = document.getElementById('cotCarro')?.value; if(!c || !id) return;
   const v = autos.find(a=>a.id===id); if(!v) return;
-  if(v.cotizacion && !confirm('Este carro ya tiene una cotización. ¿La reemplazo con la nueva?')) return;
-  const datos = { cotizacion:c };
-  if(!Number(v.costo_subasta) && subastaDe(c)) datos.costo_subasta = subastaDe(c);
+  if(cotDe(v) && !confirm('Este carro ya tiene una cotización. ¿La reemplazo con la nueva?')) return;
+  const fin = { cotizacion:c }, datos = {};
+  if(!costoCompra(v) && subastaDe(c)) fin.costo_subasta = subastaDe(c);
+  try{ await guardarFin(id, fin); }catch(e){ toast("No se pudo guardar: "+(e.code||e.message),"err"); return; }
+  registrar('cotizacion', id, `Guardó cotización de la calculadora (estimado ${money(c.costoTotal)})`);
   if(!Number(v.precio_venta) && c.ventaSugerida) datos.precio_venta = c.ventaSugerida;
-  try{ await updateDoc(doc(db,"vehiculos",id), datos); cerrarCot(); toast("Cotización guardada en el carro."); abrirDetalle(id); }
+  try{ if(Object.keys(datos).length) await updateDoc(doc(db,"vehiculos",id), datos); cerrarCot(); toast("Cotización guardada en el carro."); abrirDetalle(id); }
   catch(e){ toast("No se pudo guardar: "+(e.code||e.message),"err"); }
 };
 window.cotNueva = function(){
@@ -1598,10 +1628,127 @@ window.cotNueva = function(){
   window.__cotNueva = c;
   toast("Datos de la calculadora puestos. Revisa y registra.");
 };
+function suscribirFin(){
+  if(finSub || !verFin()) return; finSub = true;
+  onSnapshot(collection(db,"finanzas"), sn=>{
+    finMap = {}; sn.forEach(d=> finMap[d.id] = d.data());
+    pintarTodo(); if(abiertoId) abrirDetalle(abiertoId, true);
+    if(yo?.admin && !migrado) setTimeout(migrarFinanzas, 1500);
+  }, e=> console.warn("finanzas:", e.code));
+}
+// Una sola vez: muda costos, gastos, montos y cotizaciones que quedaron dentro de cada carro
+async function migrarFinanzas(){
+  if(migrado || !yo?.admin) return; migrado = true;
+  let n = 0;
+  for(const v of autosTodos()){
+    const fin = {}, borrar = {};
+    if(v.costo_subasta!==undefined){ if(F(v).costo_subasta===undefined) fin.costo_subasta = Number(v.costo_subasta)||0; borrar.costo_subasta = deleteField(); }
+    if(v.gastos!==undefined){ if(F(v).gastos===undefined) fin.gastos = v.gastos; borrar.gastos = deleteField(); }
+    if(v.cotizacion!==undefined){ if(F(v).cotizacion===undefined) fin.cotizacion = v.cotizacion; borrar.cotizacion = deleteField(); }
+    const montos = {}; let tocaTareas = false; const tareas = { ...(v.tareas||{}) };
+    Object.keys(tareas).forEach(k=>{ const st = tareas[k]; if(st && ('monto' in st || 'montoPor' in st)){ if(tieneMonto(st.monto) && F(v).montos?.[k]===undefined) montos[k] = st.monto; const { monto, montoPor, ...resto } = st; tareas[k] = resto; tocaTareas = true; } });
+    if(Object.keys(montos).length) fin.montos = { ...(F(v).montos||{}), ...montos };
+    if(tocaTareas) borrar.tareas = tareas;
+    if(!Object.keys(borrar).length) continue;
+    try{ if(Object.keys(fin).length) await guardarFin(v.id, fin); await updateDoc(doc(db,"vehiculos",v.id), borrar); n++; }
+    catch(e){ console.warn("No se pudo mudar", v.id, e.code); }
+  }
+  if(n) toast(`Listo: el dinero de ${n} carro${n>1?'s':''} quedó protegido aparte.`);
+}
+
+/* ════════ HISTORIAL: quién hizo qué y cuándo ════════ */
+window.cargarHistorial = async function(id){
+  const box = document.getElementById('hist-'+id); if(!box) return;
+  try{
+    const sn = await getDocs(query(collection(db,"historial"), where("carro","==",id)));
+    const ls = sn.docs.map(d=>d.data()).sort((a,b)=> String(b.fecha).localeCompare(String(a.fecha))).slice(0,80);
+    box.innerHTML = ls.length ? ls.map(h=>`<div class="hi"><span class="hi-d"></span><div class="min-w-0"><p>${esc(h.texto)}</p><p class="t-xs">${esc(nombreU(h.por))} · ${new Date(h.fecha).toLocaleString('es-SV',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'})}</p></div></div>`).join('')
+      : `<p class="t-xs py-2">Todavía no hay cambios anotados. Desde hoy se anota todo lo importante.</p>`;
+  }catch(e){ box.innerHTML = `<p class="t-xs py-2">No se pudo cargar (${esc(e.code||e.message)}).</p>`; }
+};
+function registrar(tipo, carro, texto){
+  if(!yo) return;
+  addDoc(collection(db,"historial"), { tipo, carro:carro||null, texto, por:yo.usuario, fecha:new Date().toISOString() }).catch(()=>{});
+}
+/* ════════ DIÁLOGO PROPIO (reemplaza las ventanitas del navegador) ════════ */
+function dialogo({ titulo, texto='', campos=[], ok='Guardar', cancelar='Cancelar', peligro=false }){
+  return new Promise(res=>{
+    const ov = document.createElement('div'); ov.className = 'dlg-ov';
+    ov.innerHTML = `<form class="dlg" role="dialog" aria-modal="true" aria-label="${esc(titulo)}">
+      <h3 class="dlg-t">${esc(titulo)}</h3>${texto?`<p class="dlg-x">${texto}</p>`:''}
+      ${campos.map((c,i)=>`<label class="campo"><span class="lbl">${esc(c.label)}</span>
+        ${c.prefijo?`<div class="dlg-pre"><span>${esc(c.prefijo)}</span>`:''}<input class="inp" id="dlg-${i}" type="${c.type||'text'}" ${c.type==='number'?'inputmode="decimal" step="any"':''} value="${esc(c.value??'')}" placeholder="${esc(c.placeholder||'')}" autocomplete="off">${c.prefijo?'</div>':''}
+        ${c.hint?`<small class="t-xs">${c.hint}</small>`:''}</label>`).join('')}
+      <p class="dlg-err" id="dlg-err"></p>
+      <div class="dlg-acc">${cancelar?`<button type="button" class="btn-g px-4 py-2.5" data-x>${esc(cancelar)}</button>`:''}<button type="submit" class="${peligro?'btn-g btn-d':'btn-p'} px-5 py-2.5">${esc(ok)}</button></div>
+    </form>`;
+    const fin = v => { ov.classList.add('sale'); setTimeout(()=>ov.remove(), 180); res(v); };
+    ov.querySelector('[data-x]')?.addEventListener('click', ()=>fin(null));
+    if(cancelar) ov.addEventListener('mousedown', e=>{ if(e.target===ov) fin(null); });
+    ov.querySelector('form').addEventListener('submit', e=>{ e.preventDefault(); fin(campos.map((_,i)=>document.getElementById('dlg-'+i).value)); });
+    ov.__error = t => { ov.querySelector('#dlg-err').textContent = t; };
+    document.body.appendChild(ov);
+    setTimeout(()=>{ const i = ov.querySelector('input'); if(i){ i.focus(); i.select?.(); } else ov.querySelector('[type=submit]').focus(); }, 30);
+  });
+}
+// Pide un monto; devuelve número, '' (vacío) o null (canceló)
+async function pedirMonto(titulo, texto, actual=''){
+  while(true){
+    const r = await dialogo({ titulo, texto, campos:[{ label:'Monto pagado', type:'number', prefijo:'$', value:actual, placeholder:'0.00', hint:'Si todavía no lo sabes, déjalo vacío y lo pones después.' }], ok:'Guardar' });
+    if(r===null) return null;
+    const v = String(r[0]).trim(); if(v==='') return '';
+    const n = Number(v.replace(/[^\d.]/g,'')); if(!isNaN(n)) return n;
+    toast("Escribe solo el número, por ejemplo 1250.","warn"); actual = v;
+  }
+}
+const claveTemporal = n => (String(n||'yesica').normalize('NFD').replace(/[̀-ͯ]/g,'').split(' ')[0]) + '-' + Math.floor(1000 + Math.random()*9000);
+
+/* ════════ CUENTAS: las crea un admin ════════ */
+window.crearCuenta = async function(u){
+  if(!yo?.admin) return;
+  const nom = EQUIPO[u]?.nombre || u;
+  const r = await dialogo({ titulo:`Crear la cuenta de ${nom}`, texto:'Dale esta contraseña temporal. La primera vez que entre, el sistema le va a pedir que ponga una suya.',
+    campos:[{ label:'Contraseña temporal', value:claveTemporal(nom), hint:'Mínimo 6 caracteres.' }], ok:'Crear cuenta' });
+  if(!r) return; const clave = r[0].trim(); if(clave.length<6){ toast("Mínimo 6 caracteres.","warn"); return; }
+  try{
+    try{ await createUserWithEmailAndPassword(authCrear(), u+"@yesica.local", clave); await signOut(authCrear()); }
+    catch(e){ if(e.code!=="auth/email-already-in-use") throw e;
+      toast(`${nom} ya tenía acceso. Si no recuerda su contraseña, usa "Reiniciar contraseña".`,"warn"); }
+    await setDoc(doc(db,"usuarios",u), { nombre:nom, admin:!!EQUIPO[u]?.admin, areas:[], debeCambiar:true, creadoPor:yo.usuario, creado:new Date().toISOString() }, { merge:true });
+    registrar('cuenta', null, `Creó la cuenta de ${nom}`);
+    await dialogo({ titulo:'Cuenta creada', texto:`Mándale esto a <b>${esc(nom)}</b>:<br><br>Usuario: <b>${esc(nom)}</b><br>Contraseña temporal: <b class="mono">${esc(clave)}</b>`, ok:'Listo', cancelar:null });
+  }catch(e){ toast("No se pudo crear la cuenta: "+(e.code||e.message),"err"); }
+};
+window.reiniciarClave = async function(u){
+  if(!yo?.admin) return;
+  const nom = nombreU(u);
+  const r = await dialogo({ titulo:`Reiniciar la contraseña de ${nom}`, texto:'El robot la cambia en unos minutos. Al entrar, le va a pedir que ponga una nueva.',
+    campos:[{ label:'Contraseña temporal', value:claveTemporal(nom) }], ok:'Reiniciar' });
+  if(!r) return; const clave = r[0].trim(); if(clave.length<6){ toast("Mínimo 6 caracteres.","warn"); return; }
+  try{ await setDoc(doc(db,"cuentas",u), { clave, por:yo.usuario, fecha:new Date().toISOString() });
+    registrar('cuenta', null, `Pidió reiniciar la contraseña de ${nom}`);
+    toast(`Listo. En unos minutos ${nom} podrá entrar con: ${clave}`); }
+  catch(e){ toast("No se pudo: "+(e.code||e.message),"err"); }
+};
+async function pedirCambioClave(){
+  window.__cambiandoClave = true;
+  let txt = 'Por seguridad, pon una contraseña que solo tú sepas. Mínimo 6 caracteres.';
+  while(true){
+    const r = await dialogo({ titulo:`Hola ${(yo.nombre||'').split(' ')[0]}, crea tu contraseña`, texto:txt,
+      campos:[{ label:'Nueva contraseña', type:'password' },{ label:'Repítela', type:'password' }], ok:'Guardar', cancelar:null });
+    const [a,b] = r||['',''];
+    if(a.length<6){ txt = '⚠️ Debe tener mínimo 6 caracteres.'; continue; }
+    if(a!==b){ txt = '⚠️ No coinciden. Escríbela igual las dos veces.'; continue; }
+    try{ await updatePassword(auth.currentUser, a); await updateDoc(doc(db,"usuarios",yo.usuario), { debeCambiar:false }); toast("Contraseña guardada."); break; }
+    catch(e){ if(e.code==='auth/requires-recent-login'){ toast("Por seguridad, vuelve a entrar con la contraseña temporal.","warn"); signOut(auth); break; }
+      txt = '⚠️ No se pudo guardar: '+(e.code||e.message); }
+  }
+  window.__cambiandoClave = false;
+}
 window.togPerm = async function(u, campo, on){
   if(!yo?.admin) return;
   const txt = { crear:["ya puede","ya no puede","agregar y editar carros"], cobros:["ya puede","ya no puede","ver y registrar cobros"], verFin:["ya puede","ya no puede","ver finanzas"] }[campo];
-  try{ await setDoc(doc(db,"usuarios",u), { [campo]:on }, { merge:true }); toast(`${nombreU(u)}: ${on?txt[0]:txt[1]} ${txt[2]}`); }
+  try{ await setDoc(doc(db,"usuarios",u), { [campo]:on }, { merge:true }); registrar('permiso', null, `${on?'Dio':'Quitó'} «${txt[2]}» a ${nombreU(u)}`); toast(`${nombreU(u)}: ${on?txt[0]:txt[1]} ${txt[2]}`); }
   catch(e){ toast("Error al guardar permiso.","err"); }
 };
 window.togCrear = async function(u, on){
@@ -1612,7 +1759,7 @@ window.togCrear = async function(u, on){
 window.setVenta = async function(id, val){
   if(!puedeCrear()){ toast("No tienes permiso para cambiar el precio.","err"); return; }
   const n = Number(val); if(isNaN(n)) return;
-  try{ await updateDoc(doc(db,"vehiculos",id), { precio_venta:n }); toast("Precio actualizado."); }catch(e){ toast("Error.","err"); }
+  try{ await updateDoc(doc(db,"vehiculos",id), { precio_venta:n }); registrar('precio', id, `Cambió el precio de venta a ${money(n)}`); toast("Precio actualizado."); }catch(e){ toast("Error.","err"); }
 };
 
 window.addAbono = async function(id){
@@ -1622,31 +1769,39 @@ window.addAbono = async function(id){
   if(!m || m<=0){ toast("Escribe un monto válido.","warn"); return; }
   const v = autos.find(a=>a.id===id);
   const abonos = [ ...(v.abonos||[]), { monto:m, nota, por:yo.usuario, fecha:new Date().toISOString() } ];
-  try{ await updateDoc(doc(db,"vehiculos",id), { abonos }); toast("Abono de "+money(m)+" registrado."); }
+  try{ await updateDoc(doc(db,"vehiculos",id), { abonos }); registrar('abono', id, `Registró abono de ${money(m)}${nota?' ('+nota+')':''}`); toast("Abono de "+money(m)+" registrado."); }
   catch(e){ toast("No se pudo registrar.","err"); }
 };
 
 window.archivar = async function(id, val){
-  try{ await updateDoc(doc(db,"vehiculos",id), { archivado:val }); cerrar(); toast(val?"Unidad archivada.":"Unidad reactivada."); }
+  try{ await updateDoc(doc(db,"vehiculos",id), { archivado:val, ...(val?{fecha_cierre:new Date().toISOString()}:{}) }); registrar('archivo', id, val?'Archivó el carro':'Reactivó el carro'); cerrar(); toast(val?"Unidad archivada.":"Unidad reactivada."); }
   catch(e){ toast("Error.","err"); }
 };
 
 window.eliminar = async function(id){
   if(!yo?.admin){ toast("Solo un administrador puede eliminar unidades.","err"); return; }
   const v = autos.find(a=>a.id===id); if(!v) return;
-  const ok = confirm(
-    "ELIMINAR PARA SIEMPRE\n\n"+
-    (v.vehiculo||"Sin nombre")+(v.vin?" ("+v.vin+")":"")+"\n"+
-    (v.tipoProceso==="Encargo" ? "Cliente: "+(v.nombreCliente||"—")+"\n" : "")+
-    "\nSe borra el vehículo con todo su historial de tareas y abonos.\nEsto NO se puede deshacer.\n\n"+
-    "Si solo quieres sacarlo de la lista, cancela y usa \"Archivar\".\n\n¿Eliminar de todas formas?"
-  );
-  if(!ok) return;
-  try{
-    await deleteDoc(doc(db,"vehiculos",id));
-    cerrar();
-    toast("Unidad eliminada definitivamente.");
-  }catch(e){ toast("No se pudo eliminar: "+(e.code||e.message),"err"); }
+  const r = await dialogo({ titulo:'¿Mandar a la papelera?', texto:`<b>${esc(v.vehiculo||'Sin nombre')}</b>${v.nombreCliente?' · '+esc(v.nombreCliente):''}<br>Deja de salir en todas partes. Lo puedes recuperar desde <b>Archivo → Papelera</b>.`, ok:'Mandar a la papelera', peligro:true });
+  if(!r) return;
+  try{ await updateDoc(doc(db,"vehiculos",id), { eliminado:true, eliminadoPor:yo.usuario, eliminadoFecha:new Date().toISOString() });
+    registrar('papelera', id, `Mandó a la papelera ${v.vehiculo||'un carro'}`); cerrar(); toast("Enviado a la papelera."); }
+  catch(e){ toast("No se pudo: "+(e.code||e.message),"err"); }
+};
+window.restaurar = async function(id){
+  if(!yo?.admin) return;
+  const v = papelera.find(a=>a.id===id); if(!v) return;
+  try{ await updateDoc(doc(db,"vehiculos",id), { eliminado:deleteField(), eliminadoPor:deleteField(), eliminadoFecha:deleteField() });
+    registrar('papelera', id, `Recuperó ${v.vehiculo||'un carro'} de la papelera`); toast("Recuperado."); }
+  catch(e){ toast("No se pudo: "+(e.code||e.message),"err"); }
+};
+window.borrarDefinitivo = async function(id){
+  if(!yo?.admin) return;
+  const v = papelera.find(a=>a.id===id); if(!v) return;
+  const r = await dialogo({ titulo:'Borrar para siempre', texto:`<b>${esc(v.vehiculo||'Sin nombre')}</b> se borra con todas sus tareas, abonos y costos. <b>No se puede deshacer.</b><br><br>Escribe <b>BORRAR</b> para confirmar.`, campos:[{ label:'Confirmación', placeholder:'BORRAR' }], ok:'Borrar para siempre', peligro:true });
+  if(!r) return; if(r[0].trim().toUpperCase()!=='BORRAR'){ toast("No se borró: escribe BORRAR para confirmar.","warn"); return; }
+  try{ await deleteDoc(doc(db,"vehiculos",id)); deleteDoc(doc(db,"finanzas",id)).catch(()=>{});
+    registrar('papelera', null, `Borró para siempre ${v.vehiculo||'un carro'}`); toast("Borrado para siempre."); }
+  catch(e){ toast("No se pudo: "+(e.code||e.message),"err"); }
 };
 
 window.avisarWhats = function(area, tarea, veh, vin){
@@ -1676,7 +1831,6 @@ window.crearUnidad = async function(){
     vehiculo: veh,
     vin: document.getElementById('fVin').value.trim().toUpperCase(),
     plataforma: document.getElementById('fPlat').value,
-    costo_subasta: Number(document.getElementById('fCosto').value)||0,
     precio_venta: Number(document.getElementById('fVenta').value)||0,
     abonos: (enc && Number(document.getElementById('aCli').value)>0)
       ? [{ monto:Number(document.getElementById('aCli').value), nota:"Abono de inicio de proceso", por:yo.usuario, fecha:new Date().toISOString() }] : [],
@@ -1685,10 +1839,13 @@ window.crearUnidad = async function(){
     creadoPor: yo.usuario,
     fecha_registro: new Date().toISOString()
   };
-  if(window.__cotNueva){ nuevo.cotizacion = window.__cotNueva; window.__cotNueva = null; }
+  const finNueva = { costo_subasta: Number(document.getElementById('fCosto').value)||0 };
+  if(window.__cotNueva){ finNueva.cotizacion = window.__cotNueva; window.__cotNueva = null; }
   // Firestore guarda primero en el teléfono y luego sincroniza: no hay que esperar al servidor
   const ref = doc(collection(db,"vehiculos"));
   setDoc(ref, nuevo).catch(e=> toast("No se pudo guardar en el servidor: "+(e.code||e.message)+". Revisa tu internet.","err"));
+  if(finNueva.costo_subasta || finNueva.cotizacion) guardarFin(ref.id, finNueva).catch(()=>{});
+  registrar('carro', ref.id, `Registró ${veh || ('encargo de '+nomCli)}`);
   toast(veh ? "Carro registrado con su lista de tareas." : "Cliente registrado. Asígnale el carro cuando se gane.");
   const ff = document.getElementById('fFoto');
   if(veh && ff && ff.files && ff.files[0]) subirPortadaArchivo(ref.id, ff.files[0]);
@@ -2327,6 +2484,7 @@ window.peGuardar = async function(){
   const btn = document.querySelector('.pe-barra .btn-p'); if(btn){ btn.disabled = true; btn.textContent = 'Guardando…'; }
   try{
     await setDoc(doc(db,"config","proceso"), { ...limpio, fuente:'control', actualizado:new Date().toISOString(), por:yo.usuario });
+    registrar('proceso', null, 'Guardó cambios en las tareas del proceso');
     procSucio = false; procBorr = null; procAbierta = null;
     toast('Tareas guardadas. Ya le aparecen así a todo el equipo.');
     pintarProceso();

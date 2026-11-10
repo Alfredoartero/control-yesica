@@ -1,0 +1,31 @@
+name: Respaldo diario
+
+on:
+  schedule:
+    - cron: '17 8 * * *'   # 2:17 a. m. en El Salvador
+  workflow_dispatch:        # botón para sacar un respaldo a mano
+
+jobs:
+  respaldar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Instalar dependencias
+        run: |
+          npm init -y >/dev/null 2>&1 || true
+          npm pkg set type=module >/dev/null
+          npm install firebase-admin@12 --no-audit --no-fund
+      - name: Copiar los datos
+        env:
+          FIREBASE_SA: ${{ secrets.FIREBASE_SA }}
+        run: node scripts/respaldo.js
+      - name: Guardar el respaldo (90 días)
+        uses: actions/upload-artifact@v4
+        with:
+          name: respaldo-${{ github.run_number }}
+          path: respaldo/*.json
+          retention-days: 90
