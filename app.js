@@ -1540,7 +1540,7 @@ window.abrirDetalle = function(id, silencioso){
             <div class="deep rounded-xl p-3"><p class="t-lbl">Registrada</p><p class="t-sm mt-1.5" style="color:var(--t1)">${fch(v.fecha_registro)||"—"}</p></div>
           </div>
           <div>${abonos}</div>
-          ${puede('finanzas') ? `<div class="flex gap-2 flex-wrap">
+          ${verCobros() ? `<div class="flex gap-2 flex-wrap">
             <input type="number" id="abMonto" placeholder="Monto $" class="inp flex-1 min-w-[110px] px-3 py-2 rounded-xl text-xs">
             <input type="text" id="abNota" placeholder="Nota (opcional)" class="inp flex-1 min-w-[140px] px-3 py-2 rounded-xl text-xs">
             <button onclick="addAbono('${v.id}')" class="btn-p px-4 py-2">Abonar</button>
@@ -1766,19 +1766,22 @@ window.estadoCuenta = function(id){
 /* ════════ COTIZACIÓN QUE LLEGA DESDE LA CALCULADORA ════════
    La calculadora abre el control con #cotizacion=<datos>. Se guarda en un carro existente o se crea uno nuevo. */
 let cotPendiente = (()=>{
-  const m = location.hash.match(/^#cotizacion=([\w-]+)/); if(!m) return null;
+  const m = location.hash.match(/^#cotizacion=([\w-]+)/);
+  if(!m){ try{ const g = JSON.parse(sessionStorage.getItem('cotPend')||'null'); return g && Array.isArray(g.partidas) ? g : null; }catch(e){ return null; } }
   try{
     const b = m[1].replace(/-/g,'+').replace(/_/g,'/'), pad = b + '==='.slice((b.length+3)%4);
     const c = JSON.parse(decodeURIComponent(escape(atob(pad))));
     history.replaceState(null, '', location.pathname + location.search);
-    return Array.isArray(c.partidas) ? c : null;
+    if(!Array.isArray(c.partidas)) return null;
+    try{ sessionStorage.setItem('cotPend', JSON.stringify(c)); }catch(e){}   // por si hay que entrar con Google antes (la página se recarga)
+    return c;
   }catch(e){ return null; }
 })();
 const subastaDe = c => (c.partidas||[]).find(x=>x.k==='subasta')?.m || 0;
 function cerrarCot(){ document.getElementById('cotOv')?.remove(); }
 window.cerrarCot = cerrarCot;
 function mostrarCotizacion(){
-  const c = cotPendiente; if(!c || !yo) return; cotPendiente = null;
+  const c = cotPendiente; if(!c || !yo) return; cotPendiente = null; try{ sessionStorage.removeItem('cotPend'); }catch(e){}
   if(!verFin()){ toast("Llegó una cotización de la calculadora, pero necesitas el permiso de finanzas para guardarla.","warn"); return; }
   const act = autos.filter(a=>!a.archivado);
   const nom = v => esc(v.vehiculo) || (v.nombreCliente ? "Encargo de "+esc(v.nombreCliente.split(" ")[0]) : "Carro por asignar");
