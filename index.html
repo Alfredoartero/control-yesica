@@ -30,7 +30,7 @@ try{ history.scrollRestoration='manual'; }catch(e){}
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=26">
+<link rel="stylesheet" href="styles.css?v=28">
 </head>
 <body class="min-h-screen pb-20 selection:bg-pink-600 selection:text-white">
 
@@ -81,14 +81,18 @@ try{ history.scrollRestoration='manual'; }catch(e){}
     <div class="rail-brand-t"><b>Importaciones Yesica</b><span>Centro de control</span></div>
   </div>
   <p class="rail-grupo">Trabajo</p>
-  <button onclick="ir('flota')"    id="tbFlota" class="rail-btn on"><span id="icFlota"></span><small>Flota</small></button>
-  <button onclick="ir('mias')"     id="tbMias"  class="rail-btn"><span id="icTareas"></span><small><i class="d">Mis tareas</i><i class="m">Tareas</i></small>
+  <button onclick="ir('hoy')"      id="tbHoy"   class="rail-btn on"><span id="icHoy"></span><small>Hoy</small>
     <span id="badgeMias" class="rail-badge cero">0</span></button>
-  <button onclick="ir('nuevo')"    id="tbNuevo" class="rail-btn"><span id="icNueva"></span><small><i class="d">Nueva unidad</i><i class="m">Nueva</i></small></button>
-  <p class="rail-grupo">Gestión</p>
-  <button onclick="ir('finanzas')" id="tbFin"   class="rail-btn"><span id="icFin"></span><small>Finanzas</small></button>
-  <button onclick="ir('archivo')"  id="tbArch"  class="rail-btn"><span id="icArch"></span><small>Archivo</small></button>
-  <button onclick="ir('usuarios')" id="tbUsers" class="rail-btn hidden"><span id="icEquipo"></span><small>Equipo</small></button>
+  <button onclick="ir('flota')"    id="tbFlota" class="rail-btn"><span id="icFlota"></span><small>Carros</small></button>
+  <button onclick="ir('nuevo')"    id="tbNuevo" class="rail-btn rail-fab"><span id="icNueva"></span><small><i class="d">Nueva unidad</i><i class="m">Nueva</i></small></button>
+  <button onclick="ir('clientes')" id="tbCli"   class="rail-btn hidden"><span id="icCli"></span><small>Clientes</small></button>
+  <button onclick="ir('llegadas')" id="tbLleg"  class="rail-btn hidden"><span id="icLleg"></span><small>Llegadas</small></button>
+  <button onclick="ir('finanzas')" id="tbFin"   class="rail-btn"><span id="icFin"></span><small><i class="d">Dinero</i><i class="m">Dinero</i></small></button>
+  <p class="rail-grupo">Más</p>
+  <button onclick="ir('mias')"     id="tbMias"  class="rail-btn rail-sec"><span id="icTareas"></span><small>Mis tareas</small></button>
+  <button onclick="ir('archivo')"  id="tbArch"  class="rail-btn rail-sec"><span id="icArch"></span><small>Archivo</small></button>
+  <button onclick="ir('usuarios')" id="tbUsers" class="rail-btn rail-sec hidden"><span id="icEquipo"></span><small>Equipo</small></button>
+  <button onclick="abrirMas()"     id="tbMas"   class="rail-btn rail-mas"><span id="icMas"></span><small>Más</small></button>
 </aside>
 
 <div class="shell">
@@ -132,8 +136,16 @@ try{ history.scrollRestoration='manual'; }catch(e){}
   <div class="hidden"><span id="sEnc">0</span><span id="sStk">0</span></div>
 
   <!-- ══ FLOTA ══ -->
-  <section id="pgFlota" class="space-y-4">
-    <div id="hoyFlota"></div>
+  <!-- ══ HOY ══ -->
+  <section id="pgHoy" class="space-y-4"><div id="hoyPag"></div></section>
+
+  <!-- ══ CLIENTES ══ -->
+  <section id="pgCli" class="hidden space-y-4"><div id="cliPag"></div></section>
+
+  <!-- ══ LLEGADAS ══ -->
+  <section id="pgLleg" class="hidden space-y-4"><div id="llegPag"></div></section>
+
+  <section id="pgFlota" class="hidden space-y-4">
     <div class="filtros-bar filtros-web">
       <div class="filtros seg-f">
         <span class="seg-pill" aria-hidden="true"></span>
@@ -145,6 +157,7 @@ try{ history.scrollRestoration='manual'; }catch(e){}
       <label class="busca-web"><span class="busca-ico" id="icoBuscar" aria-hidden="true"></span>
         <input id="buscar" oninput="pintarFlota()" placeholder="Buscar vehículo, cliente o VIN" class="inp" autocomplete="off"></label>
     </div>
+    <div id="etapasF" class="et-chips"></div>
     <p class="result-line" id="resLinea"></p>
     <div id="flota" class="vgrid"></div>
   </section>
@@ -323,6 +336,6 @@ try{ history.scrollRestoration='manual'; }catch(e){}
 
 <div id="modal" class="hidden"></div>
 
-<script type="module" src="app.js?v=26"></script>
+<script type="module" src="app.js?v=28"></script>
 </body>
 </html>

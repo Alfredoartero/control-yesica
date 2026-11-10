@@ -167,6 +167,8 @@ const ICO = {
   robot:    '<rect x="4.5" y="8" width="15" height="11" rx="3"/><path d="M12 4.5V8M8.5 13v1.5M15.5 13v1.5"/><circle cx="12" cy="4" r="1.2"/>',
   foto:     '<rect x="3.5" y="6.5" width="17" height="13" rx="3"/><circle cx="12" cy="13" r="3.2"/><path d="M8.5 6.5l1.2-2h4.6l1.2 2"/>',
   candado:  '<rect x="5.5" y="10.5" width="13" height="9" rx="2.5"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/>',
+  hoy:      '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4L6 18M18 6l1.4-1.4"/>',
+  mas3:     '<circle cx="5.5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="18.5" cy="12" r="1.3"/>',
   subir:    '<path d="M7 14.5l5-5 5 5"/>',
   bajar:    '<path d="M7 9.5l5 5 5-5"/>',
   flecha:   '<path d="M5 12h13M13 7l5 5-5 5"/>',
@@ -308,10 +310,12 @@ onAuthStateChanged(auth, async user=>{
     document.getElementById('tbUsers').classList.toggle('hidden', !yo.admin);
     document.getElementById('tbNuevo').classList.toggle('hidden', !puedeCrear());
     document.getElementById('tbFin').classList.toggle('hidden', !verFin());
+    ajustarNav();
     document.body.classList.toggle('sin-fin', !verFin());
     if(!verFin() && !document.getElementById('pgFin').classList.contains('hidden')) ir('flota');
     if(!puedeCrear() && !document.getElementById('pgNuevo').classList.contains('hidden')) ir('flota');
     pintarUsers(); pintarTodo(); if(suscrito) suscribirFin();
+    if(!window.__inicioHecho){ window.__inicioHecho = true; if(!/[?&](v|d)=/.test(location.search)) ir('hoy'); }
     if(yo.debeCambiar && !window.__cambiandoClave) pedirCambioClave();
     if(!suscrito){
       suscrito = true;
@@ -353,12 +357,15 @@ onAuthStateChanged(auth, async user=>{
 });
 
 /* ════════ NAVEGACIÓN ════════ */
-const PGS = { flota:["pgFlota","tbFlota"], mias:["pgMias","tbMias"], nuevo:["pgNuevo","tbNuevo"], finanzas:["pgFin","tbFin"], archivo:["pgArch","tbArch"], usuarios:["pgUsers","tbUsers"] };
+const PGS = { hoy:["pgHoy","tbHoy"], clientes:["pgCli","tbCli"], llegadas:["pgLleg","tbLleg"], flota:["pgFlota","tbFlota"], mias:["pgMias","tbMias"], nuevo:["pgNuevo","tbNuevo"], finanzas:["pgFin","tbFin"], archivo:["pgArch","tbArch"], usuarios:["pgUsers","tbUsers"] };
 let TITULOS = {   // [ceja, título, palabra en rosa, subtítulo]
-  flota:    ["Flota activa",  "Tu flota",     "en proceso",  "Cada carro con su ruta, lo cobrado y lo que te toca."],
+  hoy:      ["Hoy",           "Hola,",        "equipo",      ""],
+  clientes: ["Clientes",      "Tus",          "clientes",    "Lo que ha pagado cada uno, lo que falta y en qué va su carro."],
+  llegadas: ["Llegadas",      "Lo que viene", "en camino",   "Fechas estimadas de llegada, atrasos y carros que ya están en el país."],
+  flota:    ["Carros",        "Todos los",    "carros",      "Cada carro con su etapa, lo cobrado y lo que sigue."],
   mias:     ["Tu día",        "Mis",          "tareas",      "Lo que te toca a ti, empezando por lo más próximo."],
   nuevo:    ["Nueva unidad",  "Registra un",  "cliente",     "Una búsqueda personalizada: el carro se le asigna cuando se gane en subasta."],
-  finanzas: ["Finanzas",      "Panel",        "financiero",  "Inversión, cobros y ganancia de las unidades activas."],
+  finanzas: ["Dinero",        "Panel",        "financiero",  "Inversión, cobros y ganancia de las unidades activas."],
   archivo:  ["Archivo",       "Unidades",     "terminadas",  "Lo que ya completó su proceso o se archivó."],
   usuarios: ["Equipo",        "Equipo y",     "proceso",     "Las tareas de cada proceso, quién las hace, y los permisos de cada persona."],
 };
@@ -366,10 +373,14 @@ window.ir = function(p){
   if(p==='finanzas' && yo && !verFin()){ toast("No tienes permiso para ver finanzas.","warn"); p='flota'; }
   if(p==='nuevo' && yo && !puedeCrear()){ toast("No tienes permiso para agregar carros.","warn"); p='flota'; }
   if(p==='finanzas') pintarFinanzas();
+  if(p==='clientes') pintarClientes();
+  if(p==='llegadas') pintarLlegadas();
+  if(p==='hoy') pintarHoyPag();
+  cerrarMas();
   if(p==='usuarios') setTimeout(()=>{ pintarProceso(); moverPastilla(); }, 0);
   Object.keys(PGS).forEach(k=>{
     document.getElementById(PGS[k][0]).classList.toggle('hidden', k!==p);
-    document.getElementById(PGS[k][1]).classList.toggle('on', k===p);
+    document.getElementById(PGS[k][1])?.classList.toggle('on', k===p);
   });
   const t = TITULOS[p];
   if(t){
@@ -379,6 +390,7 @@ window.ir = function(p){
     const sec = document.getElementById(PGS[p][0]); if(sec){ sec.classList.remove('entra'); void sec.offsetWidth; sec.classList.add('entra'); }
     window.__vistos = new Set();  // al cambiar de página las tarjetas vuelven a entrar
     const ph = document.getElementById('pageHead'); if(ph) ph.classList.toggle('hidden', p==='mias');
+    document.getElementById('tbMas')?.classList.toggle('on', ['mias','archivo','usuarios'].includes(p) || (p!==rolTab() && ['clientes','llegadas','finanzas'].includes(p)));
   }
   const sr = document.getElementById('statsRow');
   if(sr) sr.classList.toggle('hidden', p!=='flota');
@@ -471,7 +483,7 @@ function faseActual(v){
 }
 
 /* ════════ RENDER ════════ */
-function pintarTodo(){ pintarStats(); pintarFlota(); pintarMias(); pintarArchivo(); pintarFinanzas(); pintarCfgNotis(); actualizarTitulo(); }
+function pintarTodo(){ pintarStats(); pintarFlota(); pintarMias(); pintarClientes(); pintarLlegadas(); if(yo) ajustarNav(); pintarArchivo(); pintarFinanzas(); pintarCfgNotis(); actualizarTitulo(); }
 
 // Mini gráfico de línea con el avance de cada unidad
 function sparkline(vals, w=560, h=64){
@@ -776,6 +788,8 @@ function pintarFlota(){
   if(filtro==="Encargo") ls = ls.filter(a=>a.tipoProceso==="Encargo");
   if(filtro==="Stock")   ls = ls.filter(a=>a.tipoProceso!=="Encargo");
   if(filtro==="mios")    ls = ls.filter(a=> pendientesMias(a).length>0);
+  pintarEtapasF(ls);
+  if(filtroEt!=='todas') ls = ls.filter(a=> grupoEtapa(a)===filtroEt);
   if(q) ls = ls.filter(a => [a.vehiculo,a.nombreCliente,a.vin,a.plataforma,a.deseoCliente,a.telefonoCliente].join(" ").toLowerCase().includes(q));
   const rl = document.getElementById('resLinea'); if(rl) rl.innerHTML = `Mostrando <b>${ls.length}</b> ${ls.length===1?'unidad':'unidades'}`;
   const ib = document.getElementById('icoBuscar'); if(ib && !ib.innerHTML) ib.innerHTML = ico("buscar",16,2);
@@ -845,7 +859,7 @@ function pintarMias(){
   }));
   const totalDia = hechasHoy + totalMias;
   const pctDia = totalDia ? Math.round((hechasHoy/totalDia)*100) : 100;
-  pintarHoy(items, hechasHoy);
+  window.__hechasHoy = hechasHoy; pintarHoyPag();
 
   document.getElementById('miasAnillo').innerHTML = `<div class="hoy-box"><p class="num">${hechasHoy}</p><p class="t-xs">hecha${hechasHoy===1?'':'s'} hoy</p></div>`;
   const tit = document.getElementById('miasTitulo');
@@ -1701,6 +1715,158 @@ async function migrarFinanzas(){
   if(n) toast(`Listo: el dinero de ${n} carro${n>1?'s':''} quedó protegido aparte.`);
 }
 
+/* ════════ DISTRIBUCIÓN: Hoy · Carros · + · (Clientes / Llegadas / Dinero) · Más ════════ */
+let filtroEt = 'todas';
+const ETAPAS_F = [['todas','Todas'],['busca','Buscando'],['subasta','Subasta'],['camino','En camino'],['pais','En el país'],['listo','Entregado']];
+function grupoEtapa(v){ const e = estadoDe(v).t;
+  return e==='Buscando carro' ? 'busca' : (e==='Ganado en subasta'||e==='Por iniciar') ? 'subasta' : e==='En camino' ? 'camino' : (e==='En el país'||e==='Liberado') ? 'pais' : 'listo'; }
+function pintarEtapasF(ls){
+  const box = document.getElementById('etapasF'); if(!box) return;
+  const n = k => k==='todas' ? ls.length : ls.filter(v=>grupoEtapa(v)===k).length;
+  box.innerHTML = ETAPAS_F.map(([k,t])=>`<button class="et-c${filtroEt===k?' on':''}" onclick="setEt('${k}')">${t} <i>${n(k)}</i></button>`).join('');
+}
+window.setEt = k => { filtroEt = k; pintarFlota(); };
+// Pestaña principal según el trabajo de cada quien
+function rolTab(){ if(!yo) return null; if(verFin()) return 'finanzas'; if(verCobros()) return 'clientes'; if(puede('naviera')||puede('aduana')) return 'llegadas'; return null; }
+function ajustarNav(){
+  const prin = rolTab();
+  const ver = { tbCli: verCobros(), tbLleg: yo?.admin || puede('naviera') || puede('aduana') || puedeCrear(), tbFin: verFin() };
+  Object.entries(ver).forEach(([id,ok])=>{ const b = document.getElementById(id); if(!b) return; b.classList.toggle('hidden', !ok); b.classList.toggle('rail-sec', ok && PGS_TAB[id]!==prin); });
+}
+const PGS_TAB = { tbCli:'clientes', tbLleg:'llegadas', tbFin:'finanzas' };
+window.abrirMas = function(){
+  if(document.getElementById('masOv')){ cerrarMas(); return; }
+  const prin = rolTab(), n = (document.getElementById('badgeMias')?.textContent)||'';
+  const it = [
+    ['mias','tareas','Todas mis tareas', n && n!=='0' ? n+' pendientes' : ''],
+    verCobros() && prin!=='clientes' ? ['clientes','usuario','Clientes','Pagos y estado de cada cliente'] : null,
+    (yo?.admin || puede('naviera') || puede('aduana') || puedeCrear()) && prin!=='llegadas' ? ['llegadas','avion','Llegadas','Fechas estimadas y atrasos'] : null,
+    verFin() && prin!=='finanzas' ? ['finanzas','finanzas','Dinero','Resumen del mes y costos'] : null,
+    ['archivo','archivo','Archivo','Carros terminados y papelera'],
+    yo?.admin ? ['usuarios','equipo','Equipo','Tareas del proceso y permisos'] : null,
+  ].filter(Boolean);
+  const ov = document.createElement('div'); ov.id = 'masOv'; ov.className = 'mas-ov';
+  ov.innerHTML = `<div class="mas">
+    <div class="mas-yo"><span class="avatar" style="background:var(--brand)">${esc((yo?.nombre||'?').charAt(0))}</span><div><b>${esc(yo?.nombre||'')}</b><span class="t-xs">${yo?.admin?'Administrador':'Equipo'}</span></div></div>
+    ${it.map(([p,i,t,d])=>`<button class="mas-i" onclick="ir('${p}')"><span class="mas-ic">${ico(i,18,1.7)}</span><span class="flex-1 text-left"><b>${t}</b>${d?`<small>${d}</small>`:''}</span>${ico('flecha',15,1.8)}</button>`).join('')}
+    <div class="mas-pie"><button class="btn-g px-4 py-2.5" onclick="cambiarTema()">Cambiar tema</button><button class="btn-g px-4 py-2.5" onclick="salir()">Cerrar sesión</button></div>
+  </div>`;
+  ov.addEventListener('click', e=>{ if(e.target===ov) cerrarMas(); });
+  document.body.appendChild(ov);
+};
+function cerrarMas(){ document.getElementById('masOv')?.remove(); }
+window.cerrarMas = cerrarMas;
+
+// Siguiente paso de cada carro que me toca (lo mismo que llega por Telegram)
+function siguientesMios(){
+  const out = [];
+  autos.filter(v=>!v.archivado).forEach(v=>{
+    const ls = defT(v).filter(t=>!t.opc), i = ls.findIndex(t=>!tareaOk(v,t)); if(i<0) return;
+    const t = ls[i]; if(!esMia(t)) return;
+    if(t.multi && (v.tareas?.[t.k]?.marcas||{})[yo.usuario]) return;
+    out.push({ v, t, paso:i+1, total:ls.length, quieto: atraso(v) || 0 });
+  });
+  return out.sort((a,b)=> (b.quieto-a.quieto) || (a.paso-b.paso));
+}
+const telDe = v => { const n = String(v.telefonoCliente||'').replace(/\D/g,''); return n.length===8 ? '503'+n : n; };
+function accionDe(v, t){
+  if(esGasto(t)) return { txt:'Pagar', cls:'p', fn:`hoyMarcar(this,'${v.id}','${t.k}','ok')` };
+  if(t.pago) return verCobros() ? { txt:'Abonar', cls:'p', fn:`abrirAbono('${v.id}')` } : { txt:'Ver', cls:'p', fn:`abrirDetalle('${v.id}')` };
+  if(t.foto) return { txt:'Subir', cls:'p', fn:`hoyMarcar(this,'${v.id}','${t.k}','foto')` };
+  if(/whats|avisar|estatus|cliente|opciones/i.test(t.t) && v.telefonoCliente) return { txt:'WhatsApp', cls:'w', fn:`whatsCliente('${v.id}')` };
+  if(t.multi && respons(t.a).length) return { txt:'Mi parte', cls:'p', fn:`hoyMarcar(this,'${v.id}','${t.k}','multi')` };
+  return { txt:'Hecho', cls:'p', fn:`hoyMarcar(this,'${v.id}','${t.k}','ok')` };
+}
+window.abrirAbono = function(id){ abrirDetalle(id); setTimeout(()=>{ const d = [...document.querySelectorAll('details.plegable')].find(x=>/Pagos/.test(x.querySelector('summary')?.textContent||'')); if(d){ d.open = true; d.scrollIntoView({block:'center', behavior:'smooth'}); } }, 120); };
+window.whatsCliente = function(id){
+  const v = autos.find(a=>a.id===id); if(!v) return;
+  if(verCobros()){ estadoCuenta(id); return; }
+  const msg = `Hola ${(v.nombreCliente||'').split(' ')[0]} 👋, te saludamos de *Importaciones Yesica*. Te escribimos sobre tu ${v.vehiculo||'carro'}.`;
+  window.open(`https://wa.me/${telDe(v)}?text=${encodeURIComponent(msg)}`, '_blank');
+};
+function filaTarea(x){
+  const { v, t } = x, a = accionDe(v,t);
+  const sub = [esc(v.vehiculo)||(v.nombreCliente?'Encargo de '+esc(v.nombreCliente.split(' ')[0]):'Carro por asignar'), v.nombreCliente&&v.vehiculo?esc(v.nombreCliente.split(' ')[0]):'', `paso ${x.paso} de ${x.total}`].filter(Boolean).join(' · ');
+  return `<div class="hp-f" onclick="abrirDetalle('${v.id}')">
+    <button class="hoy-ck" title="Marcar como hecha" onclick="event.stopPropagation();hoyMarcar(this,'${v.id}','${t.k}','${t.foto?'foto':(t.multi&&respons(t.a).length?'multi':'ok')}')">${t.foto?ico("clip",13,2):ico("ok",13,3)}</button>
+    <div class="min-w-0 flex-1"><p class="hp-t">${esc(t.t)}</p><p class="hp-s">${sub}${x.quieto?` · <b class="hp-w">${x.quieto} días sin avance</b>`:''}</p></div>
+    <button class="hp-a ${a.cls}" onclick="event.stopPropagation();${a.fn}">${a.txt}</button>
+  </div>`;
+}
+function pintarHoyPag(){
+  const box = document.getElementById('hoyPag'); if(!box || !yo) return;
+  const nom = (yo.nombre||'').split(' ')[0];
+  const sig = siguientesMios(), hechas = window.__hechasHoy || 0;
+  const fecha = new Date().toLocaleDateString('es-SV',{weekday:'long', day:'numeric', month:'short'}).replace('.','');
+  TITULOS.hoy = [fecha, 'Hola,', nom || 'equipo', sig.length ? `${sig.length===1?'Un carro espera':sig.length+' carros esperan'} tu siguiente paso` : 'Nada pendiente para ti por ahora'];
+  if(!document.getElementById('pgHoy').classList.contains('hidden')){
+    document.getElementById('cejaPagina').textContent = TITULOS.hoy[0];
+    ponTitulo(document.getElementById('tituloPagina'), TITULOS.hoy[1], TITULOS.hoy[2]);
+    document.getElementById('subPagina').textContent = TITULOS.hoy[3];
+  }
+  const bm = document.getElementById('badgeMias'); if(bm){ bm.innerText = sig.length; bm.classList.toggle('cero', !sig.length); }
+  const act = autos.filter(v=>!v.archivado);
+  const bloques = [];
+  // Dueños: el pulso del mes
+  if(verFin()){
+    const r = resumenMes(new Date().toISOString().slice(0,7));
+    bloques.push(`<button class="hp-hero ${r.neta<0?'neg':''}" onclick="ir('finanzas')"><span class="fm-l">Utilidad neta de ${nombreMes(new Date().toISOString().slice(0,7)).split(' ')[0].toLowerCase()}</span>
+      <b class="num">${money(r.neta)}</b><span class="fm-s">${r.vendidos.length} vendido${r.vendidos.length===1?'':'s'} · gastos ${money(r.gastos)} · te deben ${money(act.reduce((s,v)=>s+saldo(v),0))}</span></button>`);
+  }
+  // Necesita atención
+  const at = [];
+  act.forEach(v=>{ const d = atraso(v); if(d!=null && (yo.admin || pendientesMias(v).length)) at.push({ p:d, h:`<div class="hp-f" onclick="abrirDetalle('${v.id}')"><div class="min-w-0 flex-1"><p class="hp-t">${esc(v.vehiculo||'Encargo de '+(v.nombreCliente||'').split(' ')[0])} trabado</p><p class="hp-s">${d} días sin avance · ${esc(estadoDe(v).t)}</p></div><button class="hp-a p">Ver</button></div>` }); });
+  act.forEach(v=>{ const e = etaInfo(v); if(e?.tarde) at.push({ p:50, h:`<div class="hp-f" onclick="abrirDetalle('${v.id}')"><div class="min-w-0 flex-1"><p class="hp-t">${esc(v.vehiculo)}: no ha llegado</p><p class="hp-s">${e.txt}</p></div><button class="hp-a p">Ver</button></div>` }); });
+  if(verFin()) act.forEach(v=>{ const ct = cotDe(v); if(!ct) return; const dif = costosDe(v).total - Number(ct.costoTotal||0); if(dif>0) at.push({ p:40, h:`<div class="hp-f" onclick="abrirDetalle('${v.id}')"><div class="min-w-0 flex-1"><p class="hp-t">${esc(v.vehiculo)}: se pasó del estimado</p><p class="hp-s">+${money(dif)} contra la calculadora</p></div><button class="hp-a p">Ver</button></div>` }); });
+  if(yo.admin) Object.keys(EQUIPO).filter(u=>!usersData[u]).forEach(u=> at.push({ p:1, h:`<div class="hp-f" onclick="ir('usuarios');setTimeout(()=>verEquipo('personas'),50)"><div class="min-w-0 flex-1"><p class="hp-t">${esc(EQUIPO[u].nombre)} sin cuenta</p><p class="hp-s">No puede entrar hasta que le crees su acceso</p></div><button class="hp-a p">Crear</button></div>` }));
+  if(at.length) bloques.push(`<div class="hp-c lado"><p class="hp-ct">Necesita atención <span>${at.length}</span></p>${at.sort((a,b)=>b.p-a.p).slice(0,5).map(x=>x.h).join('')}</div>`);
+  // Mi siguiente paso
+  bloques.push(`<div class="hp-c"><p class="hp-ct">Tu siguiente paso <span>${sig.length ? `<button class="hp-lnk" onclick="ir('mias')">Todas mis tareas →</button>` : ''}</span></p>
+    ${sig.length ? sig.slice(0,8).map(filaTarea).join('') + (sig.length>8?`<button class="hp-mas" onclick="ir('mias')">Ver ${sig.length-8} más</button>`:'')
+      : `<div class="hp-vacio">${ico("ok",22,2.2)}<p><b>Todo al día.</b>${hechas?` Hoy marcaste ${hechas}.`:''} Cuando un carro llegue a una tarea tuya, aparece aquí.</p></div>`}</div>`);
+  // Ventas: clientes con saldo
+  if(verCobros() && !yo.admin){
+    const cl = act.filter(v=>v.nombreCliente && saldo(v)>0).sort((a,b)=>saldo(b)-saldo(a)).slice(0,4);
+    if(cl.length) bloques.push(`<div class="hp-c lado"><p class="hp-ct">Clientes con saldo <span><button class="hp-lnk" onclick="ir('clientes')">Ver todos →</button></span></p>${cl.map(v=>`<div class="hp-f" onclick="abrirDetalle('${v.id}')"><div class="min-w-0 flex-1"><p class="hp-t">${esc(v.nombreCliente)}</p><p class="hp-s">${esc(v.vehiculo||'Buscando carro')} · ${esc(estadoDe(v).t)} · debe ${money(saldo(v))}</p></div>${v.telefonoCliente?`<button class="hp-a w" onclick="event.stopPropagation();estadoCuenta('${v.id}')">Estado</button>`:''}</div>`).join('')}</div>`);
+  }
+  // Operación: llegadas próximas
+  if(!verFin() && (puede('naviera')||puede('aduana'))){
+    const ll = act.filter(v=>etaInfo(v)).sort((a,b)=>etaInfo(a).d-etaInfo(b).d).slice(0,4);
+    if(ll.length) bloques.push(`<div class="hp-c lado"><p class="hp-ct">Próximas llegadas <span><button class="hp-lnk" onclick="ir('llegadas')">Ver todas →</button></span></p>${ll.map(v=>`<div class="hp-f" onclick="abrirDetalle('${v.id}')"><div class="min-w-0 flex-1"><p class="hp-t">${esc(v.vehiculo)}</p><p class="hp-s">${etaInfo(v).f}</p></div><span class="hp-a ${etaInfo(v).tarde?'p':'w'}">${etaInfo(v).txt.replace('Llega ','')}</span></div>`).join('')}</div>`);
+  }
+  box.innerHTML = `<div class="hp">${bloques.join('')}</div>`;
+}
+function pintarClientes(){
+  const box = document.getElementById('cliPag'); if(!box) return;
+  if(!verCobros()){ box.innerHTML = `<div class="vacio"><p class="t-md">No tienes permiso de cobros.</p></div>`; return; }
+  const ls = autos.filter(v=>!v.archivado && v.nombreCliente).sort((a,b)=>saldo(b)-saldo(a));
+  box.innerHTML = ls.length ? `<div class="cl-grid">${ls.map(v=>{ const vta = Number(v.precio_venta||0), cob = pagado(v), pct = vta?Math.min(100,Math.round(cob/vta*100)):0;
+    return `<div class="cl" onclick="abrirDetalle('${v.id}')">
+      <div class="cl-cab"><span class="pp-av">${esc(v.nombreCliente.charAt(0).toUpperCase())}</span><div class="min-w-0 flex-1"><p class="cl-n">${esc(v.nombreCliente)}</p><p class="hp-s">${(v.vehiculo?esc(v.vehiculo):(v.deseoCliente?'Busca '+esc(v.deseoCliente):'Buscando carro'))}</p></div>${pillEstado(v)}</div>
+      <div class="fc-nums"><div><small>Precio</small><b class="num">${vta?money(vta):'—'}</b></div><div><small>Pagado</small><b class="num ok">${money(cob)}</b></div><div><small>Falta</small><b class="num ${saldo(v)?'wn':''}">${money(saldo(v))}</b></div></div>
+      ${vta?`<div class="fc-bar"><i style="width:${pct}%"></i></div>`:''}
+      <div class="cl-acc" onclick="event.stopPropagation()">${v.telefonoCliente?`<a class="btn-g px-3 py-2" href="https://wa.me/${telDe(v)}" target="_blank" rel="noopener">${ico("chat",14)} WhatsApp</a><button class="btn-p px-3 py-2" onclick="estadoCuenta('${v.id}')">Estado de cuenta</button>`:`<span class="t-xs">Sin teléfono registrado</span>`}<button class="btn-g px-3 py-2" onclick="abrirAbono('${v.id}')">Abonar</button></div>
+    </div>`; }).join('')}</div>` : `<div class="vacio"><p class="t-md">Todavía no hay clientes con carros activos.</p></div>`;
+}
+function pintarLlegadas(){
+  const box = document.getElementById('llegPag'); if(!box) return;
+  const act = autos.filter(v=>!v.archivado && v.vehiculo);
+  const conEta = act.filter(v=>etaInfo(v)).sort((a,b)=>etaInfo(a).d-etaInfo(b).d);
+  const sinEta = act.filter(v=>!v.eta && ['Ganado en subasta','En camino'].includes(estadoDe(v).t));
+  const pais = act.filter(v=>['En el país','Liberado'].includes(estadoDe(v).t));
+  const fila = (v, der) => `<div class="hp-f" onclick="abrirDetalle('${v.id}')"><div class="min-w-0 flex-1"><p class="hp-t">${esc(v.vehiculo)}</p><p class="hp-s">${esc(v.nombreCliente||'Stock')} · ${esc(estadoDe(v).t)}${atraso(v)?` · <b class="hp-w">${atraso(v)} días sin avance</b>`:''}</p></div>${der}</div>`;
+  const editable = puedeLogistica();
+  box.innerHTML = `<div class="hp">
+    <div class="hp-c"><p class="hp-ct">Vienen en camino <span>${conEta.length}</span></p>${conEta.map(v=>fila(v, `<span class="hp-a ${etaInfo(v).tarde?'p':'w'}">${etaInfo(v).f}</span>`)).join('') || '<p class="hp-s py-3">Ningún carro tiene fecha estimada todavía.</p>'}</div>
+    <div class="hp-c"><p class="hp-ct">Sin fecha estimada <span>${sinEta.length}</span></p>${sinEta.map(v=>fila(v, editable?`<label class="hp-fecha" onclick="event.stopPropagation()"><input type="date" onchange="ponEta('${v.id}',this.value)"><span>Poner fecha</span></label>`:'')).join('') || '<p class="hp-s py-3">Todos los carros en camino tienen fecha.</p>'}</div>
+    <div class="hp-c"><p class="hp-ct">Ya en el país <span>${pais.length}</span></p>${pais.map(v=>fila(v,'<span class="hp-a w">En el país</span>')).join('') || '<p class="hp-s py-3">Ninguno por ahora.</p>'}</div>
+  </div>`;
+}
+window.ponEta = async function(id, eta){
+  if(!eta || !puedeLogistica()) return;
+  try{ await updateDoc(doc(db,"vehiculos",id), { eta }); registrar('eta', id, `Puso llegada estimada: ${eta}`); toast("Fecha de llegada guardada."); }catch(e){ toast("No se pudo: "+(e.code||e.message),"err"); }
+};
+
 /* ════════ FINANZAS DE LA EMPRESA: resumen del mes ════════ */
 const CAT_GASTO = ["Planilla","Local y servicios","Publicidad","Combustible y transporte","Trámites","Comisiones","Otros"];
 const mesDe = x => { const t = ms_(x); return t ? new Date(t).toLocaleDateString('en-CA',{timeZone:'America/El_Salvador'}).slice(0,7) : ''; };
@@ -2405,7 +2571,7 @@ setTipo("Encargo");
 
 // Íconos del riel y la barra superior
 (function(){
-  const map = { icAvisos:'campana', icNuevaH:'nueva', icAlertaH:'alerta', icFinH:'finanzas', icDirH:'direccion', icArchH:'archivo', icEqH1:'equipo', icEqH2:'equipo', icFlota:'flota', icTareas:'tareas', icNueva:'nueva', icFin:'finanzas',
+  const map = { icAvisos:'campana', icNuevaH:'nueva', icAlertaH:'alerta', icFinH:'finanzas', icDirH:'direccion', icArchH:'archivo', icEqH1:'equipo', icEqH2:'equipo', icFlota:'flota', icHoy:'hoy', icCli:'usuario', icLleg:'avion', icMas:'mas3', icTareas:'tareas', icNueva:'nueva', icFin:'finanzas',
                 icArch:'archivo', icEquipo:'equipo', icFotoIn:'foto' };
   Object.keys(map).forEach(id=>{ const e=document.getElementById(id); if(e) e.innerHTML = ico(map[id], 19, 1.6); });
   const k = { kiUnidades:'flota', kiAvance:'direccion', kiCobrar:'reloj', kiMias:'tareas' };
