@@ -13,23 +13,23 @@ const db = admin.firestore();
 
 const T_ENC = [   // respaldo: el proceso real viene del editor (config/proceso)
   {"k": "e01", "f": 0, "a": "ventas", "t": "Ingresar datos del cliente y vehículo deseado", "d": "Nombre, foto de DUI, carro deseado, millaje, golpe y presupuesto inicial", "foto": true, "personas": ["yesica", "leslie", "alfre"]},
-  {"k": "e02", "f": 0, "a": "finanzas", "t": "Confirmar pago de $100", "d": "Anexar comprobante. Se abona al total de la venta", "pago": true, "foto": true},
+  {"k": "e02", "f": 0, "a": "finanzas", "t": "Confirmar pago de $100", "d": "Anexar comprobante. Se abona al total de la venta", "pago": true, "foto": true, "hito": true},
   {"k": "e03", "f": 0, "a": "finanzas", "t": "Facturar los $100 de inicio"},
   {"k": "e04", "f": 0, "a": "ventas", "t": "Crear grupo de WhatsApp"},
   {"k": "e05", "f": 0, "a": "marketing", "t": "Enviar opciones al cliente", "d": "De lunes a viernes hasta que se le gane una", "multi": true, "repetible": true, "hasta": "e06", "personas": ["cesar"]},
-  {"k": "e06", "f": 1, "a": "compras", "t": "Se ganó el vehículo en subasta", "personas": ["alfre", "yesica"]},
-  {"k": "e07", "f": 1, "a": "direccion", "t": "Registrar vehículo en sistema", "d": "Vehículo, costo y precio de venta", "personas": ["alfre", "yesica", "leslie"]},
+  {"k": "e06", "f": 1, "a": "compras", "t": "Se ganó el vehículo en subasta", "personas": ["alfre", "yesica"], "hito": true},
+  {"k": "e07", "f": 1, "a": "direccion", "t": "Registrar vehículo en sistema", "d": "Vehículo, costo y precio de venta", "personas": ["alfre", "yesica", "leslie"], "c": "log"},
   {"k": "e08", "f": 1, "a": "compras", "t": "Pagar la subasta (Copart / IAA)", "d": "Evitar storage. Adjuntar comprobante del pago", "foto": true},
   {"k": "e11", "f": 1, "a": "finanzas", "t": "Confirmar pago del 50% de enganche", "d": "Con comprobante en foto, o confirmar recibido si es efectivo", "pago": true, "foto": true},
   {"k": "e12", "f": 1, "a": "finanzas", "t": "Facturar el abono del 50%"},
   {"k": "e13", "f": 1, "a": "legal", "t": "Crear promesa de venta"},
   {"k": "e09", "f": 1, "a": "naviera", "t": "Asignar a naviera"},
   {"k": "e10", "f": 1, "a": "naviera", "t": "Brindar estatus al cliente", "d": "Constante, una vez por semana hasta que venga", "repetible": true, "hasta": "e14"},
-  {"k": "e14", "f": 2, "a": "aduana", "t": "Marcar llegada del vehículo al país"},
+  {"k": "e14", "f": 2, "a": "aduana", "t": "Marcar llegada del vehículo al país", "hito": true},
   {"k": "e24", "f": 2, "a": "ventas", "t": "Avisar al cliente que su vehículo llegó al país", "d": "Mensaje al cliente apenas arriba, con los siguientes pasos y lo que falta pagar"},
   {"k": "e16", "f": 2, "a": "finanzas", "t": "Pagar a la naviera", "d": "Adjuntar comprobante del pago", "foto": true},
   {"k": "e17", "f": 2, "a": "aduana", "t": "Cancelar impuestos de aduana", "d": "Adjuntar comprobante / DUCA", "foto": true},
-  {"k": "e21", "f": 2, "a": "aduana", "t": "Liberación del vehículo"},
+  {"k": "e21", "f": 2, "a": "aduana", "t": "Liberación del vehículo", "hito": true},
   {"k": "e18", "f": 2, "a": "aduana", "t": "Revisión mecánica", "d": "Subir fotos del estado del vehículo", "foto": true},
   {"k": "e19", "f": 2, "a": "finanzas", "t": "Cliente cancela el restante", "d": "Siempre con comprobante", "pago": true, "foto": true},
   {"k": "e20", "f": 2, "a": "finanzas", "t": "Facturar el monto pagado"},
@@ -39,22 +39,22 @@ const T_ENC = [   // respaldo: el proceso real viene del editor (config/proceso)
   {"k": "e23", "f": 2, "a": "legal", "t": "Hacer prórroga de compraventa", "opc": true}
 ];
 const T_STK = [   // respaldo: el proceso real viene del editor (config/proceso)
-  {"k": "s01", "f": 0, "a": "direccion", "t": "Registrar coste e introducción del vehículo"},
+  {"k": "s01", "f": 0, "a": "direccion", "t": "Registrar coste e introducción del vehículo", "hito": true, "c": "log"},
   {"k": "s03", "f": 1, "a": "compras", "t": "Pagar la subasta (Copart / IAA)", "d": "Evitar storage. Adjuntar comprobante del pago", "foto": true},
   {"k": "s04", "f": 1, "a": "naviera", "t": "Asignar a naviera"},
   {"k": "s05", "f": 2, "a": "direccion", "t": "Definir precio a cliente", "d": "Podría darse en menos"},
   {"k": "s02", "f": 2, "a": "marketing", "t": "Publicidad del vehículo", "d": "Cada quien en su canal (Facebook, grupo de WhatsApp, etc.)", "multi": true, "personas": ["nehe", "leslie", "alfre"]},
-  {"k": "s10", "f": 2, "a": "naviera", "t": "Brindar estatus al cliente", "d": "Solo si se vendió antes de llegar: una vez por semana hasta que venga", "repetible": true, "hasta": "s11", "opc": true},
-  {"k": "s11", "f": 3, "a": "aduana", "t": "Marcar llegada del vehículo al país"},
-  {"k": "nmw6nog5q", "f": 3, "a": "finanzas", "t": "Pagar a la naviera", "d": "Adjuntar comprobante del pago", "foto": true},
+  {"k": "s06", "f": 2, "a": "ventas", "t": "Venta o asignación a cliente"},
+  {"k": "s07", "f": 2, "a": "finanzas", "t": "Pago de pre-reserva / reserva (≥50%)", "d": "Con comprobante, o confirmar recibido si es efectivo", "pago": true, "foto": true},
+  {"k": "s08", "f": 2, "a": "finanzas", "t": "Facturar el abono recibido"},
+  {"k": "s09", "f": 2, "a": "legal", "t": "Crear promesa de venta"},
+  {"k": "s10", "f": 2, "a": "naviera", "t": "Brindar estatus al cliente", "d": "Una vez por semana hasta que llegue", "repetible": true, "hasta": "s11", "c": "venta"},
+  {"k": "s11", "f": 3, "a": "aduana", "t": "Marcar llegada del vehículo al país", "hito": true},
+  {"k": "nmw6nog5q", "f": 3, "a": "finanzas", "t": "Pagar a la naviera", "d": "Adjuntar comprobante del pago", "foto": true, "c": "log"},
   {"k": "s12", "f": 3, "a": "aduana", "t": "Cancelar impuestos de aduana", "d": "Adjuntar comprobante / DUCA", "foto": true},
-  {"k": "s14", "f": 3, "a": "aduana", "t": "Liberación del vehículo"},
+  {"k": "s14", "f": 3, "a": "aduana", "t": "Liberación del vehículo", "hito": true},
   {"k": "s13", "f": 3, "a": "aduana", "t": "Revisión mecánica", "d": "Subir fotos del estado del vehículo", "foto": true},
-  {"k": "s06", "f": 4, "a": "ventas", "t": "Venta o asignación a cliente"},
-  {"k": "s07", "f": 4, "a": "finanzas", "t": "Pago de pre-reserva / reserva (≥50%)", "d": "Con comprobante, o confirmar recibido si es efectivo", "pago": true, "foto": true},
-  {"k": "s08", "f": 4, "a": "finanzas", "t": "Facturar el abono recibido"},
-  {"k": "s09", "f": 4, "a": "legal", "t": "Crear promesa de venta"},
-  {"k": "s19", "f": 4, "a": "ventas", "t": "Avisar al cliente que su vehículo llegó al país", "d": "Solo si se vendió antes de llegar", "opc": true},
+  {"k": "s19", "f": 4, "a": "ventas", "t": "Avisar al cliente que su vehículo llegó al país", "d": "Mensaje al cliente apenas arriba, con lo que falta pagar"},
   {"k": "s16", "f": 4, "a": "finanzas", "t": "Cliente cancela el restante", "d": "Adjuntar comprobante del pago final", "pago": true, "foto": true},
   {"k": "s15", "f": 4, "a": "finanzas", "t": "Facturar el monto pagado"},
   {"k": "s17", "f": 4, "a": "legal", "t": "Crear compraventa y firmar contrato", "d": "Adjuntar foto del contrato firmado", "foto": true},
@@ -62,33 +62,35 @@ const T_STK = [   // respaldo: el proceso real viene del editor (config/proceso)
   {"k": "s18", "f": 4, "a": "legal", "t": "Hacer prórroga de compraventa", "opc": true}
 ];
 
-/* Orden lógico del proceso (versión 2): primero lo urgente de dinero y logística, la venta no tapa la aduana.
-   Conserva las personas y las tareas propias que ya tenga el proceso; solo reordena y corrige nombres. */
-const PROC_V = 2;
+/* Proceso versión 3: logística y venta avanzan en paralelo (carriles), con puntos de control.
+   Conserva personas y tareas propias; solo reordena, corrige nombres y marca carriles/puntos de control. */
+const PROC_V = 3;
 function ajustarProcesoV2(p){
   const q = JSON.parse(JSON.stringify(p));
   const plan = {
     Encargo:{ orden:[['e01',0],['e02',0],['e03',0],['e04',0],['e05',0],
         ['e06',1],['e07',1],['e08',1],['e11',1],['e12',1],['e13',1],['e09',1],['e10',1],
         ['e14',2],['e24',2],['e16',2],['e17',2],['e21',2],['e18',2],['e19',2],['e20',2],['e22',2],['e25',2],['e15',2],['e23',2]],
-      cambios:{ e15:{ t:"Publicar la entrega del carro", d:"Foto o video de la entrega, cada quien en su canal", opc:true } } },
-    Stock:{ fases:["Coste","Compra y envío","Precio y anuncio","Aduana","Venta y entrega"],
-      orden:[['s01',0],['s03',1],['s04',1],['s05',2],['s02',2],['s10',2],
+      cambios:{ e02:{ hito:true }, e06:{ hito:true }, e07:{ c:'log' }, e14:{ hito:true }, e21:{ hito:true },
+        e15:{ t:"Publicar la entrega del carro", d:"Foto o video de la entrega, cada quien en su canal", opc:true } } },
+    Stock:{ fases:["Coste","Compra y envío","Precio y venta","Aduana","Pago final y entrega"],
+      orden:[['s01',0],['s03',1],['s04',1],
+        ['s05',2],['s02',2],['s06',2],['s07',2],['s08',2],['s09',2],['s10',2],
         ['s11',3],['nmw6nog5q',3],['s12',3],['s14',3],['s13',3],
-        ['s06',4],['s07',4],['s08',4],['s09',4],['s19',4],['s16',4],['s15',4],['s17',4],['s20',4],['s18',4]],
-      cambios:{ s03:{ t:"Pagar la subasta (Copart / IAA)" }, s04:{ t:"Asignar a naviera" },
-        s10:{ t:"Brindar estatus al cliente", d:"Solo si se vendió antes de llegar: una vez por semana hasta que venga", opc:true },
-        s11:{ t:"Marcar llegada del vehículo al país" },
-        nmw6nog5q:{ t:"Pagar a la naviera", a:"finanzas", d:"Adjuntar comprobante del pago", foto:true },
-        s12:{ t:"Cancelar impuestos de aduana" }, s09:{ t:"Crear promesa de venta" },
-        s19:{ t:"Avisar al cliente que su vehículo llegó al país", d:"Solo si se vendió antes de llegar", opc:true },
+        ['s19',4],['s16',4],['s15',4],['s17',4],['s20',4],['s18',4]],
+      cambios:{ s01:{ hito:true, c:'log' }, s03:{ t:"Pagar la subasta (Copart / IAA)" }, s04:{ t:"Asignar a naviera" },
+        s10:{ t:"Brindar estatus al cliente", d:"Una vez por semana hasta que llegue", opc:false, c:'venta' },
+        s11:{ t:"Marcar llegada del vehículo al país", hito:true },
+        nmw6nog5q:{ t:"Pagar a la naviera", a:"finanzas", d:"Adjuntar comprobante del pago", foto:true, c:'log' },
+        s12:{ t:"Cancelar impuestos de aduana" }, s14:{ hito:true }, s09:{ t:"Crear promesa de venta" },
+        s19:{ t:"Avisar al cliente que su vehículo llegó al país", d:"Mensaje al cliente apenas arriba, con lo que falta pagar", opc:false },
         s16:{ t:"Cliente cancela el restante" }, s15:{ t:"Facturar el monto pagado" },
         s17:{ t:"Crear compraventa y firmar contrato" }, s18:{ t:"Hacer prórroga de compraventa" } } }
   };
   for(const tipo of ['Encargo','Stock']){
     const pl = plan[tipo], ts = q.tareas?.[tipo]; if(!Array.isArray(ts)) continue;
     const by = new Map(ts.map(t=>[t.k,t])), out = [];
-    pl.orden.forEach(([k,f])=>{ const t = by.get(k); if(!t) return; t.f = f; Object.assign(t, pl.cambios[k]||{}); out.push(t); by.delete(k); });
+    pl.orden.forEach(([k,f])=>{ const t = by.get(k); if(!t) return; t.f = f; Object.assign(t, pl.cambios[k]||{}); if(t.opc===false) delete t.opc; out.push(t); by.delete(k); });
     by.forEach(t=>{ let i = -1; out.forEach((x,j)=>{ if(x.f<=t.f) i = j; }); out.splice(i+1, 0, t); });   // tareas propias: al final de su etapa
     q.tareas[tipo] = out;
     if(pl.fases){ q.fases = q.fases || {}; q.fases[tipo] = pl.fases; }
@@ -148,12 +150,48 @@ const resp = (usuarios, t) => {
 
 function tareaOk(usuarios, v, t){
   const st = v.tareas?.[t.k];
+  if(t.repetible){
+    const h = t.hasta && defT(v).find(x=>x.k===t.hasta);
+    if(h && !h.repetible && tareaOk(usuarios,v,h)) return true;
+    const f = st?.ok && st.fecha ? Date.parse(st.fecha) : 0;
+    return !!f && (Date.now()-f) < cadaDias(t)*86400000 - 6*3600000;
+  }
   if(!t.multi) return !!st?.ok;
   const req = resp(usuarios, t);
   if(!req.length) return !!st?.ok;
   const m = st?.marcas || {};
   return req.every(u => !!m[u]);
 }
+
+/* ── Motor de pasos: logística y venta avanzan a la vez ──
+   · Cada tarea va en un carril (logística o venta). Dentro del carril se sigue el orden.
+   · Un punto de control pendiente (ganó subasta, llegó, liberado…) frena lo que viene después en los dos carriles.
+   · La última tarea (entrega) espera a que todo lo demás esté hecho.
+   · Las tareas constantes no frenan a nadie: vuelven a salir cada tantos días hasta que se cumpla su tope. */
+const cadaDias = t => Number(t.cada) || (/lunes a viernes|diari/i.test(t.d||'') ? 1 : 7);
+const carril = t => t.c || ((['compras','naviera','aduana'].includes(t.a) || esGasto(t)) ? 'log' : 'venta');
+let U = {};
+const RX_GASTO = /^(pagar|pagos?\b|cancelar impuestos|pago de impuestos)/i;
+const esGasto = t => t.gasto!==undefined ? !!t.gasto : (!t.pago && RX_GASTO.test(t.t||''));
+const bloq = v => defT(v).filter(t=>!t.opc && !t.repetible);
+function activos(v){
+  const ls = bloq(v), out = [], visto = {}; let frena = false; const ult = ls[ls.length-1];
+  for(const t of ls){
+    if(tareaOk(U,v,t)) continue;
+    const c = carril(t);
+    if(!visto[c] && !frena && (t!==ult || ls.every(x=> x===t || tareaOk(U,v,x)))) out.push(t);
+    visto[c] = true; if(t.hito) frena = true;
+  }
+  return out;
+}
+function faltaAntes(v, t){     // qué debería estar hecho antes de esta tarea
+  if(t.opc) return [];
+  const ls = bloq(v), ult = ls[ls.length-1], c = carril(t), out = [];
+  for(const x of defT(v)){ if(x===t) break; if(x.opc || x.repetible || tareaOk(U,v,x)) continue; if(carril(x)===c || x.hito || t===ult) out.push(x); }
+  return out;
+}
+function repsActivas(v){ return defT(v).filter(t=> t.repetible && !t.opc && !tareaOk(U,v,t) && !faltaAntes(v,t).length); }
+const pasos = v => [...activos(v), ...repsActivas(v)];
 
 const TG = process.env.TELEGRAM_TOKEN;
 const escHtml = s => String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
@@ -249,16 +287,18 @@ async function main(){
     // Si ya se hizo hasta el paso 9, se avisa el paso 10, y solo a quien le toca.
     const mapa = {};
     autos.forEach(v => {
-      const ls = defT(v).filter(t => !t.opc);
-      const i = ls.findIndex(t => !tareaOk(usuarios, v, t));
-      if(i < 0) return;                                   // proceso completo
-      const t = ls[i];
+      U = usuarios;
+      const ls = bloq(v);
+      pasos(v).forEach(t => {
+      if((t.k==='e14' || t.k==='s11') && v.eta && Date.parse(v.eta+'T12:00:00') > Date.now()+86400000) return;   // el barco aún no llega
+      const i = ls.indexOf(t);
       let quien = resp(usuarios, t);
       // Si nadie tiene esa tarea (sin persona y nadie con el área), se avisa a los admin para que no se quede trabada
       if(!quien.length) quien = Object.keys(usuarios).filter(u => usuarios[u].admin);
       quien.forEach(u => {
-        if(t.multi && (v.tareas?.[t.k]?.marcas || {})[u]) return;  // ya hizo su parte
+        if(t.multi && !t.repetible && (v.tareas?.[t.k]?.marcas || {})[u]) return;  // ya hizo su parte
         (mapa[u] ||= []).push({ v, t, paso:i+1, total:ls.length, quieto:diasQuieto(v) });
+      });
       });
     });
 
@@ -269,9 +309,9 @@ async function main(){
       const ls = mapa[u];
       const nombreCarro = v => v.vehiculo || (v.nombreCliente ? "Encargo de " + v.nombreCliente.split(" ")[0] : "Carro por asignar");
       const lista = ls.map(x =>
-        `\u{1F697} <b>${escHtml(nombreCarro(x.v))}</b>\n   \u{27A1}\u{FE0F} ${escHtml(x.t.t)}  <i>(paso ${x.paso} de ${x.total})</i>` + (x.quieto>=7 ? `\n   \u{26A0}\u{FE0F} <b>${x.quieto} d\u00edas sin avance</b>` : '')).join("\n\n");
+        `\u{1F697} <b>${escHtml(nombreCarro(x.v))}</b>\n   \u{27A1}\u{FE0F} ${escHtml(x.t.t)}  <i>(${x.paso ? `paso ${x.paso} de ${x.total}` : 'constante'})</i>` + (x.quieto>=7 ? `\n   \u{26A0}\u{FE0F} <b>${x.quieto} d\u00edas sin avance</b>` : '')).join("\n\n");
       const texto =
-        `\u{23F0} <b>${ls.length===1 ? "Un carro espera" : ls.length+" carros esperan"} tu siguiente paso</b>\n\n` +
+        `\u{23F0} <b>${ls.length===1 ? "Un paso te espera" : ls.length+" pasos te esperan"}</b>\n\n` +
         lista +
         `\n\n<i>M\u00e1rcalo en el sistema cuando lo completes.</i>`;
       const ok = await enviarTelegram(chat, texto);

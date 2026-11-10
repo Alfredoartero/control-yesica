@@ -68,23 +68,23 @@ const fch = ms => { if(!ms) return ""; const d=new Date(ms); const hoy=new Date(
 const FASES_ENC = ["1 · Inicio de proceso", "2 · Adquisición y pago inicial", "3 · Llegada y compraventa"];
 const T_ENC = [   // respaldo: el proceso real viene del editor (config/proceso)
   {"k": "e01", "f": 0, "a": "ventas", "t": "Ingresar datos del cliente y vehículo deseado", "d": "Nombre, foto de DUI, carro deseado, millaje, golpe y presupuesto inicial", "foto": true, "personas": ["yesica", "leslie", "alfre"]},
-  {"k": "e02", "f": 0, "a": "finanzas", "t": "Confirmar pago de $100", "d": "Anexar comprobante. Se abona al total de la venta", "pago": true, "foto": true},
+  {"k": "e02", "f": 0, "a": "finanzas", "t": "Confirmar pago de $100", "d": "Anexar comprobante. Se abona al total de la venta", "pago": true, "foto": true, "hito": true},
   {"k": "e03", "f": 0, "a": "finanzas", "t": "Facturar los $100 de inicio"},
   {"k": "e04", "f": 0, "a": "ventas", "t": "Crear grupo de WhatsApp"},
   {"k": "e05", "f": 0, "a": "marketing", "t": "Enviar opciones al cliente", "d": "De lunes a viernes hasta que se le gane una", "multi": true, "repetible": true, "hasta": "e06", "personas": ["cesar"]},
-  {"k": "e06", "f": 1, "a": "compras", "t": "Se ganó el vehículo en subasta", "personas": ["alfre", "yesica"]},
-  {"k": "e07", "f": 1, "a": "direccion", "t": "Registrar vehículo en sistema", "d": "Vehículo, costo y precio de venta", "personas": ["alfre", "yesica", "leslie"]},
+  {"k": "e06", "f": 1, "a": "compras", "t": "Se ganó el vehículo en subasta", "personas": ["alfre", "yesica"], "hito": true},
+  {"k": "e07", "f": 1, "a": "direccion", "t": "Registrar vehículo en sistema", "d": "Vehículo, costo y precio de venta", "personas": ["alfre", "yesica", "leslie"], "c": "log"},
   {"k": "e08", "f": 1, "a": "compras", "t": "Pagar la subasta (Copart / IAA)", "d": "Evitar storage. Adjuntar comprobante del pago", "foto": true},
   {"k": "e11", "f": 1, "a": "finanzas", "t": "Confirmar pago del 50% de enganche", "d": "Con comprobante en foto, o confirmar recibido si es efectivo", "pago": true, "foto": true},
   {"k": "e12", "f": 1, "a": "finanzas", "t": "Facturar el abono del 50%"},
   {"k": "e13", "f": 1, "a": "legal", "t": "Crear promesa de venta"},
   {"k": "e09", "f": 1, "a": "naviera", "t": "Asignar a naviera"},
   {"k": "e10", "f": 1, "a": "naviera", "t": "Brindar estatus al cliente", "d": "Constante, una vez por semana hasta que venga", "repetible": true, "hasta": "e14"},
-  {"k": "e14", "f": 2, "a": "aduana", "t": "Marcar llegada del vehículo al país"},
+  {"k": "e14", "f": 2, "a": "aduana", "t": "Marcar llegada del vehículo al país", "hito": true},
   {"k": "e24", "f": 2, "a": "ventas", "t": "Avisar al cliente que su vehículo llegó al país", "d": "Mensaje al cliente apenas arriba, con los siguientes pasos y lo que falta pagar"},
   {"k": "e16", "f": 2, "a": "finanzas", "t": "Pagar a la naviera", "d": "Adjuntar comprobante del pago", "foto": true},
   {"k": "e17", "f": 2, "a": "aduana", "t": "Cancelar impuestos de aduana", "d": "Adjuntar comprobante / DUCA", "foto": true},
-  {"k": "e21", "f": 2, "a": "aduana", "t": "Liberación del vehículo"},
+  {"k": "e21", "f": 2, "a": "aduana", "t": "Liberación del vehículo", "hito": true},
   {"k": "e18", "f": 2, "a": "aduana", "t": "Revisión mecánica", "d": "Subir fotos del estado del vehículo", "foto": true},
   {"k": "e19", "f": 2, "a": "finanzas", "t": "Cliente cancela el restante", "d": "Siempre con comprobante", "pago": true, "foto": true},
   {"k": "e20", "f": 2, "a": "finanzas", "t": "Facturar el monto pagado"},
@@ -93,24 +93,24 @@ const T_ENC = [   // respaldo: el proceso real viene del editor (config/proceso)
   {"k": "e15", "f": 2, "a": "marketing", "t": "Publicar la entrega del carro", "d": "Foto o video de la entrega, cada quien en su canal", "multi": true, "opc": true},
   {"k": "e23", "f": 2, "a": "legal", "t": "Hacer prórroga de compraventa", "opc": true}
 ];
-const FASES_STK = ["1 · Coste", "2 · Compra y envío", "3 · Precio y anuncio", "4 · Aduana", "5 · Venta y entrega"];
+const FASES_STK = ["1 · Coste", "2 · Compra y envío", "3 · Precio y venta", "4 · Aduana", "5 · Pago final y entrega"];
 const T_STK = [   // respaldo: el proceso real viene del editor (config/proceso)
-  {"k": "s01", "f": 0, "a": "direccion", "t": "Registrar coste e introducción del vehículo"},
+  {"k": "s01", "f": 0, "a": "direccion", "t": "Registrar coste e introducción del vehículo", "hito": true, "c": "log"},
   {"k": "s03", "f": 1, "a": "compras", "t": "Pagar la subasta (Copart / IAA)", "d": "Evitar storage. Adjuntar comprobante del pago", "foto": true},
   {"k": "s04", "f": 1, "a": "naviera", "t": "Asignar a naviera"},
   {"k": "s05", "f": 2, "a": "direccion", "t": "Definir precio a cliente", "d": "Podría darse en menos"},
   {"k": "s02", "f": 2, "a": "marketing", "t": "Publicidad del vehículo", "d": "Cada quien en su canal (Facebook, grupo de WhatsApp, etc.)", "multi": true, "personas": ["nehe", "leslie", "alfre"]},
-  {"k": "s10", "f": 2, "a": "naviera", "t": "Brindar estatus al cliente", "d": "Solo si se vendió antes de llegar: una vez por semana hasta que venga", "repetible": true, "hasta": "s11", "opc": true},
-  {"k": "s11", "f": 3, "a": "aduana", "t": "Marcar llegada del vehículo al país"},
-  {"k": "nmw6nog5q", "f": 3, "a": "finanzas", "t": "Pagar a la naviera", "d": "Adjuntar comprobante del pago", "foto": true},
+  {"k": "s06", "f": 2, "a": "ventas", "t": "Venta o asignación a cliente"},
+  {"k": "s07", "f": 2, "a": "finanzas", "t": "Pago de pre-reserva / reserva (≥50%)", "d": "Con comprobante, o confirmar recibido si es efectivo", "pago": true, "foto": true},
+  {"k": "s08", "f": 2, "a": "finanzas", "t": "Facturar el abono recibido"},
+  {"k": "s09", "f": 2, "a": "legal", "t": "Crear promesa de venta"},
+  {"k": "s10", "f": 2, "a": "naviera", "t": "Brindar estatus al cliente", "d": "Una vez por semana hasta que llegue", "repetible": true, "hasta": "s11", "c": "venta"},
+  {"k": "s11", "f": 3, "a": "aduana", "t": "Marcar llegada del vehículo al país", "hito": true},
+  {"k": "nmw6nog5q", "f": 3, "a": "finanzas", "t": "Pagar a la naviera", "d": "Adjuntar comprobante del pago", "foto": true, "c": "log"},
   {"k": "s12", "f": 3, "a": "aduana", "t": "Cancelar impuestos de aduana", "d": "Adjuntar comprobante / DUCA", "foto": true},
-  {"k": "s14", "f": 3, "a": "aduana", "t": "Liberación del vehículo"},
+  {"k": "s14", "f": 3, "a": "aduana", "t": "Liberación del vehículo", "hito": true},
   {"k": "s13", "f": 3, "a": "aduana", "t": "Revisión mecánica", "d": "Subir fotos del estado del vehículo", "foto": true},
-  {"k": "s06", "f": 4, "a": "ventas", "t": "Venta o asignación a cliente"},
-  {"k": "s07", "f": 4, "a": "finanzas", "t": "Pago de pre-reserva / reserva (≥50%)", "d": "Con comprobante, o confirmar recibido si es efectivo", "pago": true, "foto": true},
-  {"k": "s08", "f": 4, "a": "finanzas", "t": "Facturar el abono recibido"},
-  {"k": "s09", "f": 4, "a": "legal", "t": "Crear promesa de venta"},
-  {"k": "s19", "f": 4, "a": "ventas", "t": "Avisar al cliente que su vehículo llegó al país", "d": "Solo si se vendió antes de llegar", "opc": true},
+  {"k": "s19", "f": 4, "a": "ventas", "t": "Avisar al cliente que su vehículo llegó al país", "d": "Mensaje al cliente apenas arriba, con lo que falta pagar"},
   {"k": "s16", "f": 4, "a": "finanzas", "t": "Cliente cancela el restante", "d": "Adjuntar comprobante del pago final", "pago": true, "foto": true},
   {"k": "s15", "f": 4, "a": "finanzas", "t": "Facturar el monto pagado"},
   {"k": "s17", "f": 4, "a": "legal", "t": "Crear compraventa y firmar contrato", "d": "Adjuntar foto del contrato firmado", "foto": true},
@@ -123,33 +123,35 @@ const defF   = v => v.tipoProceso === "Encargo" ? FASES_ENC : FASES_STK;
 /* Las tareas vienen del tablero ("Tareas del proceso Yesica") a través de proceso.json.
    Si no se puede leer, se queda con la lista de arriba (o la última que se guardó en el teléfono). */
 let procRaw = null, procesoInfo = null, procBorr = null, procSucio = false, procTipo = 'Encargo', procAbierta = null;
-/* Orden lógico del proceso (versión 2): primero lo urgente de dinero y logística, la venta no tapa la aduana.
-   Conserva las personas y las tareas propias que ya tenga el proceso; solo reordena y corrige nombres. */
-const PROC_V = 2;
+/* Proceso versión 3: logística y venta avanzan en paralelo (carriles), con puntos de control.
+   Conserva personas y tareas propias; solo reordena, corrige nombres y marca carriles/puntos de control. */
+const PROC_V = 3;
 function ajustarProcesoV2(p){
   const q = JSON.parse(JSON.stringify(p));
   const plan = {
     Encargo:{ orden:[['e01',0],['e02',0],['e03',0],['e04',0],['e05',0],
         ['e06',1],['e07',1],['e08',1],['e11',1],['e12',1],['e13',1],['e09',1],['e10',1],
         ['e14',2],['e24',2],['e16',2],['e17',2],['e21',2],['e18',2],['e19',2],['e20',2],['e22',2],['e25',2],['e15',2],['e23',2]],
-      cambios:{ e15:{ t:"Publicar la entrega del carro", d:"Foto o video de la entrega, cada quien en su canal", opc:true } } },
-    Stock:{ fases:["Coste","Compra y envío","Precio y anuncio","Aduana","Venta y entrega"],
-      orden:[['s01',0],['s03',1],['s04',1],['s05',2],['s02',2],['s10',2],
+      cambios:{ e02:{ hito:true }, e06:{ hito:true }, e07:{ c:'log' }, e14:{ hito:true }, e21:{ hito:true },
+        e15:{ t:"Publicar la entrega del carro", d:"Foto o video de la entrega, cada quien en su canal", opc:true } } },
+    Stock:{ fases:["Coste","Compra y envío","Precio y venta","Aduana","Pago final y entrega"],
+      orden:[['s01',0],['s03',1],['s04',1],
+        ['s05',2],['s02',2],['s06',2],['s07',2],['s08',2],['s09',2],['s10',2],
         ['s11',3],['nmw6nog5q',3],['s12',3],['s14',3],['s13',3],
-        ['s06',4],['s07',4],['s08',4],['s09',4],['s19',4],['s16',4],['s15',4],['s17',4],['s20',4],['s18',4]],
-      cambios:{ s03:{ t:"Pagar la subasta (Copart / IAA)" }, s04:{ t:"Asignar a naviera" },
-        s10:{ t:"Brindar estatus al cliente", d:"Solo si se vendió antes de llegar: una vez por semana hasta que venga", opc:true },
-        s11:{ t:"Marcar llegada del vehículo al país" },
-        nmw6nog5q:{ t:"Pagar a la naviera", a:"finanzas", d:"Adjuntar comprobante del pago", foto:true },
-        s12:{ t:"Cancelar impuestos de aduana" }, s09:{ t:"Crear promesa de venta" },
-        s19:{ t:"Avisar al cliente que su vehículo llegó al país", d:"Solo si se vendió antes de llegar", opc:true },
+        ['s19',4],['s16',4],['s15',4],['s17',4],['s20',4],['s18',4]],
+      cambios:{ s01:{ hito:true, c:'log' }, s03:{ t:"Pagar la subasta (Copart / IAA)" }, s04:{ t:"Asignar a naviera" },
+        s10:{ t:"Brindar estatus al cliente", d:"Una vez por semana hasta que llegue", opc:false, c:'venta' },
+        s11:{ t:"Marcar llegada del vehículo al país", hito:true },
+        nmw6nog5q:{ t:"Pagar a la naviera", a:"finanzas", d:"Adjuntar comprobante del pago", foto:true, c:'log' },
+        s12:{ t:"Cancelar impuestos de aduana" }, s14:{ hito:true }, s09:{ t:"Crear promesa de venta" },
+        s19:{ t:"Avisar al cliente que su vehículo llegó al país", d:"Mensaje al cliente apenas arriba, con lo que falta pagar", opc:false },
         s16:{ t:"Cliente cancela el restante" }, s15:{ t:"Facturar el monto pagado" },
         s17:{ t:"Crear compraventa y firmar contrato" }, s18:{ t:"Hacer prórroga de compraventa" } } }
   };
   for(const tipo of ['Encargo','Stock']){
     const pl = plan[tipo], ts = q.tareas?.[tipo]; if(!Array.isArray(ts)) continue;
     const by = new Map(ts.map(t=>[t.k,t])), out = [];
-    pl.orden.forEach(([k,f])=>{ const t = by.get(k); if(!t) return; t.f = f; Object.assign(t, pl.cambios[k]||{}); out.push(t); by.delete(k); });
+    pl.orden.forEach(([k,f])=>{ const t = by.get(k); if(!t) return; t.f = f; Object.assign(t, pl.cambios[k]||{}); if(t.opc===false) delete t.opc; out.push(t); by.delete(k); });
     by.forEach(t=>{ let i = -1; out.forEach((x,j)=>{ if(x.f<=t.f) i = j; }); out.splice(i+1, 0, t); });   // tareas propias: al final de su etapa
     q.tareas[tipo] = out;
     if(pl.fases){ q.fases = q.fases || {}; q.fases[tipo] = pl.fases; }
@@ -168,6 +170,7 @@ function aplicarProceso(p){
     const fe = p.fases?.Encargo, fs = p.fases?.Stock;
     if(Array.isArray(fe) && fe.length) FASES_ENC.splice(0, FASES_ENC.length, ...fe.map((n,i)=>`${i+1} · ${n}`));
     if(Array.isArray(fs) && fs.length) FASES_STK.splice(0, FASES_STK.length, ...fs.map((n,i)=>`${i+1} · ${n}`));
+    [...T_ENC, ...T_STK].forEach(t=>{ if(t.repetible) delete t.multi; });
     procesoInfo = { actualizado:p.actualizado, fuente:p.fuente, por:p.por };
     return true;
   }catch(e){ return false; }
@@ -528,6 +531,12 @@ const nombreU = u => usersData[u]?.nombre || EQUIPO[u]?.nombre || u;
 // ¿La tarea está completa? En las "multi" solo cuando TODOS los responsables del área marcaron su parte.
 function tareaOk(v, t){
   const st = v.tareas?.[t.k];
+  if(t.repetible){   // constante: vale unos días y vuelve a salir, hasta que se cumpla su tope
+    const h = t.hasta && defT(v).find(x=>x.k===t.hasta);
+    if(h && !h.repetible && tareaOk(v,h)) return true;
+    const f = st?.ok && st.fecha ? Date.parse(st.fecha) : 0;
+    return !!f && (Date.now()-f) < cadaDias(t)*86400000 - 6*3600000;
+  }
   if(!t.multi) return !!st?.ok;
   const req = resp(t);
   if(!req.length) return !!st?.ok;          // nadie asignado todavía → funciona como check normal
@@ -536,7 +545,33 @@ function tareaOk(v, t){
 }
 function miMarca(v, t){ return !!(v.tareas?.[t.k]?.marcas || {})[yo?.usuario]; }
 
-function tareasDe(v){ return defT(v).filter(t=>!t.opc); }
+/* ── Motor de pasos: logística y venta avanzan a la vez ──
+   · Cada tarea va en un carril (logística o venta). Dentro del carril se sigue el orden.
+   · Un punto de control pendiente (ganó subasta, llegó, liberado…) frena lo que viene después en los dos carriles.
+   · La última tarea (entrega) espera a que todo lo demás esté hecho.
+   · Las tareas constantes no frenan a nadie: vuelven a salir cada tantos días hasta que se cumpla su tope. */
+const cadaDias = t => Number(t.cada) || (/lunes a viernes|diari/i.test(t.d||'') ? 1 : 7);
+const carril = t => t.c || ((['compras','naviera','aduana'].includes(t.a) || esGasto(t)) ? 'log' : 'venta');
+const bloq = v => defT(v).filter(t=>!t.opc && !t.repetible);
+function activos(v){
+  const ls = bloq(v), out = [], visto = {}; let frena = false; const ult = ls[ls.length-1];
+  for(const t of ls){
+    if(tareaOk(v,t)) continue;
+    const c = carril(t);
+    if(!visto[c] && !frena && (t!==ult || ls.every(x=> x===t || tareaOk(v,x)))) out.push(t);
+    visto[c] = true; if(t.hito) frena = true;
+  }
+  return out;
+}
+function faltaAntes(v, t){     // qué debería estar hecho antes de esta tarea
+  if(t.opc) return [];
+  const ls = bloq(v), ult = ls[ls.length-1], c = carril(t), out = [];
+  for(const x of defT(v)){ if(x===t) break; if(x.opc || x.repetible || tareaOk(v,x)) continue; if(carril(x)===c || x.hito || t===ult) out.push(x); }
+  return out;
+}
+function repsActivas(v){ return defT(v).filter(t=> t.repetible && !t.opc && !tareaOk(v,t) && !faltaAntes(v,t).length); }
+const pasos = v => [...activos(v), ...repsActivas(v)];
+function tareasDe(v){ return bloq(v); }
 function progreso(v){
   const ls = tareasDe(v); if(!ls.length) return 0;
   return Math.round(ls.filter(t=> tareaOk(v,t)).length / ls.length * 100);
@@ -555,8 +590,9 @@ function pendientesMias(v){
 function pagado(v){ return (v.abonos||[]).reduce((s,a)=> s+Number(a.monto||0), 0); }
 function saldo(v){ return Math.max(0, Number(v.precio_venta||0) - pagado(v)); }
 function faseActual(v){
-  const ls = tareasDe(v);
-  const p = ls.find(t=> !tareaOk(v,t));
+  const a = activos(v);
+  if(a.length) return Math.min(...a.map(t=>t.f));
+  const p = tareasDe(v).find(t=> !tareaOk(v,t));
   return p ? p.f : defF(v).length-1;
 }
 
@@ -641,11 +677,11 @@ function contar(id, destino, fmt){
 
 /* La ruta del carro: un punto por fase, la línea se llena con el avance real */
 function etapas(v){
-  const ls = tareasDe(v), fa = faseActual(v);
+  const ls = tareasDe(v), fa = faseActual(v), enCurso = new Set(activos(v).map(t=>t.f));
   return defF(v).map((fn,fi)=>{
     const ts = ls.filter(t=>t.f===fi), h = ts.filter(t=>tareaOk(v,t)).length;
     const done = ts.length>0 && h===ts.length;
-    return { n: fn.replace(/^\d+\s*·\s*/,''), done, cur: !done && fi===fa, pct: ts.length ? h/ts.length : 0, h, tot: ts.length };
+    return { n: fn.replace(/^\d+\s*·\s*/,''), done, cur: !done && (fi===fa || enCurso.has(fi)), pct: ts.length ? h/ts.length : 0, h, tot: ts.length };
   });
 }
 function ruta(v, grande=false){
@@ -658,12 +694,14 @@ function ruta(v, grande=false){
   return `<div class="ruta ${grande?'grande':''}">${puntos}</div>${nombres}`;
 }
 
+// Tareas de las que depende el estado del carro (no se pueden quitar del proceso)
+const LLAVES = v => v.tipoProceso==="Encargo" ? {gan:"e06", nav:"e09", lleg:"e14", lib:"e21", ent:"e25"} : {gan:"s01", nav:"s04", lleg:"s11", lib:"s14", ent:"s20"};
+const FIJAS = ["e06","e09","e14","e21","e25","s01","s04","s11","s14","s20"];
 /* Estado visible de la unidad, sacado de las tareas que ya se marcaron (mismas palabras que la web) */
 function estadoDe(v){
   const enc = v.tipoProceso==="Encargo";
   const ok = k => { const t = defT(v).find(x=>x.k===k); return t ? tareaOk(v,t) : false; };
-  const K = enc ? {gan:"e06", nav:"e09", lleg:"e14", lib:"e21", ent:"e25"}
-                : {gan:"s01", nav:"s04", lleg:"s11", lib:"s14", ent:"s20"};
+  const K = LLAVES(v);
   if(!tareasDe(v).some(t=>!tareaOk(v,t)) || ok(K.ent)) return {t:"Entregado", c:"e-neutro"};
   if(ok(K.lib))  return {t:"Liberado", c:"e-solido"};
   if(ok(K.lleg)) return {t:"En el país", c:"e-rosa"};
@@ -687,10 +725,19 @@ function ultimoAvance(v){
   return m;
 }
 const diasDesde = t => t ? Math.max(0, Math.floor((Date.now()-t)/86400000)) : null;
+// Cada tarea tiene su plazo: pagar la subasta avisa a los 2 días; lo demás a los 7 (se puede cambiar en Equipo).
+const plazoDe = t => Number(t.plazo) || (esGasto(t) && /subasta/i.test(t.t||'') ? 2 : DIAS_ALERTA);
 function atraso(v){
-  if(v.archivado || !tareasDe(v).some(t=>!tareaOk(v,t))) return null;
-  const d = diasDesde(ultimoAvance(v));
-  return d!=null && d>=DIAS_ALERTA ? d : null;
+  if(v.archivado) return null;
+  const act = activos(v); if(!act.length) return null;
+  const d = diasDesde(ultimoAvance(v)); if(d==null) return null;
+  const lleg = LLAVES(v).lleg, otros = act.filter(t=>t.k!==lleg);
+  if(otros.length){ const p = Math.min(...otros.map(plazoDe)); if(d>=p) return d; }
+  if(act.some(t=>t.k===lleg)){   // esperando el barco: no es atraso mientras no pase la fecha de llegada
+    if(v.eta){ const tarde = Math.floor((Date.now() - Date.parse(v.eta+'T12:00:00'))/86400000); return tarde>2 ? Math.max(d,tarde) : null; }
+    return d>=21 ? d : null;
+  }
+  return null;
 }
 function etaInfo(v){
   if(!v.eta) return null;
@@ -887,7 +934,7 @@ function pintarFlota(){
     const retraso = nueva ? Math.min(n++,5)*60 : 0;
     const mias = pendientesMias(v).length;
     const enc = v.tipoProceso==="Encargo";
-    const sig = tareasDe(v).find(t=> !tareaOk(v,t));
+    const pv = pasos(v), sig = pv.find(t=>pendientesMias(v).some(m=>m.k===t.k)) || pv[0] || tareasDe(v).find(t=> !tareaOk(v,t));
     const cob = pagado(v), vta = Number(v.precio_venta||0), falta = saldo(v);
     const et = etapas(v), fa = et.findIndex(x=>x.cur), eAct = et[fa>=0?fa:et.length-1];
     const hechas = tareasDe(v).filter(t=>tareaOk(v,t)).length, tot = tareasDe(v).length;
@@ -1205,8 +1252,10 @@ function heroSiguiente(v){
       ${!v.archivado?`<button onclick="archivar('${v.id}',true)" class="btn-p px-4 py-2.5 flex-shrink-0">Archivar</button>`:""}
     </div>`;
   }
-  const t = pend[0];
+  const act = pasos(v), mia = x => esMia(x) && !(x.multi && resp(x).length && miMarca(v,x));
+  const t = act.find(mia) || act[0] || pend[0];
   const paso = ls.indexOf(t) + 1;
+  const otros = act.filter(x=>x!==t), sigue = pend.find(x=> x!==t && !otros.includes(x));
   const req = t.multi ? resp(t) : [];
   const meToca = t.multi && req.length ? (req.includes(yo.usuario) && !miMarca(v,t)) : esMia(t);
   const veh = esc(v.vehiculo).replace(/'/g,""), tt = esc(t.t).replace(/'/g,"");
@@ -1227,7 +1276,7 @@ function heroSiguiente(v){
     <div class="hero-div"></div>
     <div class="flex items-center justify-between gap-2">
       <p class="ceja" style="margin:0">Siguiente paso</p>
-      <span class="t-xs num">Paso ${paso} de ${ls.length}</span>
+      <span class="t-xs num">${paso ? `Paso ${paso} de ${ls.length}` : `Cada ${cadaDias(t)===1?'día':cadaDias(t)+' días'}`}</span>
     </div>
     <p class="hero-t mt-2">${esc(t.t)}</p>
     ${t.d?`<p class="t-sm mt-1.5" style="line-height:1.5">${esc(t.d)}</p>`:""}
@@ -1237,7 +1286,7 @@ function heroSiguiente(v){
     </div>
     <div class="flex items-center gap-2 mt-4 flex-wrap">
       ${accion}
-      ${pend.length>1?`<span class="t-xs ml-1">Después: ${esc(pend[1].t)}</span>`:""}
+      ${otros.length?`<span class="t-xs ml-1">También en curso: ${otros.map(x=>`<a href="#" onclick="event.preventDefault();irATarea('${v.id}','${x.k}')" style="color:var(--t1);text-decoration:underline;text-underline-offset:3px">${esc(x.t)}</a>`).join(' · ')}</span>`:(sigue?`<span class="t-xs ml-1">Después: ${esc(sigue.t)}</span>`:"")}
     </div>
     ${otraMia?`<button onclick="irATarea('${v.id}','${otraMia.k}')" class="hero-mia">
         <span class="flex-1 min-w-0 text-left"><span class="t-lbl block">Lo tuyo en esta unidad</span>
@@ -1256,8 +1305,8 @@ window.abrirDetalle = function(id, silencioso){
   const fAct = faseActual(v);
   let bloques = fases.map((fn,fi)=>{
     const ts = defT(v).filter(t=>t.f===fi);
-    const req_ = ts.filter(t=>!t.opc), hechas_ = req_.filter(t=>tareaOk(v,t)).length;
-    const estado = hechas_===req_.length ? 'lista' : (fi===fAct ? 'actual' : (fi<fAct ? 'atras' : 'luego'));
+    const req_ = ts.filter(t=>!t.opc && !t.repetible), hechas_ = req_.filter(t=>tareaOk(v,t)).length;
+    const estado = hechas_===req_.length ? 'lista' : ((fi===fAct || activos(v).some(t=>t.f===fi)) ? 'actual' : (fi<fAct ? 'atras' : 'luego'));
     const abierta = (faseOpen[v.id] && faseOpen[v.id][fi]!==undefined) ? faseOpen[v.id][fi] : fi===fAct;
     const etiqueta = {lista:'Completa', actual:'En curso', atras:'Pendientes atrasadas', luego:'Más adelante'}[estado];
     return `<details class="fase fase-${estado}" ${abierta?'open':''} ontoggle="faseTog('${v.id}',${fi},this.open)">
@@ -1546,11 +1595,17 @@ window.guardarDatos = function(id){
 
 
 /* ════════ ACCIONES ════════ */
+async function confirmaOrden(v, def){
+  const f = faltaAntes(v, def); if(!f.length) return true;
+  const r = await dialogo({ titulo:'Antes falta otro paso', texto:`Para <b>${esc(def.t)}</b> todavía falta: <b>${f.slice(0,3).map(x=>esc(x.t)).join(', ')}</b>${f.length>3?` y ${f.length-3} más`:''}.<br>Si de verdad ya se hizo, puedes marcarla igual.`, ok:'Marcar de todos modos' });
+  return !!r;
+}
 window.marcar = async function(id, k, ok){
   const v = autos.find(a=>a.id===id); if(!v) return;
   const def = defT(v).find(t=>t.k===k); if(!def) return;
   if(!puedeT(def)){ toast("No tienes el área "+areaN(def.a)+" habilitada.","err"); return; }
   if(def.multi && resp(def).length) return marcarMulti(id, k, miMarca(v,def));
+  if(!ok && !(await confirmaOrden(v, def))){ pintarTodo(); if(abiertoId) abrirDetalle(abiertoId, true); return; }
 
   const st = v.tareas?.[k] || {};
   let sinComprobante = null;
@@ -1578,7 +1633,7 @@ window.marcar = async function(id, k, ok){
     : { ...st, ok:true, por:yo.usuario, fecha:new Date().toISOString(), ...(sinComprobante?{sinComprobante}:{}) };
   if(monto!=null){ guardarFin(id, { montos:{ [k]:monto } }).catch(e=>toast('No se guardó el monto: '+e.code,'err')); registrar('monto', id, `${def.t}: ${money(monto)}`); }
   try{
-    await updateDoc(doc(db,"vehiculos",id), { tareas });
+    await updateDoc(doc(db,"vehiculos",id), { ["tareas."+k]: tareas[k] });
     registrar('tarea', id, ok ? `Reabrió: ${def.t}` : `Marcó: ${def.t}${sinComprobante?' (sin comprobante: '+sinComprobante+')':''}`);
     if(!ok){ celebrar(); toast(""+def.t); } else toast("Tarea reabierta.");
   }catch(e){ toast("No se pudo guardar: "+e.code,"err"); }
@@ -1602,7 +1657,7 @@ window.subirFoto = async function(id, k){
     const fotos = [ ...(st.fotos||[]), { fid:g.fid, mini:g.mini, tipo:g.tipo, nombre:file.name, por:yo.usuario, fecha:new Date().toISOString() } ];
     const tareas = { ...(v.tareas||{}) };
     tareas[k] = { ...st, fotos };
-    await updateDoc(doc(db,"vehiculos",id), { tareas });
+    await updateDoc(doc(db,"vehiculos",id), { ["tareas."+k]: tareas[k] });
     inp.value = "";
     registrar('foto', id, `Subió comprobante: ${def.t}`);
     toast("Comprobante guardado.");
@@ -1620,7 +1675,7 @@ window.borrarFoto = async function(id, k, idx){
   const fotos = (st.fotos||[]).filter((_,i)=>i!==idx);
   const tareas = { ...(v.tareas||{}) };
   tareas[k] = { ...st, fotos };
-  try{ await updateDoc(doc(db,"vehiculos",id), { tareas }); toast("Comprobante quitado."); }
+  try{ await updateDoc(doc(db,"vehiculos",id), { ["tareas."+k]: tareas[k] }); toast("Comprobante quitado."); }
   catch(e){ toast("Error.","err"); }
 };
 
@@ -1629,13 +1684,14 @@ window.marcarMulti = async function(id, k, yaHecho){
   const v = autos.find(a=>a.id===id); if(!v) return;
   const def = defT(v).find(t=>t.k===k); if(!def) return;
   if(!puedeT(def)){ toast("No tienes el área "+areaN(def.a)+" habilitada.","err"); return; }
+  if(!yaHecho && !(await confirmaOrden(v, def))){ pintarTodo(); if(abiertoId) abrirDetalle(abiertoId, true); return; }
   const st = v.tareas?.[k] || {};
   const marcas = { ...(st.marcas||{}) };
   if(yaHecho) delete marcas[yo.usuario]; else marcas[yo.usuario] = new Date().toISOString();
   const tareas = { ...(v.tareas||{}) };
   tareas[k] = { ...st, marcas };
   try{
-    await updateDoc(doc(db,"vehiculos",id), { tareas });
+    await updateDoc(doc(db,"vehiculos",id), { ["tareas."+k]: tareas[k] });
     const req = resp(def), listos = req.filter(u=>marcas[u]).length;
     if(!yaHecho) celebrar();
     registrar('tarea', id, yaHecho ? `Quitó su parte: ${def.t}` : `Marcó su parte: ${def.t}`);
@@ -1853,10 +1909,13 @@ window.cerrarMas = cerrarMas;
 function siguientesMios(){
   const out = [];
   autos.filter(v=>!v.archivado).forEach(v=>{
-    const ls = defT(v).filter(t=>!t.opc), i = ls.findIndex(t=>!tareaOk(v,t)); if(i<0) return;
-    const t = ls[i]; if(!esMia(t)) return;
-    if(t.multi && (v.tareas?.[t.k]?.marcas||{})[yo.usuario]) return;
-    out.push({ v, t, paso:i+1, total:ls.length, quieto: atraso(v) || 0 });
+    const ls = tareasDe(v);
+    pasos(v).forEach(t=>{
+      if(!esMia(t)) return;
+      if(t.k===LLAVES(v).lleg && v.eta && Date.parse(v.eta+'T12:00:00') > Date.now()+86400000) return;   // el barco aún no llega
+      if(t.multi && (v.tareas?.[t.k]?.marcas||{})[yo.usuario]) return;
+      out.push({ v, t, paso:ls.indexOf(t)+1, total:ls.length, quieto: atraso(v) || 0 });
+    });
   });
   return out.sort((a,b)=> (b.quieto-a.quieto) || (a.paso-b.paso));
 }
@@ -1878,7 +1937,7 @@ window.whatsCliente = function(id){
 };
 function filaTarea(x){
   const { v, t } = x, a = accionDe(v,t);
-  const sub = [esc(v.vehiculo)||(v.nombreCliente?'Encargo de '+esc(v.nombreCliente.split(' ')[0]):'Carro por asignar'), v.nombreCliente&&v.vehiculo?esc(v.nombreCliente.split(' ')[0]):'', `paso ${x.paso} de ${x.total}`].filter(Boolean).join(' · ');
+  const sub = [esc(v.vehiculo)||(v.nombreCliente?'Encargo de '+esc(v.nombreCliente.split(' ')[0]):'Carro por asignar'), v.nombreCliente&&v.vehiculo?esc(v.nombreCliente.split(' ')[0]):'', (x.paso ? `paso ${x.paso} de ${x.total}` : `cada ${cadaDias(t)===1?'día':cadaDias(t)+' días'}`)].filter(Boolean).join(' · ');
   return `<div class="hp-f" onclick="abrirDetalle('${v.id}')">
     <button class="hoy-ck" title="Marcar como hecha" onclick="event.stopPropagation();hoyMarcar(this,'${v.id}','${t.k}','${t.foto?'foto':(t.multi&&respons(t.a).length?'multi':'ok')}')">${t.foto?ico("clip",13,2):ico("ok",13,3)}</button>
     <div class="min-w-0 flex-1"><p class="hp-t">${esc(t.t)}</p><p class="hp-s">${sub}${x.quieto?` · <b class="hp-w">${x.quieto} días sin avance</b>`:''}</p></div>
@@ -1890,7 +1949,7 @@ function pintarHoyPag(){
   const nom = (yo.nombre||'').split(' ')[0];
   const sig = siguientesMios(), hechas = window.__hechasHoy || 0;
   const fecha = new Date().toLocaleDateString('es-SV',{weekday:'long', day:'numeric', month:'short'}).replace('.','');
-  TITULOS.hoy = [fecha, 'Hola,', nom || 'equipo', sig.length ? `${sig.length===1?'Un carro espera':sig.length+' carros esperan'} tu siguiente paso` : 'Nada pendiente para ti por ahora'];
+  TITULOS.hoy = [fecha, 'Hola,', nom || 'equipo', sig.length ? (n=>`${n===1?'Un carro espera':n+' carros esperan'} tu siguiente paso`)(new Set(sig.map(x=>x.v.id)).size) : 'Nada pendiente para ti por ahora'];
   if(!document.getElementById('pgHoy').classList.contains('hidden')){
     document.getElementById('cejaPagina').textContent = TITULOS.hoy[0];
     ponTitulo(document.getElementById('tituloPagina'), TITULOS.hoy[1], TITULOS.hoy[2]);
@@ -2760,7 +2819,7 @@ function pintarProceso(){
   const fila = (t, i, lista) => {
     const abierta = procAbierta===t.k;
     const per = (t.personas||[]);
-    const marcas = [t.foto&&'Comprobante', t.pago&&'Pago', esGasto(t)&&'Gasto', t.multi&&'Cada quien marca', t.opc&&'Opcional', t.repetible&&'Constante'].filter(Boolean);
+    const marcas = [t.foto&&'Comprobante', t.pago&&'Pago', esGasto(t)&&'Gasto', t.multi&&'Cada quien marca', t.opc&&'Opcional', t.repetible&&`Cada ${cadaDias(t)===1?'día':cadaDias(t)+' días'}`, t.hito&&'Punto de control'].filter(Boolean);
     return `<div class="pe-t${abierta?' abierta':''}" id="pe-${t.k}">
       <div class="pe-fila" onclick="peAbrir('${t.k}')">
         <span class="pe-n num">${i+1}</span>
@@ -2785,8 +2844,12 @@ function pintarProceso(){
           <p class="t-xs mt-1.5">${per.length?'Solo a ellos les aparece y les llega el aviso.':'Sin nadie marcado: le toca a todos los que tengan el área '+esc(areaN(t.a))+'.'}</p>
         </div>
         <div class="pe-sw">
-          ${[['foto','Pide comprobante (foto)'],['pago','Es un pago del cliente'],['gasto','Es un gasto del carro (pide monto)'],['multi','Cada quien marca su parte'],['opc','Opcional'],['repetible','Constante (se repite)']].map(([c,n])=>
+          ${[['foto','Pide comprobante (foto)'],['pago','Es un pago del cliente'],['gasto','Es un gasto del carro (pide monto)'],['multi','Cada quien marca su parte'],['opc','Opcional'],['repetible','Constante (se repite)'],['hito','Punto de control (lo que sigue la espera)']].map(([c,n])=>
             `<label class="pe-sw-i"><input type="checkbox" ${(c==='gasto'?esGasto(t):t[c])?'checked':''} onchange="peCampo('${t.k}','${c}',this.checked)"><span class="pe-sw-b"></span>${n}</label>`).join('')}
+        </div>
+        <div class="rejilla">
+          <label class="campo"><span class="lbl">Va con</span><select class="inp" onchange="peCampo('${t.k}','c',this.value)"><option value="log" ${carril(t)==='log'?'selected':''}>Logística (subasta, naviera, aduana)</option><option value="venta" ${carril(t)==='venta'?'selected':''}>Venta y cobros</option></select></label>
+          <label class="campo"><span class="lbl">${t.repetible?'Se repite cada (días)':'Avisar atraso a los (días)'}</span><input class="inp" type="number" min="1" max="90" value="${t.repetible?cadaDias(t):plazoDe(t)}" onchange="peCampo('${t.k}','${t.repetible?'cada':'plazo'}',Math.max(1,+this.value||7))"></label>
         </div>
         ${t.repetible?`<label class="campo"><span class="lbl">Se repite hasta que se haga</span><select class="inp" onchange="peCampo('${t.k}','hasta',this.value)">
           <option value="">El final del proceso</option>${ts.filter(x=>x.k!==t.k && !x.archivada).map(x=>`<option value="${x.k}" ${x.k===t.hasta?'selected':''}>${esc(x.t)}</option>`).join('')}</select></label>`:''}
@@ -2887,6 +2950,7 @@ window.peNueva = function(fi){
 };
 window.peBorrar = async function(k){
   const ts = borr().tareas[procTipo], t = ts.find(x=>x.k===k); if(!t) return;
+  if(FIJAS.includes(k)){ toast('Esta tarea mueve el estado del carro (en camino, en el país, entregado). No se puede quitar, pero sí cambiarle el nombre.','warn'); return; }
   const n = usoTarea(k);
   const r = await dialogo({ titulo:'¿Archivar esta tarea?', texto:`<b>${esc(t.t)}</b><br>Deja de salir en el proceso y en los avisos.${n?` Los ${n} carro${n>1?'s':''} que ya la marcaron conservan su avance.`:''} La puedes restaurar cuando quieras.`, ok:'Archivar tarea' });
   if(!r) return;

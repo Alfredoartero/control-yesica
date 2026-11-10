@@ -1,6 +1,6 @@
 {
  "fuente": "tablero",
- "actualizado": "2026-11-10T19:11:54.560Z",
+ "actualizado": "2026-11-10T19:45:00.260Z",
  "fases": {
   "Encargo": [
    "Inicio de proceso",
@@ -10,9 +10,9 @@
   "Stock": [
    "Coste",
    "Compra y envío",
-   "Precio y anuncio",
+   "Precio y venta",
    "Aduana",
-   "Venta y entrega"
+   "Pago final y entrega"
   ]
  },
  "tareas": {
@@ -37,7 +37,8 @@
     "t": "Confirmar pago de $100",
     "d": "Anexar comprobante. Se abona al total de la venta",
     "pago": true,
-    "foto": true
+    "foto": true,
+    "hito": true
    },
    {
     "k": "e03",
@@ -72,7 +73,8 @@
     "personas": [
      "alfre",
      "yesica"
-    ]
+    ],
+    "hito": true
    },
    {
     "k": "e07",
@@ -84,7 +86,8 @@
      "alfre",
      "yesica",
      "leslie"
-    ]
+    ],
+    "c": "log"
    },
    {
     "k": "e08",
@@ -134,7 +137,8 @@
     "k": "e14",
     "f": 2,
     "a": "aduana",
-    "t": "Marcar llegada del vehículo al país"
+    "t": "Marcar llegada del vehículo al país",
+    "hito": true
    },
    {
     "k": "e24",
@@ -163,7 +167,8 @@
     "k": "e21",
     "f": 2,
     "a": "aduana",
-    "t": "Liberación del vehículo"
+    "t": "Liberación del vehículo",
+    "hito": true
    },
    {
     "k": "e18",
@@ -226,7 +231,9 @@
     "k": "s01",
     "f": 0,
     "a": "direccion",
-    "t": "Registrar coste e introducción del vehículo"
+    "t": "Registrar coste e introducción del vehículo",
+    "hito": true,
+    "c": "log"
    },
    {
     "k": "s03",
@@ -263,20 +270,48 @@
     ]
    },
    {
+    "k": "s06",
+    "f": 2,
+    "a": "ventas",
+    "t": "Venta o asignación a cliente"
+   },
+   {
+    "k": "s07",
+    "f": 2,
+    "a": "finanzas",
+    "t": "Pago de pre-reserva / reserva (≥50%)",
+    "d": "Con comprobante, o confirmar recibido si es efectivo",
+    "pago": true,
+    "foto": true
+   },
+   {
+    "k": "s08",
+    "f": 2,
+    "a": "finanzas",
+    "t": "Facturar el abono recibido"
+   },
+   {
+    "k": "s09",
+    "f": 2,
+    "a": "legal",
+    "t": "Crear promesa de venta"
+   },
+   {
     "k": "s10",
     "f": 2,
     "a": "naviera",
     "t": "Brindar estatus al cliente",
-    "d": "Solo si se vendió antes de llegar: una vez por semana hasta que venga",
+    "d": "Una vez por semana hasta que llegue",
     "repetible": true,
     "hasta": "s11",
-    "opc": true
+    "c": "venta"
    },
    {
     "k": "s11",
     "f": 3,
     "a": "aduana",
-    "t": "Marcar llegada del vehículo al país"
+    "t": "Marcar llegada del vehículo al país",
+    "hito": true
    },
    {
     "k": "nmw6nog5q",
@@ -284,7 +319,8 @@
     "a": "finanzas",
     "t": "Pagar a la naviera",
     "d": "Adjuntar comprobante del pago",
-    "foto": true
+    "foto": true,
+    "c": "log"
    },
    {
     "k": "s12",
@@ -298,7 +334,8 @@
     "k": "s14",
     "f": 3,
     "a": "aduana",
-    "t": "Liberación del vehículo"
+    "t": "Liberación del vehículo",
+    "hito": true
    },
    {
     "k": "s13",
@@ -309,39 +346,11 @@
     "foto": true
    },
    {
-    "k": "s06",
-    "f": 4,
-    "a": "ventas",
-    "t": "Venta o asignación a cliente"
-   },
-   {
-    "k": "s07",
-    "f": 4,
-    "a": "finanzas",
-    "t": "Pago de pre-reserva / reserva (≥50%)",
-    "d": "Con comprobante, o confirmar recibido si es efectivo",
-    "pago": true,
-    "foto": true
-   },
-   {
-    "k": "s08",
-    "f": 4,
-    "a": "finanzas",
-    "t": "Facturar el abono recibido"
-   },
-   {
-    "k": "s09",
-    "f": 4,
-    "a": "legal",
-    "t": "Crear promesa de venta"
-   },
-   {
     "k": "s19",
     "f": 4,
     "a": "ventas",
     "t": "Avisar al cliente que su vehículo llegó al país",
-    "d": "Solo si se vendió antes de llegar",
-    "opc": true
+    "d": "Mensaje al cliente apenas arriba, con lo que falta pagar"
    },
    {
     "k": "s16",
@@ -384,5 +393,5 @@
   ]
  },
  "sinUsuario": [],
- "version": 2
+ "version": 3
 }
