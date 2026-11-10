@@ -46,6 +46,11 @@ service cloud.firestore {
       allow delete: if esAdmin();
     }
 
+    // Gastos generales de la empresa (planilla, local, publicidad…): solo finanzas.
+    match /gastosEmpresa/{g} {
+      allow read, write: if verFin();
+    }
+
     // Configuración (proceso, Telegram, avisos): todos leen, solo admin escribe.
     match /config/{d} {
       allow read: if miembro();

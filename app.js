@@ -620,7 +620,7 @@ const RX_GASTO = /^(pagar|pagos?\b|cancelar impuestos|pago de impuestos)/i;
 const esGasto = t => t.gasto!==undefined ? !!t.gasto : (!t.pago && RX_GASTO.test(t.t||''));
 /* El dinero sensible vive aparte, en finanzas/{carro}: solo lo leen quienes tienen "Ver finanzas".
    (Mientras se mudan los datos viejos, se lee también lo que quedó dentro del carro.) */
-let finMap = {}, finSub = false, migrado = false, papelera = [];
+let finMap = {}, finSub = false, migrado = false, papelera = [], gastosEmp = [], mesFin = new Date().toISOString().slice(0,7);
 const autosTodos = () => [...autos, ...papelera];
 const F = v => finMap[v.id] || {};
 const costoCompra = v => Number(F(v).costo_subasta ?? v.costo_subasta ?? 0);
@@ -894,6 +894,7 @@ window.marcarDesdeLista = function(id, k){
 };
 
 function pintarFinanzas(){
+  pintarFinMes();
   const act = autos.filter(a=>!a.archivado);
   const costo   = act.reduce((s,a)=> s + costosDe(a).total, 0);
   const venta   = act.reduce((s,a)=> s + Number(a.precio_venta||0), 0);
@@ -1632,6 +1633,10 @@ window.cotNueva = function(){
 };
 function suscribirFin(){
   if(finSub || !verFin()) return; finSub = true;
+  onSnapshot(collection(db,"gastosEmpresa"), sn=>{
+    gastosEmp = []; sn.forEach(d=> gastosEmp.push({ id:d.id, ...d.data() }));
+    pintarFinMes();
+  }, e=> console.warn("gastosEmpresa:", e.code));
   onSnapshot(collection(db,"finanzas"), sn=>{
     finMap = {}; sn.forEach(d=> finMap[d.id] = d.data());
     pintarTodo(); if(abiertoId) abrirDetalle(abiertoId, true);
@@ -1657,6 +1662,101 @@ async function migrarFinanzas(){
   }
   if(n) toast(`Listo: el dinero de ${n} carro${n>1?'s':''} quedó protegido aparte.`);
 }
+
+/* ════════ FINANZAS DE LA EMPRESA: resumen del mes ════════ */
+const CAT_GASTO = ["Planilla","Local y servicios","Publicidad","Combustible y transporte","Trámites","Comisiones","Otros"];
+const mesDe = x => { const t = ms_(x); return t ? new Date(t).toLocaleDateString('en-CA',{timeZone:'America/El_Salvador'}).slice(0,7) : ''; };
+const nombreMes = m => { const [y,mm] = m.split('-').map(Number); const t = new Date(y, mm-1, 15).toLocaleDateString('es-SV',{month:'long', year:'numeric'}).replace(' de ',' '); return t.charAt(0).toUpperCase()+t.slice(1); };
+const sumarMes = (m, d) => { const [y,mm] = m.split('-').map(Number); const t = new Date(y, mm-1+d, 15); return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0'); };
+// Fecha de venta: cuando se marcó "Entregar el vehículo", o cuando se archivó
+function fechaVenta(v){
+  if(!Number(v.precio_venta)) return null;
+  const te = defT(v).find(t=> /entregar el veh/i.test(t.t));
+  const st = te && v.tareas?.[te.k];
+  if(st?.ok && st.fecha) return st.fecha;
+  return v.archivado ? (v.fecha_cierre || null) : null;
+}
+function gastosDelMes(m){
+  return gastosEmp.filter(g=>{
+    if(g.fijo){ const ini = String(g.fecha||'').slice(0,7); return ini && ini<=m && (!g.fin || m<=g.fin); }
+    return String(g.fecha||'').slice(0,7)===m;
+  });
+}
+function resumenMes(m){
+  const todos = autos;   // activos y archivados (sin la papelera)
+  const vendidos = todos.filter(v=> mesDe(fechaVenta(v))===m);
+  const ventas = vendidos.reduce((s,v)=> s+Number(v.precio_venta||0), 0);
+  const costoV = vendidos.reduce((s,v)=> s+costosDe(v).total, 0);
+  const gastos = gastosDelMes(m).reduce((s,g)=> s+Number(g.monto||0), 0);
+  const entro = todos.reduce((s,v)=> s+(v.abonos||[]).filter(a=>mesDe(a.fecha)===m).reduce((x,a)=>x+Number(a.monto||0),0), 0);
+  return { vendidos, ventas, costoV, ganCarros: ventas-costoV, gastos, neta: ventas-costoV-gastos, entro };
+}
+window.cambiarMes = d => { mesFin = sumarMes(mesFin, d); pintarFinMes(); };
+function pintarFinMes(){
+  const box = document.getElementById('finMes'); if(!box || !verFin()) return;
+  const r = resumenMes(mesFin), hoyM = new Date().toISOString().slice(0,7);
+  const activos = autos.filter(v=>!v.archivado && !fechaVenta(v));
+  const invertido = activos.reduce((s,v)=> s+costosDe(v).total, 0);
+  const teDeben = autos.filter(v=>!v.archivado).reduce((s,v)=> s+saldo(v), 0);
+  const meses = Array.from({length:6},(_,i)=> sumarMes(mesFin, i-5)).map(m=>({ m, n:resumenMes(m).neta }));
+  const max = Math.max(1, ...meses.map(x=>Math.abs(x.n)));
+  const gs = gastosDelMes(mesFin).sort((a,b)=> String(b.fecha).localeCompare(String(a.fecha)));
+  const tile = (lbl, val, cls='', sub='') => `<div class="fm-t ${cls}"><p class="fm-l">${lbl}</p><p class="fm-v num">${val}</p>${sub?`<p class="fm-s">${sub}</p>`:''}</div>`;
+  box.innerHTML = `<div class="fm">
+    <div class="fm-cab">
+      <div><p class="ceja" style="margin:0">Resumen del mes</p><h2 class="fm-mes">${nombreMes(mesFin)}</h2></div>
+      <div class="fm-nav"><button class="pe-ib" onclick="cambiarMes(-1)" aria-label="Mes anterior">${ico('flecha',16,2)}</button>
+        <button class="pe-ib" onclick="cambiarMes(1)" ${mesFin>=hoyM?'disabled':''} aria-label="Mes siguiente">${ico('flecha',16,2)}</button></div>
+    </div>
+    <div class="fm-hero ${r.neta<0?'neg':''}"><p class="fm-l">Utilidad neta</p><p class="fm-big num">${money(r.neta)}</p>
+      <p class="fm-s">${r.vendidos.length} carro${r.vendidos.length===1?'':'s'} vendido${r.vendidos.length===1?'':'s'} · ganancia de carros ${money(r.ganCarros)} − gastos de la empresa ${money(r.gastos)}</p></div>
+    <div class="fm-grid">
+      ${tile('Ventas del mes', money(r.ventas), '', r.vendidos.map(v=>esc(v.vehiculo||'Carro')).slice(0,3).join(' · ') || 'Sin ventas cerradas')}
+      ${tile('Entró de clientes', money(r.entro), 'ok', 'Abonos recibidos este mes')}
+      ${tile('Gastos de la empresa', money(r.gastos), 'wn', `${gs.length} gasto${gs.length===1?'':'s'}`)}
+      ${tile('Te deben', money(teDeben), '', 'Saldo de clientes, carros activos')}
+      ${tile('Invertido sin vender', money(invertido), '', `${activos.length} carro${activos.length===1?'':'s'} en proceso`)}
+    </div>
+    ${meses.every(x=>!x.n) ? `<p class="fm-vacio">Aquí vas a ver la utilidad neta de los últimos 6 meses, conforme se vendan carros y se registren gastos.</p>` : ''}
+    <div class="fm-bars${meses.every(x=>!x.n)?' hidden':''}" aria-label="Utilidad neta de los últimos 6 meses">${meses.map(x=>`<div class="fm-b${x.m===mesFin?' on':''}"><span class="num">${x.n?money(x.n).replace('$-','-$'):''}</span><i class="${x.n<0?'neg':''}" style="height:${Math.max(3, Math.round(Math.abs(x.n)/max*100))}%"></i><small>${nombreMes(x.m).slice(0,3)}</small></div>`).join('')}</div>
+    <div class="fm-gastos">
+      <div class="fm-gc"><p class="t-md">Gastos de la empresa</p><span class="t-xs">${nombreMes(mesFin)}</span></div>
+      ${gs.map(g=>`<div class="co-f"><span class="flex-1 min-w-0"><span class="truncate block">${esc(g.concepto)}</span><span class="t-xs">${esc(g.categoria||'Otros')}${g.fijo?' · <b class="fm-fijo">fijo mensual</b>':' · '+fch(ms_(g.fecha))}</span></span><b class="num">${money(g.monto)}</b>
+        <button class="pe-ib" title="${g.fijo?'Dejar de repetir o borrar':'Borrar'}" onclick="quitarGastoEmp('${g.id}')">${ico('cerrar',12,2)}</button></div>`).join('') || '<p class="t-xs py-2">Sin gastos registrados este mes.</p>'}
+      <div class="fm-add">
+        <input id="geCon" class="inp" placeholder="Concepto: planilla, luz, Facebook Ads…">
+        <select id="geCat" class="inp">${CAT_GASTO.map(c=>`<option>${c}</option>`).join('')}</select>
+        <input id="geMon" type="number" inputmode="decimal" class="inp" placeholder="$ monto">
+        <input id="geFec" type="date" class="inp" value="${mesFin===hoyM ? new Date().toLocaleDateString('en-CA',{timeZone:'America/El_Salvador'}) : mesFin+'-01'}">
+        <label class="fm-chk"><input type="checkbox" id="geFijo"> Se repite cada mes</label>
+        <button class="btn-p px-4 py-2.5" onclick="addGastoEmp()">Agregar gasto</button>
+      </div>
+    </div>
+  </div>`;
+}
+window.addGastoEmp = async function(){
+  if(!verFin()) return;
+  const c = document.getElementById('geCon').value.trim(), m = Number(document.getElementById('geMon').value), f = document.getElementById('geFec').value;
+  if(!c || !m || !f){ toast("Escribe el concepto, el monto y la fecha.","warn"); return; }
+  const g = { concepto:c, categoria:document.getElementById('geCat').value, monto:m, fecha:f, fijo:document.getElementById('geFijo').checked, por:yo.usuario, creado:new Date().toISOString() };
+  try{ await addDoc(collection(db,"gastosEmpresa"), g); registrar('gastoEmpresa', null, `Agregó gasto de la empresa: ${c} ${money(m)}${g.fijo?' (fijo mensual)':''}`); toast("Gasto agregado."); }
+  catch(e){ toast("No se pudo guardar: "+(e.code||e.message),"err"); }
+};
+window.quitarGastoEmp = async function(id){
+  const g = gastosEmp.find(x=>x.id===id); if(!g) return;
+  if(g.fijo){
+    const r = await dialogo({ titulo:'Gasto fijo mensual', texto:`<b>${esc(g.concepto)}</b> · ${money(g.monto)} cada mes.<br>¿Dejar de contarlo desde <b>${nombreMes(mesFin)}</b>, o borrarlo de todos los meses?`, ok:'Dejar de repetir', cancelar:'Cancelar' });
+    if(!r) return;
+    const fin = sumarMes(mesFin, -1);
+    try{ if(fin < String(g.fecha).slice(0,7)) await deleteDoc(doc(db,"gastosEmpresa",id)); else await updateDoc(doc(db,"gastosEmpresa",id), { fin });
+      registrar('gastoEmpresa', null, `Dejó de repetir: ${g.concepto}`); toast("Listo."); }catch(e){ toast("No se pudo: "+(e.code||e.message),"err"); }
+    return;
+  }
+  const r = await dialogo({ titulo:'¿Borrar este gasto?', texto:`<b>${esc(g.concepto)}</b> · ${money(g.monto)}`, ok:'Borrar', peligro:true });
+  if(!r) return;
+  try{ await deleteDoc(doc(db,"gastosEmpresa",id)); registrar('gastoEmpresa', null, `Borró gasto de la empresa: ${g.concepto} ${money(g.monto)}`); toast("Gasto borrado."); }
+  catch(e){ toast("No se pudo: "+(e.code||e.message),"err"); }
+};
 
 /* ════════ HISTORIAL: quién hizo qué y cuándo ════════ */
 window.cargarHistorial = async function(id){
