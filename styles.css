@@ -1454,3 +1454,34 @@ body.sin-fin .solo-fin{display:none!important}
   .det-din .dinero{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
 .det-acc a{text-decoration:none}
+
+/* ════════ V26 — más pegado a importacionesyesica.com ════════ */
+/* Entrada: centrada, con la marca escrita y el brillo rosa de la portada */
+#login{position:fixed!important;inset:0;overflow:auto;background:var(--bg)}
+.lg-glow{position:absolute;width:900px;height:900px;right:-260px;top:-320px;border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle,rgba(219,39,119,.22),transparent 60%);animation:lgResp 9s ease-in-out infinite}
+@keyframes lgResp{50%{transform:scale(1.12) translate(-30px,20px);opacity:.8}}
+@media(prefers-reduced-motion:reduce){.lg-glow{animation:none}}
+.lg-card{box-shadow:0 30px 80px -30px rgba(0,0,0,.7),0 0 0 1px rgba(219,39,119,.08);padding:36px 30px!important}
+.lg-marca{font-family:var(--display);font-weight:600;font-size:13px;letter-spacing:.2em;color:var(--t1);white-space:nowrap}
+.lg-marca b{font-weight:600;color:var(--brand)}
+:root:not([data-theme="light"]) .lg-marca b{color:#f472b6}
+.lg-ceja{justify-content:center;margin:26px 0 10px!important}
+.lg-h{font-family:var(--display);font-weight:500;font-size:34px;letter-spacing:-.035em;line-height:1.05;color:var(--t1)}
+.lg-h em{font-style:normal;background:linear-gradient(90deg,var(--brand),var(--brand-light),var(--brand));background-size:200% auto;-webkit-background-clip:text;background-clip:text;color:transparent}
+:root[data-theme="light"] .lg-h em{background:none;color:var(--brand)}
+.btn-google{border-radius:999px}
+/* Sin colores ni letras que la web no usa */
+.mono{font-family:var(--font);letter-spacing:.05em;font-variant-numeric:tabular-nums}
+.fx-i{background:var(--brand-dim);color:var(--brand-light)}
+:root[data-theme="light"] .fx-i{background:var(--brand-dim);color:var(--brand-2)}
+/* Equipo: aire entre las pestañas y el contenido, pestañas en píldora */
+#eqPersonas{margin-top:20px}
+.eq-seg,.pe-seg{border-radius:999px}
+.eq-seg .tab,.pe-seg .tab,.eq-seg .seg-pill,.pe-seg .seg-pill{border-radius:999px}
+/* Clientes: los botones siempre en una fila ordenada */
+.cl-acc{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.cl-acc>*{flex:1 1 auto;justify-content:center;text-align:center;white-space:nowrap}
+/* Mis tareas: lo que viene después se ve más apagado que lo de ahora */
+.lista.luego .task-card{opacity:.72}
+.lista.luego .task-card:hover{opacity:1}

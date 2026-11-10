@@ -577,7 +577,8 @@ function pintarStats(){
   document.getElementById('sProBar').style.width = avance + "%";
   contar('sSal', porCobrar, n=>money(Math.round(n)));
   document.getElementById('sCobrado').innerText = venta ? `cobrado ${money(cobrado)} de ${money(venta)}` : "—";
-  contar('sMias', yo ? contarMias() : 0, n=>String(Math.round(n)));
+  contar('sMias', yo ? siguientesMios().length : 0, n=>String(Math.round(n)));
+  { const e = document.getElementById('sMiasSub'), m = yo ? contarMias() : 0; if(e) e.textContent = m ? `de ${m} tareas tuyas en total` : 'el siguiente paso de cada carro'; }
 }
 function ponTitulo(el, base, acento){
   if(!el) return;
@@ -884,8 +885,14 @@ function pintarMias(){
 
   const items = [];
   autos.filter(a=>!a.archivado).forEach(v=> pendientesMias(v).forEach(t=> items.push({v,t})));
+  // "ahora" = el siguiente paso de ese carro (lo mismo que avisa Telegram); lo demás viene después
+  const sig = siguientesMios(), esAhora = new Set(sig.map(x=> x.v.id+'|'+x.t.k));
+  const orden = new Map(sig.map((x,i)=>[x.v.id+'|'+x.t.k, i]));
+  items.forEach(it=> it.ahora = esAhora.has(it.v.id+'|'+it.t.k));
+  items.sort((a,b)=> (b.ahora-a.ahora) || ((orden.get(a.v.id+'|'+a.t.k)??0) - (orden.get(b.v.id+'|'+b.t.k)??0)));
+  const nAhora = items.filter(i=>i.ahora).length;
   const bm = document.getElementById('badgeMias');
-  bm.innerText = items.length; bm.classList.toggle('cero', items.length===0);
+  bm.innerText = nAhora; bm.classList.toggle('cero', nAhora===0);
 
   // Cuántas se han completado hoy (de mis áreas) para dar sensación de avance
   const hoy = new Date().toDateString();
@@ -910,7 +917,8 @@ function pintarMias(){
     sub.innerText = hechasHoy ? `Completaste ${hechasHoy} tarea${hechasHoy>1?"s":""} hoy. Día limpio.` : "No tienes nada pendiente por ahora.";
   } else {
     sub.innerText = (hechasHoy ? `Llevas ${hechasHoy} hecha${hechasHoy>1?"s":""} hoy · ` : "") +
-      `${items.length} pendiente${items.length>1?"s":""} en ${new Set(items.map(i=>i.v.id)).size} unidad${new Set(items.map(i=>i.v.id)).size>1?"es":""}`;
+      (nAhora ? `${nAhora} te toca${nAhora>1?"n":""} ahora` : "Nada te toca ahora mismo") +
+      (items.length-nAhora ? ` · ${items.length-nAhora} más adelante` : "");
   }
 
   if(!items.length){
@@ -932,7 +940,7 @@ function pintarMias(){
   const foco = `<div class="hero-sig cta-web fade-up" id="tc-${f0.v.id}-${f0.t.k}">
       <div class="blob b1" aria-hidden="true"></div><div class="blob b2" aria-hidden="true"></div>
       <div class="flex items-center justify-between gap-2">
-        <p class="ceja" style="margin:0">Empieza por aquí</p>
+        <p class="ceja" style="margin:0">${f0.ahora?"Empieza por aquí":"Lo próximo que viene"}</p>
         <span class="chip chip-gr">${areaI(f0.t.a,13)} ${esc(areaN(f0.t.a))}</span>
       </div>
       <p class="hero-t mt-4">${esc(f0.t.t)}</p>
@@ -946,30 +954,35 @@ function pintarMias(){
     </div>`;
 
   const resto = items.slice(1);
+  const yaToca = resto.filter(i=>i.ahora), luego = resto.filter(i=>!i.ahora);
   const grupos = {};
-  resto.forEach(it => (grupos[it.v.id] ||= []).push(it));   // agrupadas por carro
-  const MAX = 4;
-
-  cont.innerHTML = foco + (resto.length ? `<p class="ceja" style="margin:34px 0 6px 2px">También pendiente · ${resto.length}</p>` : "") + Object.keys(grupos).map(a=>`
-    <div class="group-head" onclick="abrirDetalle('${a}')" style="cursor:pointer">
-      <span class="gh-ico">${ico("flota",16)}</span>
-      <span class="t-md truncate">${(()=>{const v=grupos[a][0].v; return esc(v.vehiculo)||(v.nombreCliente?"Encargo de "+esc(v.nombreCliente.split(" ")[0]):"Carro por asignar");})()}</span>
-      <span class="t-xs">${grupos[a].length}</span>
-      <span class="gh-line"></span>
-    </div>
-    <div class="lista">${grupos[a].slice(0, verMas.has(a)?999:MAX).map(({v,t},i)=>`
+  luego.forEach(it => (grupos[it.v.id] ||= []).push(it));   // lo que viene, agrupado por carro
+  const MAX = 3;
+  const nomV = v => esc(v.vehiculo)||(v.nombreCliente?"Encargo de "+esc(v.nombreCliente.split(" ")[0]):"Carro por asignar");
+  const tarjeta = ({v,t}, conCarro) => `
       <div class="task-card" id="tc-${v.id}-${t.k}"
            onclick="${t.foto?`abrirDetalle('${v.id}')`:`marcarDesdeLista('${v.id}','${t.k}')`}">
         <div class="task-check" id="chk-${v.id}-${t.k}">${t.foto?ico("clip",13,2):ico("ok",14,2.4)}</div>
         <div class="flex-1 min-w-0">
           <p class="task-title truncate">${esc(t.t)}</p>
-          <p class="task-meta truncate">${esc(areaN(t.a))}${personasDe(t).length?` · ${esc(personasDe(t).map(nombreU).join(", "))}`:""}${t.multi&&resp(t).length?` · tu parte (${resp(t).filter(u=>(v.tareas?.[t.k]?.marcas||{})[u]).length}/${resp(t).length})`:""}</p>
+          <p class="task-meta truncate">${conCarro?`<b style="color:var(--t1);font-weight:500">${nomV(v)}</b> · `:""}${esc(areaN(t.a))}${personasDe(t).length?` · ${esc(personasDe(t).map(nombreU).join(", "))}`:""}${t.multi&&resp(t).length?` · tu parte (${resp(t).filter(u=>(v.tareas?.[t.k]?.marcas||{})[u]).length}/${resp(t).length})`:""}</p>
         </div>
         ${t.foto?`<span class="chip chip-wn flex-shrink-0 solo-pc">comprobante</span><span class="solo-movil flex-shrink-0" style="color:var(--warn)" title="Pide comprobante">${ico("clip",15,1.8)}</span>`:""}
         <button onclick="event.stopPropagation();abrirDetalle('${v.id}')" class="tk-ir" title="Ver el carro" aria-label="Ver el carro">${ico("flecha",15,1.8)}</button>
-      </div>`).join("")}
+      </div>`;
+
+  cont.innerHTML = foco
+    + (yaToca.length ? `<p class="ceja" style="margin:34px 0 10px 2px">También te toca ahora · ${yaToca.length}</p><div class="lista">${yaToca.map(it=>tarjeta(it,true)).join("")}</div>` : "")
+    + (luego.length ? `<p class="ceja" style="margin:34px 0 2px 2px">Más adelante · ${luego.length}</p><p class="t-xs" style="margin:0 0 6px 2px">Se activan cuando el carro llegue a ese paso. Puedes adelantarlas si ya las hiciste.</p>` : "")
+    + Object.keys(grupos).map(a=>`
+    <div class="group-head" onclick="abrirDetalle('${a}')" style="cursor:pointer">
+      <span class="gh-ico">${ico("flota",16)}</span>
+      <span class="t-md truncate">${nomV(grupos[a][0].v)}</span>
+      <span class="t-xs">${grupos[a].length}</span>
+      <span class="gh-line"></span>
+    </div>
+    <div class="lista luego">${grupos[a].slice(0, verMas.has(a)?999:MAX).map(it=>tarjeta(it,false)).join("")}
     ${grupos[a].length>MAX ? `<button onclick="verMasArea('${a}')" class="ver-mas">${verMas.has(a)?'Ver menos':`Ver ${grupos[a].length-MAX} más`}</button>`:""}</div>
-    ${false ? `<button onclick="verMasArea('${a}')" class="ver-mas">${verMas.has(a)?'Ver menos':`Ver ${grupos[a].length-MAX} más`}</button>`:""}
   `).join("");
 }
 const verMas = new Set();
@@ -1413,7 +1426,7 @@ window.abrirDetalle = function(id, silencioso){
             </div>`; })() : ''}
           ${c.faltan?`<p class="t-xs mt-2" style="color:var(--warn)">${c.faltan} pago${c.faltan>1?'s':''} ya hecho${c.faltan>1?'s':''} sin monto. Ponlo en la tarea (botón “+ monto”).</p>`:''}
           <div class="flex gap-2 flex-wrap mt-3">
-            <input id="gaCon" class="inp flex-1 min-w-[140px]" placeholder="Otro gasto: grúa, reparación, trámite…">
+            <input id="gaCon" class="inp flex-1 min-w-[140px]" placeholder="Otro gasto (grúa, trámite…)">
             <input id="gaMon" type="number" inputmode="decimal" class="inp" style="width:120px" placeholder="$ monto">
             <button onclick="addGasto('${v.id}')" class="btn-g px-4 py-2">Agregar</button>
           </div>
@@ -1883,7 +1896,7 @@ function pintarClientes(){
   box.innerHTML = ls.length ? `<div class="cl-grid">${ls.map(v=>{ const vta = Number(v.precio_venta||0), cob = pagado(v), pct = vta?Math.min(100,Math.round(cob/vta*100)):0;
     return `<div class="cl" onclick="abrirDetalle('${v.id}')">
       <div class="cl-cab"><span class="pp-av">${esc(v.nombreCliente.charAt(0).toUpperCase())}</span><div class="min-w-0 flex-1"><p class="cl-n">${esc(v.nombreCliente)}</p><p class="hp-s">${(v.vehiculo?esc(v.vehiculo):(v.deseoCliente?'Busca '+esc(v.deseoCliente):'Buscando carro'))}</p></div>${pillEstado(v)}</div>
-      <div class="fc-nums"><div><small>Precio</small><b class="num">${vta?money(vta):'—'}</b></div><div><small>Pagado</small><b class="num ok">${money(cob)}</b></div><div><small>Falta</small><b class="num ${saldo(v)?'wn':''}">${money(saldo(v))}</b></div></div>
+      <div class="fc-nums"><div><small>Precio</small><b class="num">${vta?money(vta):'—'}</b></div><div><small>Pagado</small><b class="num ok">${money(cob)}</b></div><div><small>Falta</small><b class="num ${saldo(v)?'wn':''}">${vta?money(saldo(v)):'—'}</b></div></div>
       ${vta?`<div class="fc-bar"><i style="width:${pct}%"></i></div>`:''}
       <div class="cl-acc" onclick="event.stopPropagation()">${v.telefonoCliente?`<a class="btn-g px-3 py-2" href="https://wa.me/${telDe(v)}" target="_blank" rel="noopener">${ico("chat",14)} WhatsApp</a><button class="btn-p px-3 py-2" onclick="estadoCuenta('${v.id}')">Estado de cuenta</button>`:`<span class="t-xs">Sin teléfono registrado</span>`}<button class="btn-g px-3 py-2" onclick="abrirAbono('${v.id}')">Abonar</button></div>
     </div>`; }).join('')}</div>` : `<div class="vacio"><p class="t-md">Todavía no hay clientes con carros activos.</p></div>`;
