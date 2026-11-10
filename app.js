@@ -1352,7 +1352,7 @@ window.abrirDetalle = function(id, silencioso){
   }
 
   const plegAbiertos = [...m.querySelectorAll('details.plegable[open] > summary > .flex-1')].map(x=>x.textContent);
-  m.innerHTML = `<div class="glass rounded-3xl w-full max-w-2xl my-4 relative" onclick="event.stopPropagation()">
+  m.innerHTML = `<div class="glass rounded-3xl w-full max-w-2xl my-4 relative det-box" onclick="event.stopPropagation()">
     
     <div class="p-6 border-b flex justify-between items-start gap-3 sticky top-0 rounded-t-3xl z-10" style="border-color:var(--line);background:var(--panel-hi)">
       <div class="min-w-0">
@@ -1372,16 +1372,22 @@ window.abrirDetalle = function(id, silencioso){
       </div>
     </div>
 
-    <div class="p-6 space-y-5">
+    <div class="p-6 det-grid"><div class="det-der det-der-a"><div class="det-der-top">
       ${(v.vehiculo || v.portada || v.foto) ? `<div class="det-cover">${portada(v)}<div class="vc-sombra"></div>
         <div class="det-foto-acc">
           <label class="det-foto-btn">${ico("foto",15,2)} ${(v.portada||v.foto)?'Cambiar foto':'Agregar foto'}<input type="file" accept="image/*" class="hidden" onchange="subirPortada('${v.id}',this)"></label>
           ${(v.portada||v.foto)?`<button class="det-foto-btn" onclick="quitarPortada('${v.id}')">Quitar</button>`:''}
         </div></div>` : ''}
       ${chipsFecha(v) ? `<div class="det-fx">${chipsFecha(v)}<span class="t-xs">Último avance: ${fch(ultimoAvance(v))||'—'}</span></div>` : ''}
-      ${panelDatos}
-      ${heroSiguiente(v)}
-      ${v.vehiculo ? `<details class="plegable">
+      </div></div><div class="det-izq">
+      ${panelDatos ? `<div class="o3">${panelDatos}</div>` : ''}
+      <div class="o4">${heroSiguiente(v)}</div>
+      <div class="o10">
+        <p class="t-lbl mb-2.5">Proceso completo</p>
+        <div class="space-y-2">${bloques}</div>
+      </div>
+      </div><div class="det-der">
+      ${v.vehiculo ? `<details class="plegable o5">
         <summary><span class="flex-1">Llegada estimada</span><span class="t-xs">${v.eta ? (etaInfo(v)?.txt || 'ETA '+esc(v.eta)) : 'sin fecha'}</span><span class="fase-chev">${ico("flecha",14,1.8)}</span></summary>
         <div class="pt-3">${puedeLogistica() ? `<div class="rejilla">
             <div class="campo"><label for="lgEta">Llegada estimada (ETA)</label><input id="lgEta" type="date" class="inp" value="${esc(v.eta||'')}"></div>
@@ -1389,7 +1395,7 @@ window.abrirDetalle = function(id, silencioso){
           : `<p class="t-sm">${v.eta?'Llegada estimada: '+esc(etaInfo(v)?.f||v.eta):'Sin fecha de llegada.'}</p>`}</div>
       </details>` : ''}
       ${verFin() && v.vehiculo ? (()=>{ const c = costosDe(v), vta = Number(v.precio_venta||0), gr = vta - c.total;
-        return `<details class="plegable">
+        return `<details class="plegable o6">
         <summary><span class="flex-1">Costo real del carro</span><span class="t-xs">${cotDe(v)?`estimado ${money(cotDe(v).costoTotal)} · real `:''}${money(c.total)}${vta?` · ganancia <b style="color:${gr>=0?'var(--brand-light)':'var(--danger)'}">${money(gr)}</b>`:''}</span><span class="fase-chev">${ico("flecha",14,1.8)}</span></summary>
         <div class="pt-3">
           <div class="costos">${c.items.map(x=>`<div class="co-f"><span class="flex-1 min-w-0 truncate">${esc(x.n)}${x.est?' <em class="t-xs">(precio de compra)</em>':''}</span><b class="num">${money(x.m)}</b>${x.i!=null?`<button class="pe-ib" title="Quitar" onclick="quitarGasto('${v.id}',${x.i})">${ico("cerrar",12,2)}</button>`:'<span class="co-sp"></span>'}</div>`).join('') || '<p class="t-xs py-2">Todavía no hay costos registrados.</p>'}
@@ -1414,7 +1420,7 @@ window.abrirDetalle = function(id, silencioso){
         </div>
       </details>`; })() : ''}
 
-      ${verCobros() ? `      <div class="dinero">
+      ${verCobros() ? `      <div class="o7 det-din"><div class="dinero">
         <div><p class="t-lbl">Cobrado</p><p class="num text-[17px] font-semibold mt-0.5" style="color:var(--ok)">${money(pagado(v))}</p></div>
         ${Number(v.precio_venta||0) ? `
         <div><p class="t-lbl">Falta cobrar</p><p class="num text-[17px] font-semibold mt-0.5" style="color:${saldo(v)>0?'var(--warn)':'var(--t2)'}">${money(saldo(v))}</p></div>
@@ -1438,19 +1444,13 @@ window.abrirDetalle = function(id, silencioso){
             <button onclick="addAbono('${v.id}')" class="btn-p px-4 py-2">Abonar</button>
           </div>` : `<p class="t-xs">No tienes permiso para registrar cobros.</p>`}
         </div>
-      </details>` : (Number(v.precio_venta||0) ? `<div class="dinero"><div><p class="t-lbl">Precio de venta</p><p class="num text-[17px] font-semibold mt-0.5">${money(v.precio_venta)}</p></div></div>` : '')}
+      </details></div>` : (Number(v.precio_venta||0) ? `<div class="dinero o7"><div><p class="t-lbl">Precio de venta</p><p class="num text-[17px] font-semibold mt-0.5">${money(v.precio_venta)}</p></div></div>` : '')}
 
-      ${yo?.admin || verFin() ? `<details class="plegable" ontoggle="if(this.open) cargarHistorial('${v.id}')">
+      ${yo?.admin || verFin() ? `<details class="plegable o9" ontoggle="if(this.open) cargarHistorial('${v.id}')">
         <summary><span class="flex-1">Historial de cambios</span><span class="t-xs">quién hizo qué</span><span class="fase-chev">${ico("flecha",14,1.8)}</span></summary>
         <div class="pt-2"><div id="hist-${v.id}" class="hist"><p class="t-xs py-2">Cargando…</p></div></div>
       </details>` : ''}
-      <div>
-        <p class="t-lbl mb-2.5">Proceso completo</p>
-        <div class="space-y-2">${bloques}</div>
-      </div>
-
-
-      <div class="flex flex-wrap gap-2 pt-3 border-t" style="border-color:var(--line)">
+      <div class="det-acc">
         ${v.archivado ? `<button onclick="archivar('${v.id}',false)" class="btn-g px-4 py-2.5 rounded-xl flex items-center gap-2">${ico("flecha",14)} Reactivar</button>`
                       : `<button onclick="archivar('${v.id}',true)" class="btn-g px-4 py-2.5 rounded-xl flex items-center gap-2">${ico("archivo",14)} Archivar</button>`}
         ${v.telefonoCliente ? `<a href="https://wa.me/503${String(v.telefonoCliente).replace(/\\D/g,'')}" target="_blank" class="btn-g px-4 py-2.5 inline-flex items-center gap-2">${ico("chat",14)} Escribir al cliente</a>`:""}
@@ -1459,7 +1459,7 @@ window.abrirDetalle = function(id, silencioso){
           ? `<button onclick="eliminar('${v.id}')" class="btn-g btn-d px-4 py-2.5 flex items-center gap-2 ml-auto">${ico("basura",14)} Papelera</button>`
           : `<span class="t-xs self-center flex items-center gap-1.5">${ico("candado",12)} Solo un admin puede mandar a la papelera</span>`}
       </div>
-    </div>
+    </div></div>
   </div>`;
   m.querySelectorAll('details.plegable').forEach(d=>{ const t = d.querySelector('summary > .flex-1')?.textContent; if(plegAbiertos.includes(t)){ d.open = true; if(/Historial/.test(t)) cargarHistorial(v.id); } });
   m.onclick = cerrar;

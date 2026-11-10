@@ -1429,3 +1429,28 @@ body.sin-fin .solo-fin{display:none!important}
 @media(min-width:1024px) and (max-width:1499px){ .rail-btn{padding:0 12px!important} .marca{letter-spacing:.16em!important} }
 @media(min-width:1024px) and (max-width:1279px){ .marca{font-size:12px!important} #dMe,#dRol{display:none!important} }
 @media(min-width:1024px) and (max-width:1179px){ .rail{left:calc(50% + 34px)!important} .rail-btn{padding:0 10px!important} }
+
+/* ═══ V25 · Detalle del carro en dos columnas (PC) ═══ */
+.det-grid{display:flex;flex-direction:column;gap:20px}
+.det-izq,.det-der,.det-der-top{display:contents}
+.det-cover{order:1}.det-fx{order:2}.o3{order:3}.o4{order:4}.o5{order:5}.o6{order:6}.o7{order:7}.o9{order:9}.o10{order:10}
+.det-din{display:flex;flex-direction:column;gap:12px}
+.det-acc{order:11;display:flex;flex-wrap:wrap;gap:8px;padding-top:12px;border-top:1px solid var(--line)}
+@media(min-width:1024px){
+  .modal-bg>.det-box{max-width:1180px}
+  .det-grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);column-gap:24px;row-gap:0;grid-template-rows:auto 1fr;align-items:start;padding:24px 28px 28px}
+  .det-izq,.det-der{display:flex;flex-direction:column;gap:16px;min-width:0}
+  .det-izq{grid-column:1;grid-row:1 / span 2}
+  .det-der-a{grid-column:2;grid-row:1}
+  .det-der:not(.det-der-a){grid-column:2;grid-row:2;margin-top:16px}
+  .det-der-top{display:flex;flex-direction:column;gap:12px}
+  .det-izq>*{order:0}
+  .det-der>.o7{order:1}.det-der>.o5{order:2}.det-der>.o6{order:3}.det-der>.o9{order:4}.det-der>.det-acc{order:5}
+  .det-cover{aspect-ratio:16/10}
+  .det-acc{border-top:0;padding-top:0}
+  .det-acc>*{flex:1 1 auto;justify-content:center}
+  .det-acc .ml-auto{margin-left:0}
+  .det-acc>span{flex-basis:100%;justify-content:center}
+  .det-din .dinero{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+.det-acc a{text-decoration:none}
