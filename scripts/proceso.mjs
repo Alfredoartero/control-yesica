@@ -26,7 +26,7 @@ tareas = tareas.map(x => ({ id:x.id, data:(x.data && x.data.data && !x.data.t) ?
 if(fases.data) fases = fases.data;
 
 // Nombres del tablero → usuario del control
-const EQUIPO = { alfre:"Alfredo", yesica:"Yesica", cesar:"César", carlos:"Carlos", nehe:"Nehemías", evelyn:"Evelyn", leslie:"Leslie" };
+const EQUIPO = { alfre:"Alfredo", yesica:"Yesica", cesar:"César", carlos:"Carlos", nehe:"Nehemías", evelyn:"Evelyn", leslie:"Leslie", fer:"Fer" };
 const norm = s => String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().trim();
 function usuarioDe(nombre){
   const n = norm(nombre); if(!n) return null;

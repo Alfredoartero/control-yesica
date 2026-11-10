@@ -4,7 +4,7 @@ import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot
   from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL }
   from "https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, updatePassword }
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, updatePassword, GoogleAuthProvider, signInWithPopup, signInWithRedirect }
   from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
 const firebaseConfig = {
@@ -30,7 +30,24 @@ const EQUIPO = {
   nehe:   { nombre:"Nehemías",admin:false },
   evelyn: { nombre:"Evelyn",  admin:false },
   leslie: { nombre:"Leslie",  admin:false },
+  fer:    { nombre:"Fer",     admin:false },
 };
+// Correos de Google autorizados, guardados cifrados (SHA-256) para no publicar los correos.
+// Para agregar a alguien nuevo: Equipo → Personas → "Correo de Google".
+const ACCESOS = {
+  '4b0063b2ecb9095e1949242b08776bb811828d9a49e96869f9a78e3604a0d444': 'alfre',
+  '86ecaa8ab94d811758947a6f785ae4f24c67b228464c17d0c0de4a7ea8542b0a': 'yesica',
+  '21bcc67fce7e517c7c3b3d58d1d6743191e8de969a51772789b9638539d4bbe9': 'cesar',
+  '8cef5fc25c295f20273700e133e1ed5be079f01b8adf722736f67f15994115de': 'carlos',
+  '396cf02e11d16847aedc963f7a5297fb428c39c6e5debf2f88080071524510f1': 'nehe',
+  'ef94532a71d448a32f62b004c3c2733866e4406e16302fdf9304549b8934409e': 'leslie',
+  '88bd8ca16dbd84e7434de833fbeb8c905d7319b4430f1512b783f43ac5376b88': 'fer',
+};
+async function hashCorreo(e){
+  const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(String(e||'').trim().toLowerCase()));
+  return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');
+}
+let accesosMap = {};   // usuario → true si tiene correo de Google (lo ve el admin)
 const AREAS = [
   { k:"ventas",    n:"Ventas y clientes",   ic:"ventas" },
   { k:"marketing", n:"Marketing",           ic:"marketing" },
@@ -245,6 +262,20 @@ function quienes(x){
   Object.keys(EQUIPO).forEach(u=>{ const o=document.createElement('option'); o.value=u; o.innerText=EQUIPO[u].nombre; s.appendChild(o); });
 })();
 
+window.entrarGoogle = async function(){
+  const m = document.getElementById('lgMsg'), b = document.getElementById('lgGoogle');
+  m.innerText = ""; b.disabled = true;
+  const prov = new GoogleAuthProvider(); prov.setCustomParameters({ prompt:'select_account' });
+  try{ await signInWithPopup(auth, prov); }
+  catch(e){
+    if(['auth/popup-blocked','auth/operation-not-supported-in-this-environment','auth/web-storage-unsupported'].includes(e.code)){
+      try{ await signInWithRedirect(auth, prov); return; }catch(e2){ m.innerText = "No se pudo abrir Google: "+(e2.code||e2.message); }
+    } else if(e.code!=='auth/popup-closed-by-user' && e.code!=='auth/cancelled-popup-request'){
+      m.innerText = e.code==='auth/unauthorized-domain' ? "Este sitio no está autorizado en Firebase." : "No se pudo entrar con Google: "+(e.code||e.message);
+    }
+  }
+  b.disabled = false;
+};
 window.entrar = async function(){
   const u = document.getElementById('lgUser').value, p = document.getElementById('lgPass').value;
   const m = document.getElementById('lgMsg'), b = document.getElementById('lgBtn');
@@ -284,7 +315,14 @@ onAuthStateChanged(auth, async user=>{
   if(!user){
     yo=null; document.getElementById('login').classList.remove('hidden'); document.getElementById('app').classList.add('hidden'); return;
   }
-  const u = user.email.replace("@yesica.local","");
+  let u = null;
+  if(/@yesica\.local$/.test(user.email||'')) u = user.email.replace("@yesica.local","");
+  else {
+    const h = await hashCorreo(user.email);
+    u = ACCESOS[h] || null;
+    if(!u){ try{ const a = await getDoc(doc(db,"accesos",h)); if(a.exists()) u = a.data().u; }catch(e){} }
+    if(!u){ document.getElementById('lgMsg').innerText = `El correo ${user.email} no está autorizado. Pídele a Alfredo que lo agregue en Equipo.`; signOut(auth); return; }
+  }
   if(!EQUIPO[u]){ document.getElementById('lgMsg').innerText="Cuenta no autorizada."; signOut(auth); return; }
 
   const r = doc(db,"usuarios",u);
@@ -316,7 +354,8 @@ onAuthStateChanged(auth, async user=>{
     if(!puedeCrear() && !document.getElementById('pgNuevo').classList.contains('hidden')) ir('flota');
     pintarUsers(); pintarTodo(); if(suscrito) suscribirFin();
     if(!window.__inicioHecho){ window.__inicioHecho = true; if(!/[?&](v|d)=/.test(location.search)) ir('hoy'); }
-    if(yo.debeCambiar && !window.__cambiandoClave) pedirCambioClave();
+    if(yo.debeCambiar && !window.__cambiandoClave && /@yesica\.local$/.test(auth.currentUser?.email||'')) pedirCambioClave();
+    if(yo.admin && !window.__sembrado){ window.__sembrado = true; sembrarAccesos(); }
     if(!suscrito){
       suscrito = true;
       onSnapshot(doc(db,"config","telegram"), s=>{
@@ -1067,8 +1106,9 @@ function pintarUsers(){
           <p class="pp-s">${d.admin?'<b>Admin</b> · ve y edita todo':`${areas.length} área${areas.length===1?'':'s'}`}${porNombre?` · ${porNombre} tarea${porNombre===1?'':'s'} a su nombre`:''}</p>
         </div>
         <div class="pp-est">
-          ${!usersData[u] ? `<button class="pp-cta" onclick="crearCuenta('${u}')">Crear cuenta</button>` : (u!==yo.usuario ? `<button class="pp-lnk" onclick="reiniciarClave('${u}')">Reiniciar contraseña</button>` : '')}
-          <span class="pp-dot ${creado?'ok':''}"></span>${creado?(d.debeCambiar?'Clave temporal':'Activo'):'Sin cuenta'}
+          ${accesosMap[u] ? `<span class="pp-g">Google ✓</span>` : `<button class="pp-cta" onclick="ponerCorreo('${u}')">Correo de Google</button>`}
+          ${!usersData[u] ? `<button class="pp-lnk" onclick="crearCuenta('${u}')">o crear con contraseña</button>` : (u!==yo.usuario ? `<button class="pp-lnk" onclick="reiniciarClave('${u}')">Reiniciar contraseña</button>` : '')}
+          <span class="pp-dot ${creado?'ok':''}"></span>${creado?(accesosMap[u]?'Activo':(d.debeCambiar?'Clave temporal':'Activo')):'Sin cuenta'}
           <span class="pp-tg ${tg?'ok':''}" title="${tg?'Recibe avisos por Telegram':'No ha vinculado Telegram'}">Telegram ${tg?'✓':'—'}</span>
         </div>
       </div>
@@ -1818,7 +1858,7 @@ function pintarHoyPag(){
   act.forEach(v=>{ const d = atraso(v); if(d!=null && (yo.admin || pendientesMias(v).length)) at.push({ p:d, h:`<div class="hp-f" onclick="abrirDetalle('${v.id}')"><div class="min-w-0 flex-1"><p class="hp-t">${esc(v.vehiculo||'Encargo de '+(v.nombreCliente||'').split(' ')[0])} trabado</p><p class="hp-s">${d} días sin avance · ${esc(estadoDe(v).t)}</p></div><button class="hp-a p">Ver</button></div>` }); });
   act.forEach(v=>{ const e = etaInfo(v); if(e?.tarde) at.push({ p:50, h:`<div class="hp-f" onclick="abrirDetalle('${v.id}')"><div class="min-w-0 flex-1"><p class="hp-t">${esc(v.vehiculo)}: no ha llegado</p><p class="hp-s">${e.txt}</p></div><button class="hp-a p">Ver</button></div>` }); });
   if(verFin()) act.forEach(v=>{ const ct = cotDe(v); if(!ct) return; const dif = costosDe(v).total - Number(ct.costoTotal||0); if(dif>0) at.push({ p:40, h:`<div class="hp-f" onclick="abrirDetalle('${v.id}')"><div class="min-w-0 flex-1"><p class="hp-t">${esc(v.vehiculo)}: se pasó del estimado</p><p class="hp-s">+${money(dif)} contra la calculadora</p></div><button class="hp-a p">Ver</button></div>` }); });
-  if(yo.admin) Object.keys(EQUIPO).filter(u=>!usersData[u]).forEach(u=> at.push({ p:1, h:`<div class="hp-f" onclick="ir('usuarios');setTimeout(()=>verEquipo('personas'),50)"><div class="min-w-0 flex-1"><p class="hp-t">${esc(EQUIPO[u].nombre)} sin cuenta</p><p class="hp-s">No puede entrar hasta que le crees su acceso</p></div><button class="hp-a p">Crear</button></div>` }));
+  if(yo.admin) Object.keys(EQUIPO).filter(u=>!usersData[u] && !accesosMap[u]).forEach(u=> at.push({ p:1, h:`<div class="hp-f" onclick="ir('usuarios');setTimeout(()=>verEquipo('personas'),50)"><div class="min-w-0 flex-1"><p class="hp-t">${esc(EQUIPO[u].nombre)} sin cuenta</p><p class="hp-s">No puede entrar hasta que le crees su acceso</p></div><button class="hp-a p">Crear</button></div>` }));
   if(at.length) bloques.push(`<div class="hp-c lado"><p class="hp-ct">Necesita atención <span>${at.length}</span></p>${at.sort((a,b)=>b.p-a.p).slice(0,5).map(x=>x.h).join('')}</div>`);
   // Mi siguiente paso
   bloques.push(`<div class="hp-c"><p class="hp-ct">Tu siguiente paso <span>${sig.length ? `<button class="hp-lnk" onclick="ir('mias')">Todas mis tareas →</button>` : ''}</span></p>
@@ -2008,6 +2048,34 @@ async function pedirMonto(titulo, texto, actual=''){
   }
 }
 const claveTemporal = n => (String(n||'yesica').normalize('NFD').replace(/[̀-ͯ]/g,'').split(' ')[0]) + '-' + Math.floor(1000 + Math.random()*9000);
+
+/* ════════ ACCESO CON GOOGLE ════════ */
+async function sembrarAccesos(){
+  try{
+    const sn = await getDocs(collection(db,"accesos"));
+    const ya = {}; sn.forEach(d=>{ ya[d.id] = d.data().u; });
+    for(const [h,u] of Object.entries(ACCESOS)) if(ya[h]!==u){ await setDoc(doc(db,"accesos",h), { u, por:yo.usuario, fecha:new Date().toISOString() }); ya[h] = u; }
+    accesosMap = {}; Object.values(ya).forEach(u=> accesosMap[u] = true);
+    // Ficha de cada persona con acceso, para que pueda entrar con Google sin esperar
+    for(const u of new Set(Object.values(ya))) if(EQUIPO[u] && !usersData[u])
+      await setDoc(doc(db,"usuarios",u), { nombre:EQUIPO[u].nombre, admin:!!EQUIPO[u].admin, areas:[], creadoPor:yo.usuario, creado:new Date().toISOString() }, { merge:true });
+    pintarUsers();
+  }catch(e){ console.warn("accesos:", e.code||e.message); }
+}
+window.ponerCorreo = async function(u){
+  if(!yo?.admin) return;
+  const nom = EQUIPO[u]?.nombre || u;
+  const r = await dialogo({ titulo:`Correo de Google de ${nom}`, texto:'Con este correo va a entrar tocando "Entrar con Google". El correo no se guarda a la vista: solo una huella cifrada.',
+    campos:[{ label:'Correo', type:'email', placeholder:'nombre@gmail.com' }], ok:'Autorizar' });
+  if(!r) return; const e = r[0].trim().toLowerCase();
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)){ toast("Ese correo no se ve bien.","warn"); return; }
+  try{
+    await setDoc(doc(db,"accesos",await hashCorreo(e)), { u, por:yo.usuario, fecha:new Date().toISOString() });
+    if(!usersData[u]) await setDoc(doc(db,"usuarios",u), { nombre:nom, admin:!!EQUIPO[u]?.admin, areas:[], creadoPor:yo.usuario, creado:new Date().toISOString() }, { merge:true });
+    accesosMap[u] = true; registrar('cuenta', null, `Autorizó el correo de Google de ${nom}`); pintarUsers();
+    toast(`${nom} ya puede entrar con Google.`);
+  }catch(err){ toast("No se pudo: "+(err.code||err.message),"err"); }
+};
 
 /* ════════ CUENTAS: las crea un admin ════════ */
 window.crearCuenta = async function(u){

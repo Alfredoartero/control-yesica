@@ -3,9 +3,17 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // Entrada con usuario/contraseña (@yesica.local) o con Google (correo autorizado, guardado cifrado en /accesos)
+    function local()    { return request.auth.token.email.matches('.*@yesica[.]local$'); }
+    function google()   { return request.auth.token.firebase.sign_in_provider == 'google.com' && request.auth.token.email_verified == true; }
+    function correoH()  { return hashing.sha256(request.auth.token.email.lower()).toHexString().lower(); }
+    function dueno()    { return correoH() == '4b0063b2ecb9095e1949242b08776bb811828d9a49e96869f9a78e3604a0d444' ? 'alfre'
+                               : (correoH() == '86ecaa8ab94d811758947a6f785ae4f24c67b228464c17d0c0de4a7ea8542b0a' ? 'yesica' : ''); }
     function signed()   { return request.auth != null && request.auth.token.email != null
-                                 && request.auth.token.email.matches('.*@yesica[.]local$'); }
-    function uid()      { return request.auth.token.email.split('@')[0]; }
+                                 && (local() || (google() && (dueno() != ''
+                                     || exists(/databases/$(database)/documents/accesos/$(correoH()))))); }
+    function uid()      { return local() ? request.auth.token.email.split('@')[0]
+                               : (dueno() != '' ? dueno() : get(/databases/$(database)/documents/accesos/$(correoH())).data.u); }
     function miembro()  { return signed() && exists(/databases/$(database)/documents/usuarios/$(uid())); }
     function yo()       { return get(/databases/$(database)/documents/usuarios/$(uid())).data; }
     function esAdmin()  { return miembro() && yo().get('admin', false) == true; }
@@ -69,6 +77,12 @@ service cloud.firestore {
       allow read: if esAdmin() || verFin();
       allow create: if miembro() && request.resource.data.por == uid();
       allow update, delete: if false;
+    }
+
+    // Correos de Google autorizados (cifrados): cada quien lee el suyo, solo admin los agrega
+    match /accesos/{h} {
+      allow get: if esAdmin() || (request.auth != null && google() && h == correoH());
+      allow list, write: if esAdmin();
     }
 
     // Reinicios de contraseña pedidos por un admin (los procesa el robot)

@@ -1414,3 +1414,18 @@ body.sin-fin .solo-fin{display:none!important}
 .cl-acc a{text-decoration:none}
 .hp-c{box-shadow:0 1px 0 rgba(255,255,255,.02) inset}
 .hp-f:hover .hp-t{color:var(--brand-light)}
+
+/* ═══════════ V24 · ENTRAR CON GOOGLE ═══════════ */
+.btn-google{display:flex;align-items:center;justify-content:center;gap:12px;height:52px;border-radius:16px;background:#fff;color:#1f1f1f;font-weight:600;font-size:15px;border:1px solid rgba(0,0,0,.08);box-shadow:0 10px 26px -12px rgba(0,0,0,.6);transition:transform .15s,box-shadow .2s}
+.btn-google:hover{box-shadow:0 14px 30px -12px rgba(219,39,119,.6)}
+.btn-google:active{transform:scale(.98)}
+.btn-google:disabled{opacity:.6}
+.lg-otra>summary{cursor:pointer;text-align:center;font-size:13px;color:var(--t3);list-style:none}
+.lg-otra>summary::-webkit-details-marker{display:none}
+.lg-otra>summary:hover{color:var(--t1)}
+.pp-g{font-size:12px;font-weight:600;color:var(--ok-txt);padding:5px 10px;border-radius:999px;border:1px solid var(--ok-line)}
+/* Barra superior en compu: que el menú nunca tape la marca */
+@media(min-width:1024px) and (max-width:1799px){ .marca-tag{display:none!important} }
+@media(min-width:1024px) and (max-width:1499px){ .rail-btn{padding:0 12px!important} .marca{letter-spacing:.16em!important} }
+@media(min-width:1024px) and (max-width:1279px){ .marca{font-size:12px!important} #dMe,#dRol{display:none!important} }
+@media(min-width:1024px) and (max-width:1179px){ .rail{left:calc(50% + 34px)!important} .rail-btn{padding:0 10px!important} }
