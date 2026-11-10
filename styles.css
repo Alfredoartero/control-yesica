@@ -1279,3 +1279,6 @@ body.sin-fin .solo-fin{display:none!important}
 .hi{display:flex;gap:12px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13.5px;color:var(--t1)}
 .hi:last-child{border-bottom:0}
 .hi-d{width:8px;height:8px;border-radius:50%;background:var(--brand);margin-top:6px;flex-shrink:0;box-shadow:0 0 0 3px var(--brand-dim)}
+.pe-arch{margin-top:16px;border:1px dashed var(--line-2);border-radius:16px;padding:12px 14px}
+.pe-arch>summary{cursor:pointer;font-size:13.5px;color:var(--t3)}
+.pe-arch-f{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line);font-size:13.5px;color:var(--t2);margin-top:8px}

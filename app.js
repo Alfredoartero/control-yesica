@@ -48,69 +48,71 @@ const fch = ms => { if(!ms) return ""; const d=new Date(ms); const hoy=new Date(
   return d.toLocaleDateString('es-SV', o).replace('.',''); };
 
 /* ════════ PROCESOS ════════ */
-const FASES_ENC = ["1 · Inicio de proceso","2 · Adquisición y pago inicial","3 · Llegada y compraventa"];
-const T_ENC = [
-  {k:"e01",f:0,a:"ventas",   t:"Ingresar datos del cliente y vehículo deseado", d:"Nombre, foto de DUI, carro deseado, millaje, golpe y presupuesto inicial"},
-  {k:"e02",f:0,a:"finanzas", t:"Confirmar pago de $100", d:"Anexar comprobante. Se abona al total de la venta", pago:true, foto:true},
-  {k:"e03",f:0,a:"finanzas", t:"Facturar los $100 de inicio"},
-  {k:"e04",f:0,a:"ventas",   t:"Crear grupo de WhatsApp"},
-  {k:"e05",f:0,a:"marketing",t:"Enviar opciones al cliente", d:"De lunes a viernes hasta que se le gane una", multi:true},
-  {k:"e06",f:1,a:"compras",  t:"Se ganó el vehículo en subasta"},
-  {k:"e07",f:1,a:"direccion",t:"Registrar vehículo en sistema", d:"Vehículo, costo y precio de venta"},
-  {k:"e08",f:1,a:"compras",  t:"Pagar la subasta (Copart / IAA)", d:"Evitar storage. Adjuntar comprobante del pago", foto:true},
-  {k:"e09",f:1,a:"naviera",  t:"Asignar a naviera"},
-  {k:"e10",f:1,a:"naviera",  t:"Brindar estatus al cliente", d:"Constante, una vez por semana hasta que venga", repetible:true},
-  {k:"e11",f:1,a:"finanzas", t:"Confirmar pago del 50% de enganche", d:"Con comprobante en foto, o confirmar recibido si es efectivo", pago:true, foto:true},
-  {k:"e12",f:1,a:"finanzas", t:"Facturar el abono del 50%"},
-  {k:"e13",f:1,a:"legal",    t:"Crear promesa de venta"},
-  {k:"e14",f:2,a:"aduana",   t:"Marcar llegada del vehículo al país"},
-  {k:"e24",f:2,a:"ventas",   t:"Avisar al cliente que su vehículo llegó al país", d:"Mensaje al cliente apenas arriba, con los siguientes pasos y lo que falta pagar"},
-  {k:"e15",f:2,a:"marketing",t:"Subir el carro como publicidad", d:"Cada quien en su canal (Facebook, grupo de WhatsApp, etc.)", multi:true},
-  {k:"e16",f:2,a:"finanzas", t:"Pagar a la naviera", d:"Adjuntar comprobante del pago", foto:true},
-  {k:"e17",f:2,a:"aduana",   t:"Cancelar impuestos de aduana", d:"Adjuntar comprobante / DUCA", foto:true},
-  {k:"e18",f:2,a:"aduana",   t:"Revisión mecánica", d:"Subir fotos del estado del vehículo", foto:true},
-  {k:"e19",f:2,a:"finanzas", t:"Cliente cancela el restante", d:"Siempre con comprobante", pago:true, foto:true},
-  {k:"e20",f:2,a:"finanzas", t:"Facturar el monto pagado"},
-  {k:"e21",f:2,a:"aduana",   t:"Liberación del vehículo"},
-  {k:"e22",f:2,a:"legal",    t:"Crear compraventa y firmar contrato", d:"Adjuntar foto del contrato firmado por ambas partes", foto:true},
-  {k:"e25",f:2,a:"ventas",   t:"Entregar el vehículo al cliente", d:"Coordinar la entrega y dejar constancia con foto", foto:true},
-  {k:"e23",f:2,a:"legal",    t:"Hacer prórroga de compraventa", opc:true},
+const FASES_ENC = ["1 · Inicio de proceso", "2 · Adquisición y pago inicial", "3 · Llegada y compraventa"];
+const T_ENC = [   // respaldo: el proceso real viene del editor (config/proceso)
+  {"k": "e01", "f": 0, "a": "ventas", "t": "Ingresar datos del cliente y vehículo deseado", "d": "Nombre, foto de DUI, carro deseado, millaje, golpe y presupuesto inicial", "foto": true, "personas": ["yesica", "leslie", "alfre"]},
+  {"k": "e02", "f": 0, "a": "finanzas", "t": "Confirmar pago de $100", "d": "Anexar comprobante. Se abona al total de la venta", "pago": true, "foto": true},
+  {"k": "e03", "f": 0, "a": "finanzas", "t": "Facturar los $100 de inicio"},
+  {"k": "e04", "f": 0, "a": "ventas", "t": "Crear grupo de WhatsApp"},
+  {"k": "e05", "f": 0, "a": "marketing", "t": "Enviar opciones al cliente", "d": "De lunes a viernes hasta que se le gane una", "multi": true, "repetible": true, "hasta": "e06", "personas": ["cesar"]},
+  {"k": "e06", "f": 1, "a": "compras", "t": "Se ganó el vehículo en subasta", "personas": ["alfre", "yesica"]},
+  {"k": "e07", "f": 1, "a": "direccion", "t": "Registrar vehículo en sistema", "d": "Vehículo, costo y precio de venta", "personas": ["alfre", "yesica", "leslie"]},
+  {"k": "e11", "f": 1, "a": "finanzas", "t": "Confirmar pago del 50% de enganche", "d": "Con comprobante en foto, o confirmar recibido si es efectivo", "pago": true, "foto": true},
+  {"k": "e12", "f": 1, "a": "finanzas", "t": "Facturar el abono del 50%"},
+  {"k": "e08", "f": 1, "a": "compras", "t": "Pagar la subasta (Copart / IAA)", "d": "Evitar storage. Adjuntar comprobante del pago", "foto": true},
+  {"k": "e09", "f": 1, "a": "naviera", "t": "Asignar a naviera"},
+  {"k": "e13", "f": 1, "a": "legal", "t": "Crear promesa de venta"},
+  {"k": "e10", "f": 1, "a": "naviera", "t": "Brindar estatus al cliente", "d": "Constante, una vez por semana hasta que venga", "repetible": true, "hasta": "e14"},
+  {"k": "e14", "f": 2, "a": "aduana", "t": "Marcar llegada del vehículo al país"},
+  {"k": "e24", "f": 2, "a": "ventas", "t": "Avisar al cliente que su vehículo llegó al país", "d": "Mensaje al cliente apenas arriba, con los siguientes pasos y lo que falta pagar"},
+  {"k": "e19", "f": 2, "a": "finanzas", "t": "Cliente cancela el restante", "d": "Siempre con comprobante", "pago": true, "foto": true},
+  {"k": "e20", "f": 2, "a": "finanzas", "t": "Facturar el monto pagado"},
+  {"k": "e15", "f": 2, "a": "marketing", "t": "Subir el carro como publicidad", "d": "Cada quien en su canal (Facebook, grupo de WhatsApp, etc.)", "multi": true},
+  {"k": "e16", "f": 2, "a": "finanzas", "t": "Pagar a la naviera", "d": "Adjuntar comprobante del pago", "foto": true},
+  {"k": "e17", "f": 2, "a": "aduana", "t": "Cancelar impuestos de aduana", "d": "Adjuntar comprobante / DUCA", "foto": true},
+  {"k": "e18", "f": 2, "a": "aduana", "t": "Revisión mecánica", "d": "Subir fotos del estado del vehículo", "foto": true},
+  {"k": "e22", "f": 2, "a": "legal", "t": "Crear compraventa y firmar contrato", "d": "Adjuntar foto del contrato firmado por ambas partes", "foto": true},
+  {"k": "e21", "f": 2, "a": "aduana", "t": "Liberación del vehículo"},
+  {"k": "e25", "f": 2, "a": "ventas", "t": "Entregar el vehículo al cliente", "d": "Coordinar la entrega y dejar constancia con foto", "foto": true},
+  {"k": "e23", "f": 2, "a": "legal", "t": "Hacer prórroga de compraventa", "opc": true}
 ];
-const FASES_STK = ["1 · Coste e introducción","2 · Preparación y logística USA","3 · Gestión comercial","4 · Arribo y finalización"];
-const T_STK = [
-  {k:"s01",f:0,a:"direccion",t:"Registrar coste e introducción del vehículo"},
-  {k:"s02",f:1,a:"marketing",t:"Publicidad del vehículo", d:"Cada quien en su canal (Facebook, grupo de WhatsApp, etc.)", multi:true},
-  {k:"s03",f:1,a:"compras",  t:"Pagos USA (Copart / IAA)", d:"Evitar storage. Adjuntar comprobante del pago", foto:true},
-  {k:"s04",f:1,a:"naviera",  t:"Asignación de naviera"},
-  {k:"s05",f:2,a:"direccion",t:"Definir precio a cliente", d:"Podría darse en menos"},
-  {k:"s06",f:2,a:"ventas",   t:"Venta o asignación a cliente"},
-  {k:"s07",f:2,a:"finanzas", t:"Pago de pre-reserva / reserva (≥50%)", d:"Con comprobante, o confirmar recibido si es efectivo", pago:true, foto:true},
-  {k:"s08",f:2,a:"finanzas", t:"Facturar el abono recibido"},
-  {k:"s09",f:2,a:"legal",    t:"Creación de promesa de venta"},
-  {k:"s10",f:2,a:"naviera",  t:"Control de estatus al cliente", d:"Semanal hasta que llegue", repetible:true},
-  {k:"s11",f:3,a:"aduana",   t:"Arribo al país"},
-  {k:"s19",f:3,a:"ventas",   t:"Avisar al cliente que el vehículo llegó", d:"Solo si ya está asignado a un cliente"},
-  {k:"s12",f:3,a:"aduana",   t:"Pago de impuestos en aduana", d:"Adjuntar comprobante / DUCA", foto:true},
-  {k:"s13",f:3,a:"aduana",   t:"Revisión mecánica", d:"Subir fotos del estado del vehículo", foto:true},
-  {k:"s14",f:3,a:"aduana",   t:"Liberación del vehículo"},
-  {k:"s15",f:3,a:"finanzas", t:"Facturación del restante"},
-  {k:"s16",f:3,a:"finanzas", t:"Cancelación total (pago final)", d:"Adjuntar comprobante del pago final", pago:true, foto:true},
-  {k:"s17",f:3,a:"legal",    t:"Compraventa (firma contrato final)", d:"Adjuntar foto del contrato firmado", foto:true},
-  {k:"s20",f:3,a:"ventas",   t:"Entregar el vehículo al cliente", d:"Coordinar la entrega y dejar constancia con foto", foto:true},
-  {k:"s18",f:3,a:"legal",    t:"Crear prórroga de compraventa", opc:true},
+const FASES_STK = ["1 · Coste e introducción", "2 · Preparación y logística USA", "3 · Gestión comercial", "4 · Arribo y finalización"];
+const T_STK = [   // respaldo: el proceso real viene del editor (config/proceso)
+  {"k": "s01", "f": 0, "a": "direccion", "t": "Registrar coste e introducción del vehículo"},
+  {"k": "s02", "f": 1, "a": "marketing", "t": "Publicidad del vehículo", "d": "Cada quien en su canal (Facebook, grupo de WhatsApp, etc.)", "multi": true, "personas": ["nehe", "leslie", "alfre"]},
+  {"k": "s03", "f": 1, "a": "compras", "t": "Pagos USA (Copart / IAA)", "d": "Evitar storage. Adjuntar comprobante del pago", "foto": true},
+  {"k": "s04", "f": 1, "a": "naviera", "t": "Asignación de naviera"},
+  {"k": "s05", "f": 2, "a": "direccion", "t": "Definir precio a cliente", "d": "Podría darse en menos"},
+  {"k": "s06", "f": 2, "a": "ventas", "t": "Venta o asignación a cliente"},
+  {"k": "s07", "f": 2, "a": "finanzas", "t": "Pago de pre-reserva / reserva (≥50%)", "d": "Con comprobante, o confirmar recibido si es efectivo", "pago": true, "foto": true},
+  {"k": "s08", "f": 2, "a": "finanzas", "t": "Facturar el abono recibido"},
+  {"k": "s09", "f": 2, "a": "legal", "t": "Creación de promesa de venta"},
+  {"k": "s10", "f": 2, "a": "naviera", "t": "Control de estatus al cliente", "d": "Semanal hasta que llegue", "repetible": true, "hasta": "s11"},
+  {"k": "s11", "f": 3, "a": "aduana", "t": "Arribo al país"},
+  {"k": "s19", "f": 3, "a": "ventas", "t": "Avisar al cliente que el vehículo llegó", "d": "Solo si ya está asignado a un cliente"},
+  {"k": "s16", "f": 3, "a": "finanzas", "t": "Cancelación total (pago final)", "d": "Adjuntar comprobante del pago final", "pago": true, "foto": true},
+  {"k": "s15", "f": 3, "a": "finanzas", "t": "Facturación del restante"},
+  {"k": "s17", "f": 3, "a": "legal", "t": "Compraventa (firma contrato final)", "d": "Adjuntar foto del contrato firmado", "foto": true},
+  {"k": "nmw6nog5q", "f": 3, "a": "ventas", "t": "PAGAR NAVIERA", "d": "Salió de una idea del esquema"},
+  {"k": "s13", "f": 3, "a": "aduana", "t": "Revisión mecánica", "d": "Subir fotos del estado del vehículo", "foto": true},
+  {"k": "s12", "f": 3, "a": "aduana", "t": "Pago de impuestos en aduana", "d": "Adjuntar comprobante / DUCA", "foto": true},
+  {"k": "s14", "f": 3, "a": "aduana", "t": "Liberación del vehículo"},
+  {"k": "s20", "f": 3, "a": "ventas", "t": "Entregar el vehículo al cliente", "d": "Coordinar la entrega y dejar constancia con foto", "foto": true},
+  {"k": "s18", "f": 3, "a": "legal", "t": "Crear prórroga de compraventa", "opc": true}
 ];
 const defT   = v => v.tipoProceso === "Encargo" ? T_ENC : T_STK;
 const defF   = v => v.tipoProceso === "Encargo" ? FASES_ENC : FASES_STK;
 
 /* Las tareas vienen del tablero ("Tareas del proceso Yesica") a través de proceso.json.
    Si no se puede leer, se queda con la lista de arriba (o la última que se guardó en el teléfono). */
-let procesoInfo = null, procBorr = null, procSucio = false, procTipo = 'Encargo', procAbierta = null;
+let procRaw = null, procesoInfo = null, procBorr = null, procSucio = false, procTipo = 'Encargo', procAbierta = null;
 function aplicarProceso(p){
   try{
     const E = p?.tareas?.Encargo, S = p?.tareas?.Stock;
     if(!Array.isArray(E) || !E.length || !Array.isArray(S) || !S.length) return false;
-    T_ENC.splice(0, T_ENC.length, ...E);
-    T_STK.splice(0, T_STK.length, ...S);
+    procRaw = { Encargo:E, Stock:S };   // con las archivadas, para el editor
+    T_ENC.splice(0, T_ENC.length, ...E.filter(t=>!t.archivada));
+    T_STK.splice(0, T_STK.length, ...S.filter(t=>!t.archivada));
     const fe = p.fases?.Encargo, fs = p.fases?.Stock;
     if(Array.isArray(fe) && fe.length) FASES_ENC.splice(0, FASES_ENC.length, ...fe.map((n,i)=>`${i+1} · ${n}`));
     if(Array.isArray(fs) && fs.length) FASES_STK.splice(0, FASES_STK.length, ...fs.map((n,i)=>`${i+1} · ${n}`));
@@ -2316,7 +2318,7 @@ window.verEquipo = function(v){
 };
 const procActual = () => ({
   fases:{ Encargo: FASES_ENC.map(f=>f.replace(/^\d+\s*·\s*/,'')), Stock: FASES_STK.map(f=>f.replace(/^\d+\s*·\s*/,'')) },
-  tareas:{ Encargo: T_ENC.map(t=>({...t})), Stock: T_STK.map(t=>({...t})) }
+  tareas:{ Encargo: (procRaw?.Encargo || T_ENC).map(t=>({...t})), Stock: (procRaw?.Stock || T_STK).map(t=>({...t})) }
 });
 function borr(){ if(!procBorr) procBorr = JSON.parse(JSON.stringify(procActual())); return procBorr; }
 function sucio(){ procSucio = true; pintarProceso(); }
@@ -2363,9 +2365,9 @@ function pintarProceso(){
             `<label class="pe-sw-i"><input type="checkbox" ${(c==='gasto'?esGasto(t):t[c])?'checked':''} onchange="peCampo('${t.k}','${c}',this.checked)"><span class="pe-sw-b"></span>${n}</label>`).join('')}
         </div>
         ${t.repetible?`<label class="campo"><span class="lbl">Se repite hasta que se haga</span><select class="inp" onchange="peCampo('${t.k}','hasta',this.value)">
-          <option value="">El final del proceso</option>${ts.filter(x=>x.k!==t.k).map(x=>`<option value="${x.k}" ${x.k===t.hasta?'selected':''}>${esc(x.t)}</option>`).join('')}</select></label>`:''}
+          <option value="">El final del proceso</option>${ts.filter(x=>x.k!==t.k && !x.archivada).map(x=>`<option value="${x.k}" ${x.k===t.hasta?'selected':''}>${esc(x.t)}</option>`).join('')}</select></label>`:''}
         <div class="pe-acc">
-          <button class="pe-borrar" onclick="peBorrar('${t.k}')">${ico('basura',14,1.8)} Borrar tarea</button>
+          <button class="pe-borrar" onclick="peBorrar('${t.k}')">${ico('archivo',14,1.8)} Archivar tarea</button>
           <button class="btn-g px-4 py-2" onclick="peAbrir('${t.k}')">Listo</button>
         </div>
       </div>` : ''}
@@ -2374,12 +2376,12 @@ function pintarProceso(){
   box.innerHTML = `
     <div class="pe-cab">
       <div class="seg seg-f pe-seg"><span class="seg-pill" aria-hidden="true"></span>
-        <button class="tab ${tipo==='Encargo'?'on':''}" onclick="peTipo('Encargo')">Encargo <i>${B.tareas.Encargo.length}</i></button>
-        <button class="tab ${tipo==='Stock'?'on':''}" onclick="peTipo('Stock')">Stock <i>${B.tareas.Stock.length}</i></button>
+        <button class="tab ${tipo==='Encargo'?'on':''}" onclick="peTipo('Encargo')">Encargo <i>${B.tareas.Encargo.filter(t=>!t.archivada).length}</i></button>
+        <button class="tab ${tipo==='Stock'?'on':''}" onclick="peTipo('Stock')">Stock <i>${B.tareas.Stock.filter(t=>!t.archivada).length}</i></button>
       </div>
       <p class="t-xs">${quien?`Último cambio: ${esc(quien)}${cuando?' · '+cuando:''}`:'Vienen del tablero. Desde aquí ya las puedes cambiar.'}</p>
     </div>
-    ${fases.map((f,fi)=>{ const lista = ts.filter(t=>t.f===fi); return `
+    ${fases.map((f,fi)=>{ const lista = ts.filter(t=>t.f===fi && !t.archivada); return `
       <div class="pe-fase">
         <div class="pe-fh">
           <span class="pe-fn num">${fi+1}</span>
@@ -2391,6 +2393,8 @@ function pintarProceso(){
         <button class="pe-add" onclick="peNueva(${fi})">${ico('mas',14,2)} Agregar tarea</button>
       </div>`; }).join('')}
     <button class="pe-add-f" onclick="peFaseNueva()">${ico('mas',15,2)} Agregar etapa</button>
+    ${ts.some(t=>t.archivada) ? `<details class="pe-arch"><summary>Tareas archivadas · ${ts.filter(t=>t.archivada).length}</summary>
+      ${ts.filter(t=>t.archivada).map(t=>`<div class="pe-arch-f"><span class="flex-1 min-w-0 truncate">${esc(t.t)}</span><button class="btn-g px-3 py-1.5" onclick="peRestaurar('${t.k}')">Restaurar</button></div>`).join('')}</details>` : ''}
     <div class="pe-barra${procSucio?' on':''}">
       <span>${procSucio?'Tienes cambios sin guardar':'Todo guardado'}</span>
       <div class="flex gap-2">
@@ -2404,11 +2408,11 @@ function pintarProceso(){
 window.peMover = function(k, dir){
   const ts = borr().tareas[procTipo], nf = borr().fases[procTipo].length;
   const t = ts.find(x=>x.k===k); if(!t) return;
-  const lista = ts.filter(x=>x.f===t.f), i = lista.indexOf(t);
+  const lista = ts.filter(x=>x.f===t.f && !x.archivada), i = lista.indexOf(t);
   if((dir<0 && i===0) || (dir>0 && i===lista.length-1)){
     const nfa = t.f + dir; if(nfa<0 || nfa>=nf) return;
     ts.splice(ts.indexOf(t),1); t.f = nfa;
-    const dest = ts.filter(x=>x.f===nfa);
+    const dest = ts.filter(x=>x.f===nfa && !x.archivada);
     if(dir<0){ const ult = dest[dest.length-1]; ts.splice(ult ? ts.indexOf(ult)+1 : ts.length, 0, t); }
     else { const pri = dest[0]; ts.splice(pri ? ts.indexOf(pri) : ts.length, 0, t); }
   } else {
@@ -2457,25 +2461,27 @@ window.peNueva = function(fi){
   procAbierta = k; sucio();
   requestAnimationFrame(()=>{ const i = document.querySelector(`#pe-${k} .pe-form input`); i?.focus(); i?.select(); i?.scrollIntoView({block:'center', behavior:'smooth'}); });
 };
-window.peBorrar = function(k){
+window.peBorrar = async function(k){
   const ts = borr().tareas[procTipo], t = ts.find(x=>x.k===k); if(!t) return;
   const n = usoTarea(k);
-  if(!confirm(`¿Borrar "${t.t}"?${n?`\n\nYa está marcada en ${n} carro${n>1?'s':''}: ese avance deja de contar.`:''}`)) return;
-  ts.splice(ts.indexOf(t),1);
+  const r = await dialogo({ titulo:'¿Archivar esta tarea?', texto:`<b>${esc(t.t)}</b><br>Deja de salir en el proceso y en los avisos.${n?` Los ${n} carro${n>1?'s':''} que ya la marcaron conservan su avance.`:''} La puedes restaurar cuando quieras.`, ok:'Archivar tarea' });
+  if(!r) return;
+  t.archivada = true;
   ts.forEach(x=>{ if(x.hasta===k) delete x.hasta; });
   procAbierta = null; sucio();
 };
+window.peRestaurar = function(k){ const t = borr().tareas[procTipo].find(x=>x.k===k); if(!t) return; delete t.archivada; sucio(); };
 window.peFaseNombre = (fi, v) => { borr().fases[procTipo][fi] = v; procSucio = true; barraSucia(); };
 window.peFaseNueva = () => { borr().fases[procTipo].push('Nueva etapa'); sucio(); };
 window.peFaseBorrar = function(fi){
-  const B = borr(); if(B.tareas[procTipo].some(t=>t.f===fi)) return;
-  B.fases[procTipo].splice(fi,1); B.tareas[procTipo].forEach(t=>{ if(t.f>fi) t.f--; }); sucio();
+  const B = borr(); if(B.tareas[procTipo].some(t=>t.f===fi && !t.archivada)) return;
+  B.fases[procTipo].splice(fi,1); B.tareas[procTipo].forEach(t=>{ if(t.f>fi) t.f--; else if(t.f===fi) t.f = Math.max(0, fi-1); }); sucio();
 };
 window.peDescartar = () => { if(!confirm('¿Descartar los cambios que no guardaste?')) return; procBorr = null; procSucio = false; procAbierta = null; pintarProceso(); };
 window.peGuardar = async function(){
   const B = borr();
   for(const tipo of ['Encargo','Stock']){
-    if(!B.tareas[tipo].length){ toast(`${tipo} se quedaría sin tareas.`,'warn'); return; }
+    if(!B.tareas[tipo].filter(t=>!t.archivada).length){ toast(`${tipo} se quedaría sin tareas.`,'warn'); return; }
     if(B.fases[tipo].some(f=>!String(f).trim())){ toast('Hay una etapa sin nombre.','warn'); return; }
     const vacia = B.tareas[tipo].find(t=>!String(t.t).trim()); if(vacia){ procTipo = tipo; procAbierta = vacia.k; pintarProceso(); toast('Hay una tarea sin nombre.','warn'); return; }
   }
