@@ -1,6 +1,5 @@
 rules_version = '2';
 // Reglas del Centro de Control · Importaciones Yesica (proyecto sistema-yesica)
-// Pegar en: Firebase → Firestore Database → Reglas → Publicar
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -32,8 +31,8 @@ service cloud.firestore {
       allow read: if miembro();
       allow create: if crear();
       allow update: if esAdmin() || crear()
-                    || (miembro() && cambia().hasOnly(['tareas', 'eta', 'foto']))
-                    || (cobros() && cambia().hasOnly(['tareas', 'eta', 'foto', 'abonos']));
+                    || (miembro() && cambia().hasOnly(['tareas', 'eta', 'foto', 'portada', 'fotoId']))
+                    || (cobros() && cambia().hasOnly(['tareas', 'eta', 'foto', 'portada', 'fotoId', 'abonos']));
       allow delete: if esAdmin();
     }
 
@@ -49,6 +48,14 @@ service cloud.firestore {
     // Gastos generales de la empresa (planilla, local, publicidad…): solo finanzas.
     match /gastosEmpresa/{g} {
       allow read, write: if verFin();
+    }
+
+    // Fotos y comprobantes (guardados achicados en la base): solo el equipo con sesión.
+    match /fotos/{f} {
+      allow read: if miembro();
+      allow create: if miembro() && request.resource.data.por == uid();
+      allow update: if false;
+      allow delete: if esAdmin();
     }
 
     // Configuración (proceso, Telegram, avisos): todos leen, solo admin escribe.

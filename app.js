@@ -646,7 +646,7 @@ const gananciaDe = v => Number(v.precio_venta||0) - costosDe(v).total;
 /* Portada del carro: su foto si la tiene; si no, un dibujo según el tipo */
 const RX_SUV = /cr-?v|rav ?4|tucson|sportage|outlander|cx-?\d|rogue|explorer|highlander|santa ?fe|equinox|escape|pilot|4runner|tahoe|suburban|cherokee|wrangler|kicks|seltos|kona|venue|hr-?v|forester|crosstrek|tiguan|pathfinder|murano|sorento|telluride|palisade|trax|blazer|traverse|edge|bronco|compass|renegade|x-?trail|qashqai|soul|hilux|tacoma|frontier|ranger|tundra|silverado|f-?150|ram\b|l200|navara|suv|camioneta|pick ?up/i;
 function portada(v){
-  if(v.foto) return `<img src="${esc(v.foto)}" alt="" loading="lazy" decoding="async" class="vc-img">`;
+  if(v.portada || v.foto) return `<img src="${v.portada || esc(v.foto)}" alt="" loading="lazy" decoding="async" class="vc-img">`;
   const tipo = !v.vehiculo ? 'q' : (RX_SUV.test(v.vehiculo) ? 'suv' : 'car');
   const tono = {'e-verde':'t-verde','e-rosa':'t-rosa','e-ambar':'t-ambar','e-solido':'t-rosa'}[estadoDe(v).c] || 't-gris';
   return `<div class="vc-dib ${tono}"><svg viewBox="0 0 320 ${tipo==='suv'?120:110}" aria-hidden="true"><use href="#s-${tipo}"/></svg></div>`;
@@ -660,19 +660,57 @@ async function achicarFoto(file, max=1600){
     return await new Promise(r=> c.toBlob(b=> r(b||file), 'image/jpeg', .82));
   }catch(e){ return file; }
 }
+/* ════════ FOTOS GUARDADAS EN LA BASE DE DATOS (sin Storage) ════════
+   Se achican en el teléfono y se guardan en fotos/{id}. Solo las ve el equipo con sesión. */
+async function aDataURL(file, max, q){
+  const bmp = await createImageBitmap(file);
+  const k = Math.min(1, max/Math.max(bmp.width, bmp.height));
+  const c = document.createElement('canvas'); c.width = Math.round(bmp.width*k); c.height = Math.round(bmp.height*k);
+  const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0,0,c.width,c.height); g.drawImage(bmp, 0, 0, c.width, c.height);
+  return c.toDataURL('image/jpeg', q);
+}
+const leerArchivo = f => new Promise((res,rej)=>{ const r = new FileReader(); r.onload = ()=>res(r.result); r.onerror = rej; r.readAsDataURL(f); });
+async function guardarFotoDB(file, carro, tarea){
+  let data, mini = null; const pdf = file.type==='application/pdf';
+  if(pdf){
+    if(file.size > 700*1024) throw new Error("El PDF pesa más de 700 KB. Mándale una captura de pantalla en su lugar.");
+    data = await leerArchivo(file);
+  } else {
+    if(!/^image\//.test(file.type||'image/')) throw new Error("Solo fotos o PDF.");
+    data = await aDataURL(file, 1600, .78);
+    if(data.length > 900000) data = await aDataURL(file, 1200, .66);
+    if(data.length > 900000) data = await aDataURL(file, 1000, .55);
+    mini = await aDataURL(file, 220, .6);
+  }
+  const r = await addDoc(collection(db,"fotos"), { carro, tarea:tarea||null, data, tipo: pdf?'pdf':'img', nombre:file.name||'foto', por:yo.usuario, fecha:new Date().toISOString() });
+  return { fid:r.id, mini, tipo: pdf?'pdf':'img' };
+}
+window.verFoto = async function(fid, url){
+  if(url){ window.open(url,'_blank'); return; }
+  const ov = document.createElement('div'); ov.className = 'visor';
+  ov.innerHTML = `<div class="visor-c"><p class="t-xs">Cargando…</p></div><button class="visor-x" aria-label="Cerrar">${ico("cerrar",18,2)}</button>`;
+  const fin = ()=> ov.remove(); ov.querySelector('.visor-x').onclick = fin; ov.addEventListener('click', e=>{ if(e.target===ov) fin(); });
+  document.body.appendChild(ov);
+  try{
+    const sn = await getDoc(doc(db,"fotos",fid)); if(!sn.exists()) throw new Error("No se encontró la foto.");
+    const f = sn.data();
+    ov.querySelector('.visor-c').innerHTML = (f.tipo==='pdf'
+      ? `<iframe src="${f.data}" title="${esc(f.nombre)}"></iframe>`
+      : `<img src="${f.data}" alt="${esc(f.nombre)}">`) +
+      `<div class="visor-pie"><span class="t-xs">${esc(f.nombre)} · ${esc(nombreU(f.por))} · ${fch(ms_(f.fecha))}</span><a class="btn-g px-3 py-2" href="${f.data}" download="${esc(f.nombre||'comprobante')}">Descargar</a></div>`;
+  }catch(e){ ov.querySelector('.visor-c').innerHTML = `<p class="t-sm">No se pudo abrir: ${esc(e.message||e.code)}</p>`; }
+};
 async function subirPortadaArchivo(id, file){
   if(!file) return;
   if(!/^image\//.test(file.type||'image/')){ toast("Elige una imagen.","warn"); return; }
   toast("Subiendo foto…","warn");
   try{
-    const blob = await achicarFoto(file);
-    const snap = await uploadBytes(ref(storage, `comprobantes/${id}/portada_${Date.now()}.jpg`), blob, {contentType:'image/jpeg'});
-    const url  = await getDownloadURL(snap.ref);
-    await updateDoc(doc(db,"vehiculos",id), { foto:url });
+    const portada = await aDataURL(file, 900, .72);
+    const g = await guardarFotoDB(file, id, 'portada');
+    await updateDoc(doc(db,"vehiculos",id), { portada, fotoId:g.fid });
+    registrar('foto', id, 'Puso la foto del carro');
     toast("Foto del carro guardada.");
-  }catch(e){
-    toast(e.code==="storage/unauthorized" ? "Storage sin permisos. Revisa las reglas en Firebase." : "No se pudo subir: "+(e.code||e.message), "err");
-  }
+  }catch(e){ toast("No se pudo subir: "+(e.message||e.code), "err"); }
 }
 window.verFotoNueva = inp => {
   const box = document.getElementById('fFotoVista'); if(!box) return;
@@ -684,7 +722,7 @@ window.verFotoNueva = inp => {
 window.subirPortada = (id, inp) => { const f = inp.files && inp.files[0]; inp.value = ""; subirPortadaArchivo(id, f); };
 window.quitarPortada = async id => {
   if(!confirm("¿Quitar la foto de este carro?")) return;
-  try{ await updateDoc(doc(db,"vehiculos",id), { foto:"" }); toast("Foto quitada."); }catch(e){ toast("No se pudo: "+e.code,"err"); }
+  try{ await updateDoc(doc(db,"vehiculos",id), { foto:"", portada:"", fotoId:"" }); toast("Foto quitada."); }catch(e){ toast("No se pudo: "+e.code,"err"); }
 };
 
 /* Lo tuyo de hoy: las 3 primeras tareas, arriba de la flota */
@@ -1171,8 +1209,8 @@ window.abrirDetalle = function(id, silencioso){
             ${st?.sinComprobante?`<span class="t-xs" style="color:var(--warn)">${esc(st.sinComprobante)}</span>`:""}
           </div>
           ${fotos.length?`<div class="flex flex-wrap gap-1.5 mb-2">${fotos.map((f,i)=>`
-            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg deep">
-              <a href="${esc(f.url)}" target="_blank" class="t-xs underline" style="color:var(--cyan)">${esc((f.nombre||'foto').slice(0,20))}</a>
+            <span class="mini-f">
+              <button type="button" onclick="verFoto('${f.fid||''}','${f.fid?'':esc(f.url||'')}')" class="mini-b" title="${esc(f.nombre||'foto')}">${f.mini?`<img src="${f.mini}" alt="">`:`<span>${f.tipo==='pdf'?'PDF':ico("foto",14)}</span>`}</button>
               ${can?`<button onclick="borrarFoto('${v.id}','${t.k}',${i})" class="t-xs" style="color:var(--danger)" title="Quitar">${ico("cerrar",11,2)}</button>`:""}
             </span>`).join("")}</div>`:""}
           ${can?`<div class="flex gap-1.5 items-center">
@@ -1186,7 +1224,7 @@ window.abrirDetalle = function(id, silencioso){
         return `<div id="tk-${t.k}" class="tarea-ok">
           <div class="tbox on" ${can?`onclick="marcar('${v.id}','${t.k}',true)" title="Reabrir"`:''}>${ico("ok",11,2.6)}</div>
           <span class="flex-1 min-w-0 truncate">${esc(t.t)}</span>
-          ${nf?`<a href="${esc(st.fotos[0].url)}" target="_blank" class="t-xs flex items-center gap-1" style="color:var(--cyan)" onclick="event.stopPropagation()">${ico("clip",12)}${nf>1?nf:''}</a>`:""}
+          ${nf?`<button type="button" class="t-xs flex items-center gap-1" style="color:var(--cyan)" onclick="event.stopPropagation();verFoto('${st.fotos[0].fid||''}','${st.fotos[0].fid?'':esc(st.fotos[0].url||'')}')">${ico("clip",12)}${nf>1?nf:''}</button>`:""}
           ${esGasto(t) && verFin() ? `<button class="monto-chip ${tieneMonto(montoDe(v,t.k))?'':'falta'}" ${can?`onclick="ponMonto('${v.id}','${t.k}')"`:'disabled'}>${tieneMonto(montoDe(v,t.k))?money(montoDe(v,t.k)):'+ monto'}</button>` : ''}
           <span class="t-xs flex-shrink-0">${st?.por?esc(usersData[st.por]?.nombre||st.por)+' · ':''}${fch(st?.fecha)}</span>
         </div>`;
@@ -1281,10 +1319,10 @@ window.abrirDetalle = function(id, silencioso){
     </div>
 
     <div class="p-6 space-y-5">
-      ${(v.vehiculo || v.foto) ? `<div class="det-cover">${portada(v)}<div class="vc-sombra"></div>
+      ${(v.vehiculo || v.portada || v.foto) ? `<div class="det-cover">${portada(v)}<div class="vc-sombra"></div>
         <div class="det-foto-acc">
-          <label class="det-foto-btn">${ico("foto",15,2)} ${v.foto?'Cambiar foto':'Agregar foto'}<input type="file" accept="image/*" class="hidden" onchange="subirPortada('${v.id}',this)"></label>
-          ${v.foto?`<button class="det-foto-btn" onclick="quitarPortada('${v.id}')">Quitar</button>`:''}
+          <label class="det-foto-btn">${ico("foto",15,2)} ${(v.portada||v.foto)?'Cambiar foto':'Agregar foto'}<input type="file" accept="image/*" class="hidden" onchange="subirPortada('${v.id}',this)"></label>
+          ${(v.portada||v.foto)?`<button class="det-foto-btn" onclick="quitarPortada('${v.id}')">Quitar</button>`:''}
         </div></div>` : ''}
       ${chipsFecha(v) ? `<div class="det-fx">${chipsFecha(v)}<span class="t-xs">Último avance: ${fch(ultimoAvance(v))||'—'}</span></div>` : ''}
       ${panelDatos}
@@ -1449,24 +1487,21 @@ window.subirFoto = async function(id, k){
   if(!puedeT(def)){ toast("No tienes esta área habilitada.","err"); return; }
 
   const file = inp.files[0];
-  if(file.size > 8*1024*1024){ toast("La foto pesa más de 8 MB. Usa una más liviana.","warn"); return; }
+  if(file.size > 25*1024*1024){ toast("El archivo pesa demasiado.","warn"); return; }
 
   toast("Subiendo comprobante…","warn");
   try{
-    const ruta = `comprobantes/${id}/${k}_${Date.now()}_${file.name.replace(/[^\w.\-]/g,"_")}`;
-    const snap = await uploadBytes(ref(storage, ruta), file);
-    const url  = await getDownloadURL(snap.ref);
+    const g = await guardarFotoDB(file, id, k);
     const st   = v.tareas?.[k] || {};
-    const fotos = [ ...(st.fotos||[]), { url, nombre:file.name, por:yo.usuario, fecha:new Date().toISOString() } ];
+    const fotos = [ ...(st.fotos||[]), { fid:g.fid, mini:g.mini, tipo:g.tipo, nombre:file.name, por:yo.usuario, fecha:new Date().toISOString() } ];
     const tareas = { ...(v.tareas||{}) };
     tareas[k] = { ...st, fotos };
     await updateDoc(doc(db,"vehiculos",id), { tareas });
     inp.value = "";
+    registrar('foto', id, `Subió comprobante: ${def.t}`);
     toast("Comprobante guardado.");
   }catch(e){
-    toast(e.code==="storage/unauthorized"
-      ? "Storage sin permisos. Revisa las reglas en Firebase."
-      : "No se pudo subir: "+(e.code||e.message), "err");
+    toast("No se pudo subir: "+(e.message||e.code), "err");
   }
 };
 
@@ -1652,10 +1687,13 @@ async function migrarFinanzas(){
     if(v.costo_subasta!==undefined){ if(F(v).costo_subasta===undefined) fin.costo_subasta = Number(v.costo_subasta)||0; borrar.costo_subasta = deleteField(); }
     if(v.gastos!==undefined){ if(F(v).gastos===undefined) fin.gastos = v.gastos; borrar.gastos = deleteField(); }
     if(v.cotizacion!==undefined){ if(F(v).cotizacion===undefined) fin.cotizacion = v.cotizacion; borrar.cotizacion = deleteField(); }
-    const montos = {}; let tocaTareas = false; const tareas = { ...(v.tareas||{}) };
-    Object.keys(tareas).forEach(k=>{ const st = tareas[k]; if(st && ('monto' in st || 'montoPor' in st)){ if(tieneMonto(st.monto) && F(v).montos?.[k]===undefined) montos[k] = st.monto; const { monto, montoPor, ...resto } = st; tareas[k] = resto; tocaTareas = true; } });
+    const montos = {};
+    Object.keys(v.tareas||{}).forEach(k=>{ const st = v.tareas[k];
+      if(st && ('monto' in st || 'montoPor' in st)){
+        if(tieneMonto(st.monto) && F(v).montos?.[k]===undefined) montos[k] = st.monto;
+        borrar[`tareas.${k}.monto`] = deleteField(); borrar[`tareas.${k}.montoPor`] = deleteField();   // campo por campo: no pisa cambios recientes
+      } });
     if(Object.keys(montos).length) fin.montos = { ...(F(v).montos||{}), ...montos };
-    if(tocaTareas) borrar.tareas = tareas;
     if(!Object.keys(borrar).length) continue;
     try{ if(Object.keys(fin).length) await guardarFin(v.id, fin); await updateDoc(doc(db,"vehiculos",v.id), borrar); n++; }
     catch(e){ console.warn("No se pudo mudar", v.id, e.code); }
