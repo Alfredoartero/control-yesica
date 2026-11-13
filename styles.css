@@ -1485,3 +1485,9 @@ body.sin-fin .solo-fin{display:none!important}
 /* Mis tareas: lo que viene después se ve más apagado que lo de ahora */
 .lista.luego .task-card{opacity:.72}
 .lista.luego .task-card:hover{opacity:1}
+
+/* V27 · Reparación del carro (stock que llega sin venderse) */
+.rep-b{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:16px;padding:10px 14px;border-radius:14px;
+  background:rgba(219,39,119,.08);border:1px solid rgba(219,39,119,.28);font-size:13px;color:var(--t1);position:relative;z-index:1}
+.rep-b.on{background:rgba(219,39,119,.14);color:var(--brand-light)}
+.rep-b button{font-size:12.5px}

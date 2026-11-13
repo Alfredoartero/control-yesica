@@ -346,6 +346,54 @@
     "foto": true
    },
    {
+    "k": "r01",
+    "f": 3,
+    "a": "direccion",
+    "c": "log",
+    "rep": true,
+    "t": "Llevar el carro al taller",
+    "d": "Anotar qué se le va a reparar"
+   },
+   {
+    "k": "r02",
+    "f": 3,
+    "a": "finanzas",
+    "c": "log",
+    "rep": true,
+    "t": "Pagar reparación y repuestos",
+    "d": "Adjuntar factura o comprobante. Se suma al costo real",
+    "foto": true,
+    "gasto": true
+   },
+   {
+    "k": "r03",
+    "f": 3,
+    "a": "direccion",
+    "c": "log",
+    "rep": true,
+    "hito": true,
+    "t": "Reparación terminada",
+    "d": "Subir fotos de cómo quedó",
+    "foto": true
+   },
+   {
+    "k": "r04",
+    "f": 3,
+    "a": "direccion",
+    "c": "log",
+    "rep": true,
+    "t": "Revisar el precio ya reparado"
+   },
+   {
+    "k": "r05",
+    "f": 3,
+    "a": "marketing",
+    "c": "log",
+    "rep": true,
+    "t": "Publicar con fotos reales",
+    "d": "Ya reparado, cada quien en su canal"
+   },
+   {
     "k": "s19",
     "f": 4,
     "a": "ventas",
@@ -393,5 +441,5 @@
   ]
  },
  "sinUsuario": [],
- "version": 3
+ "version": 4
 }

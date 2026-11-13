@@ -64,7 +64,7 @@ const T_STK = [   // respaldo: el proceso real viene del editor (config/proceso)
 
 /* Proceso versión 3: logística y venta avanzan en paralelo (carriles), con puntos de control.
    Conserva personas y tareas propias; solo reordena, corrige nombres y marca carriles/puntos de control. */
-const PROC_V = 3;
+const PROC_V = 4;
 function ajustarProcesoV2(p){
   const q = JSON.parse(JSON.stringify(p));
   const plan = {
@@ -95,6 +95,19 @@ function ajustarProcesoV2(p){
     q.tareas[tipo] = out;
     if(pl.fases){ q.fases = q.fases || {}; q.fases[tipo] = pl.fases; }
   }
+  // v4: reparación (solo para carros de stock que no se vendieron en camino y se mandan a reparar)
+  const S = q.tareas?.Stock;
+  if(Array.isArray(S) && !S.some(t=>t.k==='r01')){
+    const rep = [
+      { k:'r01', f:3, a:'direccion', c:'log', rep:true, t:"Llevar el carro al taller", d:"Anotar qué se le va a reparar" },
+      { k:'r02', f:3, a:'finanzas', c:'log', rep:true, t:"Pagar reparación y repuestos", d:"Adjuntar factura o comprobante. Se suma al costo real", foto:true, gasto:true },
+      { k:'r03', f:3, a:'direccion', c:'log', rep:true, hito:true, t:"Reparación terminada", d:"Subir fotos de cómo quedó", foto:true },
+      { k:'r04', f:3, a:'direccion', c:'log', rep:true, t:"Revisar el precio ya reparado" },
+      { k:'r05', f:3, a:'marketing', c:'log', rep:true, t:"Publicar con fotos reales", d:"Ya reparado, cada quien en su canal" }
+    ];
+    let i = S.findIndex(t=>t.k==='s13'); if(i<0){ i = -1; S.forEach((x,j)=>{ if(x.f<=3) i = j; }); }
+    S.splice(i+1, 0, ...rep);
+  }
   q.version = PROC_V;
   return q;
 }
@@ -124,7 +137,7 @@ async function cargarProcesoFirestore(){
   }catch(e){ console.log("No se pudo leer config/proceso:", e.message); }
 }
 
-const defT = v => v.tipoProceso === "Encargo" ? T_ENC : T_STK;
+const defT = v => v.tipoProceso === "Encargo" ? T_ENC : T_STK.filter(t=> !t.rep || v.reparar);   // las de reparación solo si el carro se repara
 // Días desde el último avance del carro (tarea marcada o abono)
 const ms_ = x => typeof x === "number" ? x : (Date.parse(x) || 0);
 function diasQuieto(v){

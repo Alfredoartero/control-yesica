@@ -118,7 +118,7 @@ const T_STK = [   // respaldo: el proceso real viene del editor (config/proceso)
   {"k": "s20", "f": 4, "a": "ventas", "t": "Entregar el vehículo al cliente", "d": "Coordinar la entrega y dejar constancia con foto", "foto": true},
   {"k": "s18", "f": 4, "a": "legal", "t": "Hacer prórroga de compraventa", "opc": true}
 ];
-const defT   = v => v.tipoProceso === "Encargo" ? T_ENC : T_STK;
+const defT = v => v.tipoProceso === "Encargo" ? T_ENC : T_STK.filter(t=> !t.rep || v.reparar);   // las de reparación solo si el carro se repara
 const defF   = v => v.tipoProceso === "Encargo" ? FASES_ENC : FASES_STK;
 
 /* Las tareas vienen del tablero ("Tareas del proceso Yesica") a través de proceso.json.
@@ -126,7 +126,7 @@ const defF   = v => v.tipoProceso === "Encargo" ? FASES_ENC : FASES_STK;
 let procRaw = null, procesoInfo = null, procBorr = null, procSucio = false, procTipo = 'Encargo', procAbierta = null;
 /* Proceso versión 3: logística y venta avanzan en paralelo (carriles), con puntos de control.
    Conserva personas y tareas propias; solo reordena, corrige nombres y marca carriles/puntos de control. */
-const PROC_V = 3;
+const PROC_V = 4;
 function ajustarProcesoV2(p){
   const q = JSON.parse(JSON.stringify(p));
   const plan = {
@@ -156,6 +156,19 @@ function ajustarProcesoV2(p){
     by.forEach(t=>{ let i = -1; out.forEach((x,j)=>{ if(x.f<=t.f) i = j; }); out.splice(i+1, 0, t); });   // tareas propias: al final de su etapa
     q.tareas[tipo] = out;
     if(pl.fases){ q.fases = q.fases || {}; q.fases[tipo] = pl.fases; }
+  }
+  // v4: reparación (solo para carros de stock que no se vendieron en camino y se mandan a reparar)
+  const S = q.tareas?.Stock;
+  if(Array.isArray(S) && !S.some(t=>t.k==='r01')){
+    const rep = [
+      { k:'r01', f:3, a:'direccion', c:'log', rep:true, t:"Llevar el carro al taller", d:"Anotar qué se le va a reparar" },
+      { k:'r02', f:3, a:'finanzas', c:'log', rep:true, t:"Pagar reparación y repuestos", d:"Adjuntar factura o comprobante. Se suma al costo real", foto:true, gasto:true },
+      { k:'r03', f:3, a:'direccion', c:'log', rep:true, hito:true, t:"Reparación terminada", d:"Subir fotos de cómo quedó", foto:true },
+      { k:'r04', f:3, a:'direccion', c:'log', rep:true, t:"Revisar el precio ya reparado" },
+      { k:'r05', f:3, a:'marketing', c:'log', rep:true, t:"Publicar con fotos reales", d:"Ya reparado, cada quien en su canal" }
+    ];
+    let i = S.findIndex(t=>t.k==='s13'); if(i<0){ i = -1; S.forEach((x,j)=>{ if(x.f<=3) i = j; }); }
+    S.splice(i+1, 0, ...rep);
   }
   q.version = PROC_V;
   return q;
@@ -694,6 +707,28 @@ function ruta(v, grande=false){
       `<span class="${x.done?'ok':x.cur?'cur':''}">${esc(x.n)}<em>${x.h} de ${x.tot}</em></span>`).join('')}</div>` : '';
   return `<div class="ruta ${grande?'grande':''}">${puntos}</div>${nombres}`;
 }
+
+/* Reparación: un carro de stock que llega sin venderse se puede mandar al taller.
+   Al activarlo aparecen sus tareas (llevar al taller, pagar, terminada, precio, fotos reales). */
+const llegoSinVender = v => v.tipoProceso!=="Encargo" && !!v.tareas?.s11?.ok && !v.tareas?.s06?.ok;
+function barraRepara(v){
+  if(v.tipoProceso==="Encargo" || !T_STK.some(t=>t.rep)) return '';
+  const puedo = yo?.admin || puedeCrear();
+  if(v.reparar) return `<div class="rep-b on">${ico("ok",13,2.4)}<span class="flex-1">Este carro se repara antes de venderse</span>${puedo?`<button class="hp-lnk" onclick="setReparar('${v.id}',false)">Quitar</button>`:''}</div>`;
+  if(!puedo || !llegoSinVender(v)) return '';
+  return `<div class="rep-b"><span class="flex-1">Llegó sin venderse. ¿Se repara?</span>
+    <button class="btn-p px-3 py-1.5" onclick="setReparar('${v.id}',true)">Sí, se repara</button>
+    ${v.sinReparar?'':`<button class="btn-g px-3 py-1.5" onclick="setReparar('${v.id}',null)">Se vende así</button>`}</div>`;
+}
+window.setReparar = async function(id, val){
+  if(!(yo?.admin || puedeCrear())){ toast("No tienes permiso para cambiar esto.","err"); return; }
+  const v = autos.find(a=>a.id===id); if(!v) return;
+  if(val===false){ const hechas = T_STK.filter(t=>t.rep && v.tareas?.[t.k]?.ok).length;
+    if(hechas && !await dialogo({ titulo:'¿Quitar la reparación?', texto:`Ya hay ${hechas} paso${hechas>1?'s':''} de reparación marcado${hechas>1?'s':''}. No se borran: vuelven a salir si la activas otra vez.`, ok:'Quitar' })) return; }
+  const datos = val===null ? { sinReparar:true } : { reparar:val, sinReparar:false };
+  try{ await updateDoc(doc(db,"vehiculos",id), datos); registrar('reparar', id, val===null?'Decidió venderlo sin reparar':val?'Lo mandó a reparar':'Quitó la reparación'); toast(val===null?"Listo: se vende así.":val?"Listo: se agregaron los pasos de reparación.":"Reparación quitada."); }
+  catch(e){ toast("No se pudo: "+(e.code||e.message),"err"); }
+};
 
 // Tareas de las que depende el estado del carro (no se pueden quitar del proceso)
 const LLAVES = v => v.tipoProceso==="Encargo" ? {gan:"e06", nav:"e09", lleg:"e14", lib:"e21", ent:"e25"} : {gan:"s01", nav:"s04", lleg:"s11", lib:"s14", ent:"s20"};
@@ -1274,6 +1309,7 @@ function heroSiguiente(v){
   return `<div class="hero-sig cta-web suave">
     <div class="blob b1" aria-hidden="true"></div><div class="blob b2" aria-hidden="true"></div>
     ${ruta(v,true)}
+    ${barraRepara(v)}
     <div class="hero-div"></div>
     <div class="flex items-center justify-between gap-2">
       <p class="ceja" style="margin:0">Siguiente paso</p>
@@ -1972,6 +2008,7 @@ function pintarHoyPag(){
   const at = [];
   act.forEach(v=>{ const d = atraso(v); if(d!=null && (yo.admin || pendientesMias(v).length)) at.push({ p:d, h:`<div class="hp-f" onclick="abrirDetalle('${v.id}')"><div class="min-w-0 flex-1"><p class="hp-t">${esc(v.vehiculo||'Encargo de '+(v.nombreCliente||'').split(' ')[0])} trabado</p><p class="hp-s">${d} días sin avance · ${esc(estadoDe(v).t)}</p></div><button class="hp-a p">Ver</button></div>` }); });
   act.forEach(v=>{ const e = etaInfo(v); if(e?.tarde) at.push({ p:50, h:`<div class="hp-f" onclick="abrirDetalle('${v.id}')"><div class="min-w-0 flex-1"><p class="hp-t">${esc(v.vehiculo)}: no ha llegado</p><p class="hp-s">${e.txt}</p></div><button class="hp-a p">Ver</button></div>` }); });
+  if(yo.admin || puedeCrear()) act.forEach(v=>{ if(llegoSinVender(v) && !v.reparar && !v.sinReparar && T_STK.some(t=>t.rep)) at.push({ p:45, h:`<div class="hp-f" onclick="abrirDetalle('${v.id}')"><div class="min-w-0 flex-1"><p class="hp-t">${esc(v.vehiculo||'Carro')}: llegó sin venderse</p><p class="hp-s">¿Se vende así o se repara?</p></div><button class="hp-a p">Decidir</button></div>` }); });
   if(verFin()) act.forEach(v=>{ const ct = cotDe(v); if(!ct) return; const dif = costosDe(v).total - Number(ct.costoTotal||0); if(dif>0) at.push({ p:40, h:`<div class="hp-f" onclick="abrirDetalle('${v.id}')"><div class="min-w-0 flex-1"><p class="hp-t">${esc(v.vehiculo)}: se pasó del estimado</p><p class="hp-s">+${money(dif)} contra la calculadora</p></div><button class="hp-a p">Ver</button></div>` }); });
   if(yo.admin) Object.keys(EQUIPO).filter(u=>!usersData[u] && !accesosMap[u]).forEach(u=> at.push({ p:1, h:`<div class="hp-f" onclick="ir('usuarios');setTimeout(()=>verEquipo('personas'),50)"><div class="min-w-0 flex-1"><p class="hp-t">${esc(EQUIPO[u].nombre)} sin cuenta</p><p class="hp-s">No puede entrar hasta que le crees su acceso</p></div><button class="hp-a p">Crear</button></div>` }));
   if(at.length) bloques.push(`<div class="hp-c lado"><p class="hp-ct">Necesita atención <span>${at.length}</span></p>${at.sort((a,b)=>b.p-a.p).slice(0,5).map(x=>x.h).join('')}</div>`);
@@ -2823,7 +2860,7 @@ function pintarProceso(){
   const fila = (t, i, lista) => {
     const abierta = procAbierta===t.k;
     const per = (t.personas||[]);
-    const marcas = [t.foto&&'Comprobante', t.pago&&'Pago', esGasto(t)&&'Gasto', t.multi&&'Cada quien marca', t.opc&&'Opcional', t.repetible&&`Cada ${cadaDias(t)===1?'día':cadaDias(t)+' días'}`, t.hito&&'Punto de control'].filter(Boolean);
+    const marcas = [t.foto&&'Comprobante', t.pago&&'Pago', esGasto(t)&&'Gasto', t.multi&&'Cada quien marca', t.opc&&'Opcional', t.repetible&&`Cada ${cadaDias(t)===1?'día':cadaDias(t)+' días'}`, t.hito&&'Punto de control', t.rep&&'Solo si se repara'].filter(Boolean);
     return `<div class="pe-t${abierta?' abierta':''}" id="pe-${t.k}">
       <div class="pe-fila" onclick="peAbrir('${t.k}')">
         <span class="pe-n num">${i+1}</span>
@@ -2848,7 +2885,7 @@ function pintarProceso(){
           <p class="t-xs mt-1.5">${per.length?'Solo a ellos les aparece y les llega el aviso.':'Sin nadie marcado: le toca a todos los que tengan el área '+esc(areaN(t.a))+'.'}</p>
         </div>
         <div class="pe-sw">
-          ${[['foto','Pide comprobante (foto)'],['pago','Es un pago del cliente'],['gasto','Es un gasto del carro (pide monto)'],['multi','Cada quien marca su parte'],['opc','Opcional'],['repetible','Constante (se repite)'],['hito','Punto de control (lo que sigue la espera)']].map(([c,n])=>
+          ${[['foto','Pide comprobante (foto)'],['pago','Es un pago del cliente'],['gasto','Es un gasto del carro (pide monto)'],['multi','Cada quien marca su parte'],['opc','Opcional'],['repetible','Constante (se repite)'],['hito','Punto de control (lo que sigue la espera)'],...(procTipo==='Stock'?[['rep','Solo si el carro se repara']]:[])].map(([c,n])=>
             `<label class="pe-sw-i"><input type="checkbox" ${(c==='gasto'?esGasto(t):t[c])?'checked':''} onchange="peCampo('${t.k}','${c}',this.checked)"><span class="pe-sw-b"></span>${n}</label>`).join('')}
         </div>
         <div class="rejilla">
