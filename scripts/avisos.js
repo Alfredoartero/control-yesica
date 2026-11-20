@@ -288,7 +288,7 @@ async function main(){
   const autos = [];
   (await db.collection("vehiculos").get()).forEach(d => {
     const a = { id: d.id, ...d.data() };
-    if(!a.archivado) autos.push(a);
+    if(!a.archivado && !a.eliminado) autos.push(a);   // fuera: archivados y papelera
   });
   console.log(`${Object.keys(usuarios).length} usuarios · ${autos.length} unidades activas`);
 
