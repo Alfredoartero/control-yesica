@@ -1495,3 +1495,6 @@ body.sin-fin .solo-fin{display:none!important}
 
 /* V28 · En PC las fotos de las tarjetas son más altas: el carro se ve más grande */
 @media(min-width:1024px){ .vc-cover{aspect-ratio:4/3;max-height:none} }
+
+/* V29 · PC: el recuadro completo del carro cabe en la pantalla (la foto se ajusta al alto de la ventana) */
+@media(min-width:1024px){ .vc-cover{aspect-ratio:auto;height:clamp(190px,34vh,300px);max-height:none} }
