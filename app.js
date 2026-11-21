@@ -820,7 +820,8 @@ const gananciaDe = v => Number(v.precio_venta||0) - costosDe(v).total;
 /* Portada del carro: su foto si la tiene; si no, un dibujo según el tipo */
 const RX_SUV = /cr-?v|rav ?4|tucson|sportage|outlander|cx-?\d|rogue|explorer|highlander|santa ?fe|equinox|escape|pilot|4runner|tahoe|suburban|cherokee|wrangler|kicks|seltos|kona|venue|hr-?v|forester|crosstrek|tiguan|pathfinder|murano|sorento|telluride|palisade|trax|blazer|traverse|edge|bronco|compass|renegade|x-?trail|qashqai|soul|hilux|tacoma|frontier|ranger|tundra|silverado|f-?150|ram\b|l200|navara|suv|camioneta|pick ?up/i;
 function portada(v){
-  if(v.portada || v.foto) return `<img src="${v.portada || esc(v.foto)}" alt="" loading="lazy" decoding="async" class="vc-img">`;
+  if(v.portada || v.foto){ const src = v.portada || esc(v.foto);   // fondo borroso + foto completa encima
+    return `<img src="${src}" alt="" aria-hidden="true" loading="lazy" decoding="async" class="vc-bg"><img src="${src}" alt="" loading="lazy" decoding="async" class="vc-img">`; }
   const tipo = !v.vehiculo ? 'q' : (RX_SUV.test(v.vehiculo) ? 'suv' : 'car');
   const tono = {'e-verde':'t-verde','e-rosa':'t-rosa','e-ambar':'t-ambar','e-solido':'t-rosa'}[estadoDe(v).c] || 't-gris';
   return `<div class="vc-dib ${tono}"><svg viewBox="0 0 320 ${tipo==='suv'?120:110}" aria-hidden="true"><use href="#s-${tipo}"/></svg></div>`;
