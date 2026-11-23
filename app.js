@@ -76,8 +76,8 @@ const T_ENC = [   // respaldo: el proceso real viene del editor (config/proceso)
   {"k": "e06", "f": 1, "a": "compras", "t": "Se ganó el vehículo en subasta", "personas": ["alfre", "yesica"], "hito": true},
   {"k": "e07", "f": 1, "a": "direccion", "t": "Registrar vehículo en sistema", "d": "Vehículo, costo y precio de venta", "personas": ["alfre", "yesica", "leslie"], "c": "log"},
   {"k": "e08", "f": 1, "a": "compras", "t": "Pagar la subasta (Copart / IAA)", "d": "Evitar storage. Adjuntar comprobante del pago", "foto": true},
-  {"k": "e11", "f": 1, "a": "finanzas", "t": "Confirmar pago del 50% de enganche", "d": "Con comprobante en foto, o confirmar recibido si es efectivo", "pago": true, "foto": true},
-  {"k": "e12", "f": 1, "a": "finanzas", "t": "Facturar el abono del 50%"},
+  {"k": "e11", "f": 1, "a": "finanzas", "t": "Confirmar primer abono", "d": "Con comprobante en foto, o confirmar recibido si es efectivo", "pago": true, "foto": true},
+  {"k": "e12", "f": 1, "a": "finanzas", "t": "Facturar el primer abono"},
   {"k": "e13", "f": 1, "a": "legal", "t": "Crear promesa de venta"},
   {"k": "e09", "f": 1, "a": "naviera", "t": "Asignar a naviera"},
   {"k": "e10", "f": 1, "a": "naviera", "t": "Brindar estatus al cliente", "d": "Constante, una vez por semana hasta que venga", "repetible": true, "hasta": "e14"},
@@ -102,7 +102,7 @@ const T_STK = [   // respaldo: el proceso real viene del editor (config/proceso)
   {"k": "s05", "f": 2, "a": "direccion", "t": "Definir precio a cliente", "d": "Podría darse en menos"},
   {"k": "s02", "f": 2, "a": "marketing", "t": "Publicidad del vehículo", "d": "Cada quien en su canal (Facebook, grupo de WhatsApp, etc.)", "multi": true, "personas": ["nehe", "leslie", "alfre"]},
   {"k": "s06", "f": 2, "a": "ventas", "t": "Venta o asignación a cliente"},
-  {"k": "s07", "f": 2, "a": "finanzas", "t": "Pago de pre-reserva / reserva (≥50%)", "d": "Con comprobante, o confirmar recibido si es efectivo", "pago": true, "foto": true},
+  {"k": "s07", "f": 2, "a": "finanzas", "t": "Pago de pre-reserva / reserva (primer abono)", "d": "Con comprobante, o confirmar recibido si es efectivo", "pago": true, "foto": true},
   {"k": "s08", "f": 2, "a": "finanzas", "t": "Facturar el abono recibido"},
   {"k": "s09", "f": 2, "a": "legal", "t": "Crear promesa de venta"},
   {"k": "s10", "f": 2, "a": "naviera", "t": "Brindar estatus al cliente", "d": "Una vez por semana hasta que llegue", "repetible": true, "hasta": "s11", "c": "venta"},
@@ -126,7 +126,7 @@ const defF   = v => v.tipoProceso === "Encargo" ? FASES_ENC : FASES_STK;
 let procRaw = null, procesoInfo = null, procBorr = null, procSucio = false, procTipo = 'Encargo', procAbierta = null;
 /* Proceso versión 3: logística y venta avanzan en paralelo (carriles), con puntos de control.
    Conserva personas y tareas propias; solo reordena, corrige nombres y marca carriles/puntos de control. */
-const PROC_V = 4;
+const PROC_V = 5;
 function ajustarProcesoV2(p){
   const q = JSON.parse(JSON.stringify(p));
   const plan = {
@@ -170,6 +170,9 @@ function ajustarProcesoV2(p){
     let i = S.findIndex(t=>t.k==='s13'); if(i<0){ i = -1; S.forEach((x,j)=>{ if(x.f<=3) i = j; }); }
     S.splice(i+1, 0, ...rep);
   }
+  // v5: el abono del 50% pasa a llamarse "primer abono" (solo si nadie le cambió el nombre)
+  const REN5 = { e11:["Confirmar pago del 50% de enganche","Confirmar primer abono"], e12:["Facturar el abono del 50%","Facturar el primer abono"], s07:["Pago de pre-reserva / reserva (≥50%)","Pago de pre-reserva / reserva (primer abono)"] };
+  Object.values(q.tareas||{}).forEach(L=> Array.isArray(L) && L.forEach(t=>{ const r = REN5[t.k]; if(r && t.t===r[0]) t.t = r[1]; }));
   q.version = PROC_V;
   return q;
 }
@@ -1444,7 +1447,7 @@ window.abrirDetalle = function(id, silencioso){
 
   const abonos = (v.abonos||[]).map((a,i)=>`<div class="flex justify-between items-center t-sm py-1.5 border-b" style="border-color:var(--line)">
       <span style="color:var(--t3)">${[fch(a.fecha), esc(usersData[a.por]?.nombre||a.por||""), esc(a.nota||"")].filter(Boolean).join(" · ")}</span>
-      <b style="color:var(--ok)">${money(a.monto)}</b></div>`).join("") ||
+      <span class="flex items-center gap-2"><b style="color:var(--ok)">${money(a.monto)}</b>${verCobros()?`<button class="btn-g px-2 py-1 text-[11px]" title="Cambiar o borrar este abono" onclick="editAbono('${v.id}',${i})">Editar</button>`:''}</span></div>`).join("") ||
     `<p class="text-[11px] py-2" style="color:var(--t3)">Sin abonos registrados.</p>`;
 
   // ── Panel editable: asignar carro (encargo) o asignar cliente (stock) ──
@@ -2298,6 +2301,24 @@ window.addAbono = async function(id){
   const abonos = [ ...(v.abonos||[]), { monto:m, nota, por:yo.usuario, fecha:new Date().toISOString() } ];
   try{ await updateDoc(doc(db,"vehiculos",id), { abonos }); registrar('abono', id, `Registró abono de ${money(m)}${nota?' ('+nota+')':''}`); toast("Abono de "+money(m)+" registrado."); }
   catch(e){ toast("No se pudo registrar.","err"); }
+};
+
+window.editAbono = async function(id, i){
+  if(!verCobros()){ toast("No tienes permiso para cambiar cobros.","err"); return; }
+  const v = autos.find(a=>a.id===id); const ab = v?.abonos?.[i]; if(!ab) return;
+  const r = await dialogo({ titulo:'Editar abono', texto:`Registrado el ${fch(ab.fecha)}. Para borrarlo, deja el monto en 0.`,
+    campos:[{ label:'Monto', type:'number', prefijo:'$', value:ab.monto }, { label:'Nota', value:ab.nota||'', placeholder:'Ej. primer abono' }] });
+  if(r===null) return;
+  const m = Number(String(r[0]).replace(/[^\d.]/g,''));
+  const lista = [...(v.abonos||[])];
+  if(!m){
+    if(!await dialogo({ titulo:'¿Borrar este abono?', texto:`Se quita el abono de <b>${money(ab.monto)}</b> y vuelve a sumarse a lo que falta cobrar.`, ok:'Borrar', peligro:true })) return;
+    lista.splice(i,1);
+  } else lista[i] = { ...ab, monto:m, nota:String(r[1]||'').trim(), editadoPor:yo.usuario, editado:new Date().toISOString() };
+  try{ await updateDoc(doc(db,"vehiculos",id), { abonos:lista });
+    registrar('abono', id, !m ? `Borró un abono de ${money(ab.monto)}` : `Cambió un abono de ${money(ab.monto)} a ${money(m)}`);
+    toast(!m ? "Abono borrado." : "Abono actualizado."); }
+  catch(e){ toast("No se pudo guardar: "+(e.code||e.message),"err"); }
 };
 
 window.archivar = async function(id, val){

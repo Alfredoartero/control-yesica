@@ -101,7 +101,7 @@
     "k": "e11",
     "f": 1,
     "a": "finanzas",
-    "t": "Confirmar pago del 50% de enganche",
+    "t": "Confirmar primer abono",
     "d": "Con comprobante en foto, o confirmar recibido si es efectivo",
     "pago": true,
     "foto": true
@@ -110,7 +110,7 @@
     "k": "e12",
     "f": 1,
     "a": "finanzas",
-    "t": "Facturar el abono del 50%"
+    "t": "Facturar el primer abono"
    },
    {
     "k": "e13",
@@ -279,7 +279,7 @@
     "k": "s07",
     "f": 2,
     "a": "finanzas",
-    "t": "Pago de pre-reserva / reserva (≥50%)",
+    "t": "Pago de pre-reserva / reserva (primer abono)",
     "d": "Con comprobante, o confirmar recibido si es efectivo",
     "pago": true,
     "foto": true
@@ -441,5 +441,5 @@
   ]
  },
  "sinUsuario": [],
- "version": 4
+ "version": 5
 }
